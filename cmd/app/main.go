@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 	"main/internal/config"
-
-	"database/sql"
-	_ "github.com/lib/pq"
+	"main/internal/database"
+	"main/internal/handler"
+	"net/http"
 )
 
 func main() {
@@ -15,24 +15,17 @@ func main() {
 		log.Fatalf("Ошибка файла конфигурации: %s", err)
 	}
 
-	psqlInfo := fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		cfg.DBConfig.Host,
-		cfg.DBConfig.Port,
-		cfg.DBConfig.User,
-		cfg.DBConfig.Password,
-		cfg.DBConfig.Database)
-
-	db, err := sql.Open("postgres", psqlInfo)
-	if err != nil {
-		log.Fatal(err)
-	}
+	db, _ := database.New(cfg.DBConfig)
 	defer db.Close()
 
-	err = db.Ping()
-	if err != nil {
-		log.Fatal(err)
-	}
+	http.HandleFunc("/database/", func(w http.ResponseWriter, r *http.Request) {
+		handler.DatabaseHandler(w, r, db)
+	})
 
-	fmt.Println("Successfully connected!")
+	serverSettings := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
+	log.Printf("Сервер запущен по адресу: %s", serverSettings)
+	err = http.ListenAndServe(serverSettings, nil)
+	if err != nil {
+		log.Fatalf("Ошибка запуска сервера: %s", err)
+	}
 }

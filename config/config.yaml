@@ -4,3 +4,7 @@ pgconnection:
   user: virus
   password: postgres
   database: db
+
+server:
+  host: localhost
+  port: 8080

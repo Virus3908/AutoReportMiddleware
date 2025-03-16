@@ -8,6 +8,12 @@ type DBConnection struct {
 	Database string `yaml:"database"`
 }
 
+type SercerConfig struct {
+	Host string `yaml:"host"`
+	Port int    `yaml:"port"`
+}
+
 type ConfigStuct struct {
 	DBConfig DBConnection `yaml:"pgconnection"`
+	Server   SercerConfig `yaml:"server"`
 }
