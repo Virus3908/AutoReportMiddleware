@@ -48,10 +48,25 @@ func getDatabaseHandler(w http.ResponseWriter, r *http.Request, db *database.DB)
 }
 
 func postDatabaseHandler(w http.ResponseWriter, r *http.Request, db *database.DB) {
-	_, err := db.Database.Exec(context.Background(), "INSERT INTO users (name) VALUES ($1)", r.URL.Path)
+	var requestData struct {
+		Name string `json:"name"`
+	}
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		http.Error(w, "Некорректный JSON", http.StatusBadRequest)
+		return
+	}
+	if requestData.Name == "" {
+		http.Error(w, "Поле 'name' обязательно", http.StatusBadRequest)
+		return
+	}
+	_, err = db.Database.Exec(context.Background(),
+		"INSERT INTO users (name) VALUES ($1)", requestData.Name)
+
 	if err != nil {
 		http.Error(w, "Ошибка запроса к базе данных", http.StatusInternalServerError)
 		return
 	}
+
 	w.WriteHeader(http.StatusCreated)
 }
