@@ -6,6 +6,7 @@ import (
 	"main/internal/config"
 	"main/internal/database"
 	"main/internal/handlers"
+	"main/internal/storage"
 	"net/http"
 )
 
@@ -15,10 +16,18 @@ func main() {
 		log.Fatalf("Ошибка файла конфигурации: %s", err)
 	}
 
-	db, _ := database.New(cfg.DBConfig)
+	db, err := database.New(cfg.DB)
+	if err != nil {
+		log.Fatalf("Ошибка подключения к базе данных: %s", err)
+	}
 	defer db.Close()
 
-	router := handlers.CreateHandlers(db)
+	storage, err := storage.NewStorage(cfg.S3)
+	if err != nil {
+		log.Fatalf("Ошибка подключения к хранилищу: %s", err)
+	}
+
+	router := handlers.CreateHandlers(db, storage)
 
 	serverSettings := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 

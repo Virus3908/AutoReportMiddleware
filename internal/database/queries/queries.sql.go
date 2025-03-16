@@ -11,6 +11,20 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const createConversation = `-- name: CreateConversation :exec
+INSERT INTO Conversations (conversation_name, file_url) VALUES ($1, $2)
+`
+
+type CreateConversationParams struct {
+	ConversationName string
+	FileUrl          pgtype.Text
+}
+
+func (q *Queries) CreateConversation(ctx context.Context, arg CreateConversationParams) error {
+	_, err := q.db.Exec(ctx, createConversation, arg.ConversationName, arg.FileUrl)
+	return err
+}
+
 const createParticipant = `-- name: CreateParticipant :exec
 INSERT INTO Participants (name, email) VALUES ($1, $2)
 `

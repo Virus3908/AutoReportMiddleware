@@ -3,19 +3,24 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"main/internal/common"
 	"main/internal/database"
 	"main/internal/database/queries"
+	"main/internal/storage"
 	"net/http"
-	"main/internal/common"
 	// "github.com/jackc/pgx/v5/pgtype"
-	// "github.com/google/uuid"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func conversationHandlers(w http.ResponseWriter, r *http.Request, db *database.DataBase) {
+func conversationHandlers(w http.ResponseWriter, r *http.Request, db *database.DataBase, storage *storage.S3Client) {
 	switch r.Method {
 	case http.MethodGet:
 		getConversationsHandler(w, r, db)
+	case http.MethodPost:
+		createConversationHandler(w, r, db, storage)
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
@@ -123,4 +128,62 @@ func updateConversationNameByIDHandler(w http.ResponseWriter, r *http.Request, d
 	}
 	commit()
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func createConversationHandler(w http.ResponseWriter, r *http.Request, db *database.DataBase, storage *storage.S3Client) {
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		http.Error(w, "Ошибка парсинга формы: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	conversationName := r.FormValue("ConversationName")
+	if conversationName == "" {
+		http.Error(w, "ConversationName обязателен", http.StatusBadRequest)
+		return
+	}
+
+	file, header, err := r.FormFile("FileUrl")
+	if err != nil {
+		http.Error(w, "Ошибка получения файла: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	fileID := uuid.New().String()
+	fileKey := fmt.Sprintf("uploads/%s_%s", fileID, header.Filename)
+
+	err = storage.UploadFile(file, fileKey)
+	if err != nil {
+		http.Error(w, "Ошибка загрузки файла в S3: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	fileURL := fmt.Sprintf("%s/%s/%s", storage.Endpoint, storage.Bucket, fileKey)
+
+	conversation := queries.CreateConversationParams{
+		ConversationName: conversationName,
+		FileUrl:          pgtype.Text{String: fileURL, Valid: true},
+	}
+
+	tx, rollback, commit, err := common.StartTransaction(db)
+	if err != nil {
+		http.Error(w, "Ошибка начала транзакции: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rollback()
+
+	err = tx.CreateConversation(context.Background(), conversation)
+	if err != nil {
+		http.Error(w, "Ошибка записи в БД: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	commit()
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message":  "Разговор создан",
+		"file_url": fileURL,
+	})
 }
