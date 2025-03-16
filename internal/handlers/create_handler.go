@@ -20,11 +20,11 @@ func CreateHandlers(db *database.DataBase) *mux.Router {
 	router.HandleFunc("/conversations/{id}", func(w http.ResponseWriter, r *http.Request) {
 		conversationHandlersWithID(w, r, db)
 	})
-	router.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) {
-		userHandlers(w, r, db)
+	router.HandleFunc("/participant", func(w http.ResponseWriter, r *http.Request) {
+		participantHandlers(w, r, db)
 	})
-	router.HandleFunc("/users/{id}", func(w http.ResponseWriter, r *http.Request) {
-		userHandlersWithID(w, r, db)
+	router.HandleFunc("/participant/{id}", func(w http.ResponseWriter, r *http.Request) {
+		participantHandlersWithID(w, r, db)
 	})
 	return router
 }

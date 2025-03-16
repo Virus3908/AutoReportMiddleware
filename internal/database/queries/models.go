@@ -17,7 +17,7 @@ type Conversation struct {
 	UpdatedAt        pgtype.Timestamp
 }
 
-type Conversationsuser struct {
+type Conversationsparticipant struct {
 	ID             pgtype.UUID
 	UserID         pgtype.UUID
 	ConversationID pgtype.UUID
@@ -43,6 +43,14 @@ type Diarize struct {
 	TaskID         pgtype.UUID
 	CreatedAt      pgtype.Timestamp
 	UpdatedAt      pgtype.Timestamp
+}
+
+type Participant struct {
+	ID        pgtype.UUID
+	Name      string
+	Email     string
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
 }
 
 type Promt struct {
@@ -71,12 +79,4 @@ type Transcribe struct {
 	Complete       pgtype.Bool
 	CreatedAt      pgtype.Timestamp
 	UpdatedAt      pgtype.Timestamp
-}
-
-type User struct {
-	ID        pgtype.UUID
-	Name      string
-	Email     string
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
 }

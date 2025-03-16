@@ -1,17 +1,17 @@
--- name: GetUsers :many
-SELECT * FROM Users;
+-- name: GetParticipants :many
+SELECT * FROM Participants;
 
--- name: CreateUser :exec
-INSERT INTO Users (name, email) VALUES ($1, $2);
+-- name: CreateParticipant :exec
+INSERT INTO Participants (name, email) VALUES ($1, $2);
 
--- name: UpdateUserByID :exec
-UPDATE Users SET name = $1, email = $2 WHERE id = $3;
+-- name: UpdateParticipantByID :exec
+UPDATE Participants SET name = $1, email = $2 WHERE id = $3;
 
--- name: DeleteUserByID :exec
-DELETE FROM Users WHERE id = $1;
+-- name: DeleteParticipantByID :exec
+DELETE FROM Participants WHERE id = $1;
 
--- name: GetUserByID :one
-SELECT * FROM Users WHERE id = $1;
+-- name: GetParticipantByID :one
+SELECT * FROM Participants WHERE id = $1;
 
 -- name: GetConversations :many
 SELECT * FROM Conversations;

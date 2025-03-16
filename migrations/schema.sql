@@ -9,7 +9,7 @@ CREATE TABLE Conversations (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE Users (
+CREATE TABLE participants (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -17,7 +17,7 @@ CREATE TABLE Users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE ConversationsUsers (
+CREATE TABLE ConversationsParticipant (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES Users(id) ON DELETE CASCADE,
     conversation_id UUID REFERENCES Conversations(id) ON DELETE CASCADE,
@@ -86,13 +86,13 @@ BEFORE UPDATE ON Conversations
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER trigger_update_users
-BEFORE UPDATE ON Users
+CREATE TRIGGER trigger_update_participant
+BEFORE UPDATE ON participants
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER trigger_update_conversations_users
-BEFORE UPDATE ON ConversationsUsers
+CREATE TRIGGER trigger_update_conversations_participant
+BEFORE UPDATE ON ConversationsParticipant
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
