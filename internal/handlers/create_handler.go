@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"main/internal/database"
+	"main/internal/logging"
 	"net/http"
 	"github.com/gorilla/mux"
-	"main/internal/logging"
 )
 
 func CreateHandlers(db *database.DataBase) *mux.Router {
@@ -19,6 +19,12 @@ func CreateHandlers(db *database.DataBase) *mux.Router {
 	})
 	router.HandleFunc("/conversations/{id}", func(w http.ResponseWriter, r *http.Request) {
 		conversationHandlersWithID(w, r, db)
+	})
+	router.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) {
+		userHandlers(w, r, db)
+	})
+	router.HandleFunc("/users/{id}", func(w http.ResponseWriter, r *http.Request) {
+		userHandlersWithID(w, r, db)
 	})
 	return router
 }

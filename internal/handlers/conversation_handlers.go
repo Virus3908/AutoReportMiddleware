@@ -6,8 +6,9 @@ import (
 	"main/internal/database"
 	"main/internal/database/queries"
 	"net/http"
-	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/google/uuid"
+	"main/internal/common"
+	// "github.com/jackc/pgx/v5/pgtype"
+	// "github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -15,8 +16,6 @@ func conversationHandlers(w http.ResponseWriter, r *http.Request, db *database.D
 	switch r.Method {
 	case http.MethodGet:
 		getConversationsHandler(w, r, db)
-	case http.MethodPost:
-		createConversationsHandler(w, r, db)
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
@@ -27,7 +26,9 @@ func conversationHandlersWithID(w http.ResponseWriter, r *http.Request, db *data
 	case http.MethodGet:
 		getConversationByIDHandler(w, r, db)
 	case http.MethodPost:
-		updateConversationByIDHandler(w, r, db)
+		updateConversationNameByIDHandler(w, r, db)
+	case http.MethodDelete:
+		deleteConversationByIDHandler(w, r, db)
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
@@ -45,33 +46,42 @@ func getConversationsHandler(w http.ResponseWriter, _ *http.Request, db *databas
 
 }
 
-func createConversationsHandler(w http.ResponseWriter, r *http.Request, db *database.DataBase) {
-	var conversation queries.CreateConversationParams
-	err := json.NewDecoder(r.Body).Decode(&conversation)
+func deleteConversationByIDHandler(w http.ResponseWriter, r *http.Request, db *database.DataBase) {
+	params := mux.Vars(r)
+	strID := params["id"]
+
+	pgUUID, err := common.StrToPGUUID(strID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	queries := queries.New(db.Pool)
-	err = queries.CreateConversation(context.Background(), conversation)
+
+	tx, rollback, commit, err := common.StartTransaction(db)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
+
+	defer rollback()
+	err = tx.DeleteConversationByID(context.Background(), pgUUID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	commit()
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func getConversationByIDHandler(w http.ResponseWriter, r *http.Request, db *database.DataBase) {
 	params := mux.Vars(r)
-	idStr := params["id"]
+	strID := params["id"]
 
-	id, err := uuid.Parse(idStr)
+	pgUUID, err := common.StrToPGUUID(strID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	pgUUID := pgtype.UUID{Bytes: id, Valid: true}
 	querry := queries.New(db.Pool)
 	conversation, err := querry.GetConversationByID(context.Background(), pgUUID)
 	if err != nil {
@@ -82,30 +92,35 @@ func getConversationByIDHandler(w http.ResponseWriter, r *http.Request, db *data
 	json.NewEncoder(w).Encode(conversation)
 }
 
-func updateConversationByIDHandler(w http.ResponseWriter, r *http.Request, db *database.DataBase) {
+func updateConversationNameByIDHandler(w http.ResponseWriter, r *http.Request, db *database.DataBase) {
 	params := mux.Vars(r)
-	idStr := params["id"]
+	strID := params["id"]
 
-	id, err := uuid.Parse(idStr)
+	pgUUID, err := common.StrToPGUUID(strID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	pgUUID := pgtype.UUID{Bytes: id, Valid: true}
-
-	var conversation queries.UpdateConversationParams
+	var conversation queries.UpdateConversationNameByIDParams
 	err = json.NewDecoder(r.Body).Decode(&conversation)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	conversation.ID = pgUUID
-	querry := queries.New(db.Pool)
-	err = querry.UpdateConversation(context.Background(), conversation)
+	tx, rollback, commit, err := common.StartTransaction(db)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	defer rollback()
+	err = tx.UpdateConversationNameByID(context.Background(), conversation)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	commit()
+	w.WriteHeader(http.StatusNoContent)
 }

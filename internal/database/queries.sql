@@ -1,17 +1,26 @@
--- name: GetConversations :many
-SELECT * FROM conversations;
-
--- name: CreateConversation :exec
-INSERT INTO conversations (conversation_name, file_url) VALUES ($1, $2);
+-- name: GetUsers :many
+SELECT * FROM Users;
 
 -- name: CreateUser :exec
-INSERT INTO users (name, email) VALUES ($1, $2);
+INSERT INTO Users (name, email) VALUES ($1, $2);
 
--- name: GetUsers :many
-SELECT * FROM users;
+-- name: UpdateUserByID :exec
+UPDATE Users SET name = $1, email = $2 WHERE id = $3;
 
--- name: UpdateConversation :exec
-UPDATE conversations SET status = $2 WHERE id = $1;
+-- name: DeleteUserByID :exec
+DELETE FROM Users WHERE id = $1;
+
+-- name: GetUserByID :one
+SELECT * FROM Users WHERE id = $1;
+
+-- name: GetConversations :many
+SELECT * FROM Conversations;
+
+-- name: DeleteConversationByID :exec
+DELETE FROM Conversations WHERE id = $1;
 
 -- name: GetConversationByID :one
-SELECT * FROM conversations WHERE id = $1;
+SELECT * FROM Conversations WHERE id = $1;
+
+-- name: UpdateConversationNameByID :exec
+UPDATE Conversations SET conversation_name = $1 WHERE id = $2;
