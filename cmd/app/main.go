@@ -18,10 +18,6 @@ func main() {
 	db, _ := database.New(cfg.DBConfig)
 	defer db.Close()
 
-	http.HandleFunc("/database/", func(w http.ResponseWriter, r *http.Request) {
-		handler.DatabaseHandler(w, r, db)
-	})
-
 	serverSettings := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	log.Printf("Сервер запущен по адресу: %s", serverSettings)
 	err = http.ListenAndServe(serverSettings, nil)

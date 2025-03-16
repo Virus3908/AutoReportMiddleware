@@ -11,11 +11,11 @@ import (
 
 // var db *pgxpool.Pool
 
-type DB struct {
-	Database *pgxpool.Pool
+type DataBase struct {
+	Pool *pgxpool.Pool
 }
 
-func New(cfg config.DBConnection) (*DB, error) {
+func New(cfg config.DBConnection) (*DataBase, error) {
 
 	connectionInfo := fmt.Sprintf(
 		"postgres://%s:%s@%s:%d/%s?sslmode=disable",
@@ -36,11 +36,11 @@ func New(cfg config.DBConnection) (*DB, error) {
 		return nil, status.Error(codes.Internal, fmt.Sprintf("Ошибка пинга базы данных: %s", err))
 	}
 
-	return &DB{Database: pool}, nil
+	return &DataBase{Pool: pool}, nil
 }
 
-func (d *DB) Close() {
-	if d.Database != nil {
-		d.Database.Close()
+func (d *DataBase) Close() {
+	if d.Pool != nil {
+		d.Pool.Close()
 	}
 }
