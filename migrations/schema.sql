@@ -19,7 +19,8 @@ CREATE TABLE participants (
 
 CREATE TABLE ConversationsParticipant (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES Users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES participants(id) ON DELETE CASCADE,
+    speaker INT,
     conversation_id UUID REFERENCES Conversations(id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -37,9 +38,9 @@ CREATE TABLE Convert (
 CREATE TABLE Diarize (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     conversation_id UUID REFERENCES Conversations(id) ON DELETE CASCADE,
-    start_time TIME NOT NULL,
-    end_time INTEGER NOT NULL,
-    speaker UUID REFERENCES ConversationsUsers(id) ON DELETE CASCADE,
+    start_time FLOAT NOT NULL,
+    end_time FLOAT NOT NULL,
+    speaker INT NOT NULL,
     task_id UUID,  -- UUID передается вручную
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

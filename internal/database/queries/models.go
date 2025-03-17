@@ -20,6 +20,7 @@ type Conversation struct {
 type Conversationsparticipant struct {
 	ID             pgtype.UUID
 	UserID         pgtype.UUID
+	Speaker        pgtype.Int4
 	ConversationID pgtype.UUID
 	CreatedAt      pgtype.Timestamp
 	UpdatedAt      pgtype.Timestamp
@@ -37,9 +38,9 @@ type Convert struct {
 type Diarize struct {
 	ID             pgtype.UUID
 	ConversationID pgtype.UUID
-	StartTime      pgtype.Time
-	EndTime        int32
-	Speaker        pgtype.UUID
+	StartTime      float64
+	EndTime        float64
+	Speaker        int32
 	TaskID         pgtype.UUID
 	CreatedAt      pgtype.Timestamp
 	UpdatedAt      pgtype.Timestamp

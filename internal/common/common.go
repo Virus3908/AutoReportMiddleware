@@ -1,11 +1,13 @@
 package common
 
 import (
-	"github.com/jackc/pgx/v5/pgtype"
 	"context"
+	"fmt"
 	"main/internal/database"
 	"main/internal/database/queries"
+
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func StrToPGUUID(strID string) (pgtype.UUID, error) {
@@ -28,4 +30,15 @@ func StartTransaction(db *database.DataBase) (*queries.Queries, func(), func() (
 		return tx.Commit(context.Background())
 	}
 	return (&queries.Queries{}).WithTx(tx), rollback, commit, nil
+}
+
+func PGUUIDtoStr(ID pgtype.UUID) (string, error){
+	if !ID.Valid {
+		return "", fmt.Errorf("uuid не валидный")
+	}
+	u, err := uuid.FromBytes(ID.Bytes[:])
+	if err != nil {
+		return "", fmt.Errorf("ошибка uuid: %s", err)
+	}
+	return u.String(), nil
 }
