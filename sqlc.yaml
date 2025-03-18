@@ -33,7 +33,9 @@ sql:
             nullable: false
           - db_type: "pg_catalog.varchar"
             nullable: true
-            go_type: "string"
+            go_type: 
+              type: "string"
+              pointer: true
           - db_type: "pg_catalog.varchar"
             nullable: false
             go_type:

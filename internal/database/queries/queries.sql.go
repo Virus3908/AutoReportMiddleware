@@ -30,8 +30,8 @@ INSERT INTO Participants (name, email) VALUES ($1, $2)
 `
 
 type CreateParticipantParams struct {
-	Name  string `db:"name" json:"name"`
-	Email string `db:"email" json:"email"`
+	Name  *string `db:"name" json:"name"`
+	Email string  `db:"email" json:"email"`
 }
 
 func (q *Queries) CreateParticipant(ctx context.Context, arg CreateParticipantParams) error {
@@ -172,7 +172,7 @@ UPDATE Participants SET name = $1, email = $2 WHERE id = $3
 `
 
 type UpdateParticipantByIDParams struct {
-	Name  string    `db:"name" json:"name"`
+	Name  *string   `db:"name" json:"name"`
 	Email string    `db:"email" json:"email"`
 	ID    uuid.UUID `db:"id" json:"id"`
 }

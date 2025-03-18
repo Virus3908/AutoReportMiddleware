@@ -42,18 +42,32 @@ const (
 )
 
 type Segment struct {
-	StartTime float64
-	EndTime   float64
-	Speaker   int32
+	StartTime float64 `json:"start_time"`
+	EndTime   float64 `json:"end_time"`
+	Speaker   int32   `json:"speaker"`
 }
 
 type responseAudioFileSegments struct {
-	ID uuid.UUID
-	Segments []Segment
+	Segments []Segment `json:"segments"`
+}
+
+type responseMessage struct {
+	Message string `json:"message"`
 }
 
 type requestFile struct {
-	FileUrl string `json:"fileURL"`
+	FileURL string `json:"file_url"`
+}
+
+type requestFileWithSegment struct {
+	FileURL string  `json:"file_url"`
+	Segment Segment `json:"segment"`
+}
+
+type requestMessageWithAudioLen struct {
+	Message string `json:"message"`
+	Promt string `json:"promt"`
+	AudioLen float64 `json:"audio_len"`
 }
 
 func NewAPIClient(ctx context.Context, cfg APIConfig) (*APIClient, error) {
@@ -74,7 +88,7 @@ func NewAPIClient(ctx context.Context, cfg APIConfig) (*APIClient, error) {
 	return &client, nil
 }
 
-func getAPIResponse[T responseAudioFileSegments | responseStatus | responseInfo](ctx context.Context, a *http.Client, method, url string, body io.Reader) (*T, error) {
+func getAPIResponse[T responseAudioFileSegments | responseStatus | responseInfo | responseMessage](ctx context.Context, a *http.Client, method, url string, body io.Reader) (*T, error) {
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
 		return nil, fmt.Errorf("error creating API request: %s", err)
@@ -97,8 +111,83 @@ func getAPIResponse[T responseAudioFileSegments | responseStatus | responseInfo]
 	return &response, nil
 }
 
-func (a *APIClient) GetTaskStatusByID(ctx context.Context, ID string) (Status, error) {
-	url := a.Config.BaseURL + "/api/status/" + ID
+func (a *APIClient) CreateTaskConvertFileAndGetTaskID(ctx context.Context, fileURL string) (*uuid.UUID, error) {
+	data := requestFile{
+		FileURL: fileURL,
+	}
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("marshal error API: %v", err)
+	}
+
+	url := a.Config.BaseURL + "/api/convert"
+	response, err := getAPIResponse[responseStatus](ctx, a.Client, http.MethodPost, url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, fmt.Errorf("%s", err)
+	}
+
+	return &response.ID, nil
+}
+
+func (a *APIClient) CreateTaskDiarizeFileAndGetTaskID(ctx context.Context, fileURL string) (*uuid.UUID, error) {
+	data := requestFile{
+		FileURL: fileURL,
+	}
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("marshal error API: %v", err)
+	}
+
+	url := a.Config.BaseURL + "/api/diarize"
+	response, err := getAPIResponse[responseStatus](ctx, a.Client, http.MethodPost, url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, fmt.Errorf("%s", err)
+	}
+
+	return &response.ID, nil
+}
+
+func (a *APIClient) CreateTaskTranscribeSegmentFileAndGetTaskID(ctx context.Context, fileURL string, segment Segment) (*uuid.UUID, error) {
+	data := requestFileWithSegment{
+		FileURL: fileURL,
+		Segment: segment,
+	}
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("marshal error API: %v", err)
+	}
+
+	url := a.Config.BaseURL + "/api/transcribe"
+	response, err := getAPIResponse[responseStatus](ctx, a.Client, http.MethodPost, url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, fmt.Errorf("%s", err)
+	}
+
+	return &response.ID, nil
+}
+
+func (a *APIClient) CreateTaskReportAndGetTaskID(ctx context.Context, message, promt string, audioLen float64) (*uuid.UUID, error) {
+	data := requestMessageWithAudioLen{
+		Message: message,
+		Promt: promt,
+		AudioLen: audioLen,
+	}
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("marshal error API: %v", err)
+	}
+
+	url := a.Config.BaseURL + "/api/report"
+	response, err := getAPIResponse[responseStatus](ctx, a.Client, http.MethodPost, url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, fmt.Errorf("%s", err)
+	}
+
+	return &response.ID, nil
+}
+
+func (a *APIClient) GetTaskStatusByID(ctx context.Context, ID uuid.UUID) (Status, error) {
+	url := a.Config.BaseURL + "/api/status/" + ID.String()
 
 	response, err := getAPIResponse[responseStatus](ctx, a.Client, http.MethodGet, url, nil)
 	if err != nil {
@@ -118,20 +207,11 @@ func (a *APIClient) GetDiarizationSegmentsByTaskID(ctx context.Context, ID uuid.
 	return response.Segments, nil
 }
 
-func (a *APIClient) CreateTaskConvertFileAndGetTaskID(ctx context.Context, fileURL string) (*uuid.UUID, error) {
-	data := requestFile{
-		FileUrl: fileURL,
-	}
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		return nil, fmt.Errorf("marshal error API: %v", err)
-	}
-
-	url := a.Config.BaseURL + "/api/convert"
-	response, err := getAPIResponse[responseStatus](ctx, a.Client, http.MethodPost, url, bytes.NewBuffer(jsonData))
+func (a *APIClient) GetMessageByTaskID(ctx context.Context, ID uuid.UUID) (*string, error) {
+	url := a.Config.BaseURL + "/api/message/" + ID.String()
+	response, err := getAPIResponse[responseMessage](ctx, a.Client, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("%s", err)
 	}
-
-	return &response.ID, nil
+	return &response.Message, nil
 }
