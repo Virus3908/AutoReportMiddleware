@@ -31,7 +31,8 @@ type Conversationsparticipant struct {
 type Convert struct {
 	ID              uuid.UUID `db:"id" json:"id"`
 	ConversationsID uuid.UUID `db:"conversations_id" json:"conversations_id"`
-	FileUrl         string    `db:"file_url" json:"file_url"`
+	FileUrl         *string   `db:"file_url" json:"file_url"`
+	AudioLen        *float64  `db:"audio_len" json:"audio_len"`
 	TaskID          uuid.UUID `db:"task_id" json:"task_id"`
 	Status          int32     `db:"status" json:"status"`
 	CreatedAt       time.Time `db:"created_at" json:"created_at"`
@@ -49,7 +50,7 @@ type Diarize struct {
 
 type Participant struct {
 	ID        uuid.UUID `db:"id" json:"id"`
-	Name      string    `db:"name" json:"name"`
+	Name      *string   `db:"name" json:"name"`
 	Email     string    `db:"email" json:"email"`
 	CreatedAt time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
