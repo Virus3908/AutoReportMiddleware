@@ -11,7 +11,52 @@ import (
 	"time"
 )
 
-func NewAPIClient(cfg APIConfig) (*APIClient, error) {
+type APIConfig struct {
+	BaseURL string `yaml:"baseurl"`
+	Timeout int    `yaml:"timeout"`
+}
+
+type APIClient struct {
+	Config APIConfig
+	Client *http.Client
+}
+
+type Status int
+
+type responseInfo struct {
+	Version   string `json:"version"`
+	Timestamp string `json:"timestamp"`
+	Status    string `json:"status"`
+}
+
+type responseStatus struct {
+	ID     uuid.UUID
+	status Status
+}
+
+const (
+	Queued Status = iota
+	INProgress
+	Done
+	Error
+)
+
+type Segment struct {
+	StartTime float64
+	EndTime   float64
+	Speaker   int32
+}
+
+type responseAudioFileSegments struct {
+	ID uuid.UUID
+	Segments []Segment
+}
+
+type requestFile struct {
+	FileUrl string `json:"fileURL"`
+}
+
+func NewAPIClient(ctx context.Context, cfg APIConfig) (*APIClient, error) {
 	if cfg.Timeout < 1 {
 		return nil, fmt.Errorf("timeout can't be less 1")
 	}
@@ -22,14 +67,14 @@ func NewAPIClient(cfg APIConfig) (*APIClient, error) {
 		},
 	}
 	url := cfg.BaseURL + "/info"
-	_, err := getAPIResponse[ResponseInfo](context.Background(), client.Client, http.MethodGet, url, nil)
+	_, err := getAPIResponse[responseInfo](ctx, client.Client, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create client connection: %s", err)
 	}
 	return &client, nil
 }
 
-func getAPIResponse[T ResponseSegments | ResponseStatus | ResponseInfo](ctx context.Context, a *http.Client, method, url string, body io.Reader) (*T, error) {
+func getAPIResponse[T responseAudioFileSegments | responseStatus | responseInfo](ctx context.Context, a *http.Client, method, url string, body io.Reader) (*T, error) {
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
 		return nil, fmt.Errorf("error creating API request: %s", err)
@@ -55,7 +100,7 @@ func getAPIResponse[T ResponseSegments | ResponseStatus | ResponseInfo](ctx cont
 func (a *APIClient) GetTaskStatusByID(ctx context.Context, ID string) (Status, error) {
 	url := a.Config.BaseURL + "/api/status/" + ID
 
-	response, err := getAPIResponse[ResponseStatus](ctx, a.Client, http.MethodGet, url, nil)
+	response, err := getAPIResponse[responseStatus](ctx, a.Client, http.MethodGet, url, nil)
 	if err != nil {
 		return Error, fmt.Errorf("%s", err)
 	}
@@ -66,7 +111,7 @@ func (a *APIClient) GetTaskStatusByID(ctx context.Context, ID string) (Status, e
 func (a *APIClient) GetDiarizationSegmentsByTaskID(ctx context.Context, ID uuid.UUID) ([]Segment, error) {
 	url := a.Config.BaseURL + "/api/segments/" + ID.String()
 
-	response, err := getAPIResponse[ResponseSegments](ctx, a.Client, http.MethodGet, url, nil)
+	response, err := getAPIResponse[responseAudioFileSegments](ctx, a.Client, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("%s", err)
 	}
@@ -74,7 +119,7 @@ func (a *APIClient) GetDiarizationSegmentsByTaskID(ctx context.Context, ID uuid.
 }
 
 func (a *APIClient) CreateTaskConvertFileAndGetTaskID(ctx context.Context, fileURL string) (*uuid.UUID, error) {
-	data := RequestFile{
+	data := requestFile{
 		FileUrl: fileURL,
 	}
 	jsonData, err := json.Marshal(data)
@@ -83,7 +128,7 @@ func (a *APIClient) CreateTaskConvertFileAndGetTaskID(ctx context.Context, fileU
 	}
 
 	url := a.Config.BaseURL + "/api/convert"
-	response, err := getAPIResponse[ResponseStatus](ctx, a.Client, http.MethodPost, url, bytes.NewBuffer(jsonData))
+	response, err := getAPIResponse[responseStatus](ctx, a.Client, http.MethodPost, url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("%s", err)
 	}
