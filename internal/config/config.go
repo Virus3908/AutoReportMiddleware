@@ -2,7 +2,7 @@ package config
 
 import (
 	"main/internal/database"
-	"main/internal/services"
+	"main/internal/clients"
 	"main/internal/storage"
 )
 
@@ -15,5 +15,5 @@ type ConfigStuct struct {
 	DB     database.DBConfig `yaml:"pg"`
 	Server ServerConfig          `yaml:"server"`
 	S3     storage.S3Config      `yaml:"s3"`
-	API    services.APIConfig     `yaml:"api"`
+	API    clients.APIConfig     `yaml:"api"`
 }

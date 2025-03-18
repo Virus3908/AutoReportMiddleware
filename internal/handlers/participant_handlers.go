@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"main/internal/common"
 	"main/internal/database"
-	"main/internal/database/queries"
+	"main/internal/repositories"
 	"net/http"
+
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -35,7 +37,7 @@ func participantHandlersWithID(w http.ResponseWriter, r *http.Request, db *datab
 }
 
 func getParticipantsHandler(w http.ResponseWriter, _ *http.Request, db *database.DataBase) {
-	querry := queries.New(db.Pool)
+	querry := repositories.New(db.Pool)
 	users, err := querry.GetParticipants(context.Background())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -46,7 +48,7 @@ func getParticipantsHandler(w http.ResponseWriter, _ *http.Request, db *database
 }
 
 func createParticipantsHandler(w http.ResponseWriter, r *http.Request, db *database.DataBase) {
-	var user queries.CreateParticipantParams
+	var user repositories.CreateParticipantParams
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -71,14 +73,14 @@ func getParticipantByIDHandler(w http.ResponseWriter, r *http.Request, db *datab
 	params := mux.Vars(r)
 	strID := params["id"]
 
-	pgUUID, err := common.StrToPGUUID(strID)
+	UUID, err := uuid.Parse(strID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	querry := queries.New(db.Pool)
-	user, err := querry.GetParticipantByID(context.Background(), pgUUID)
+	querry := repositories.New(db.Pool)
+	user, err := querry.GetParticipantByID(context.Background(), UUID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -91,20 +93,20 @@ func updateParticipantByIDHandler(w http.ResponseWriter, r *http.Request, db *da
 	params := mux.Vars(r)
 	strID := params["id"]
 
-	pgUUID, err := common.StrToPGUUID(strID)
+	UUID, err := uuid.Parse(strID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	var user queries.UpdateParticipantByIDParams
+	var user repositories.UpdateParticipantByIDParams
 	err = json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	user.ID = pgUUID
+	user.ID = UUID
 	tx, rollback, commit, err := common.StartTransaction(db)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -124,7 +126,7 @@ func deleteParticipantByIDHandler(w http.ResponseWriter, r *http.Request, db *da
 	params := mux.Vars(r)
 	strID := params["id"]
 
-	pgUUID, err := common.StrToPGUUID(strID)
+	UUID, err := uuid.Parse(strID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -137,7 +139,7 @@ func deleteParticipantByIDHandler(w http.ResponseWriter, r *http.Request, db *da
 	}
 
 	defer rollback()
-	err = tx.DeleteParticipantByID(context.Background(), pgUUID)
+	err = tx.DeleteParticipantByID(context.Background(), UUID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
