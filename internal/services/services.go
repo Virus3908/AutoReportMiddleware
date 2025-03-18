@@ -45,7 +45,7 @@ func getAPIResponse[T APIResponseSegments | APIResponseStatus](ctx context.Conte
 	return &response, nil 
 }
 
-func (a *APIClient) GetResponseStatus(ctx context.Context, ID string) (Status, error) {
+func (a *APIClient) GetTaskStatusByID(ctx context.Context, ID string) (Status, error) {
 	url := a.BaseURL + "/api/status/" + ID
 
 	response, err := getAPIResponse[APIResponseStatus](ctx, a, http.MethodGet, url, nil)
@@ -56,7 +56,7 @@ func (a *APIClient) GetResponseStatus(ctx context.Context, ID string) (Status, e
 	return response.status, nil
 }
 
-func (a *APIClient) GetResponseSegments(ctx context.Context, ID uuid.UUID) ([]Segments, error) {
+func (a *APIClient) GetDiarizationSegmentsByTaskID(ctx context.Context, ID uuid.UUID) ([]Segments, error) {
 	url := a.BaseURL + "/api/segments/" + ID.String()
 
 	response, err := getAPIResponse[APIResponseSegments](ctx, a, http.MethodGet, url, nil)
@@ -66,7 +66,7 @@ func (a *APIClient) GetResponseSegments(ctx context.Context, ID uuid.UUID) ([]Se
 	return response.Segments, nil
 }
 
-func (a *APIClient) ConvertFile(ctx context.Context, fileURL string) (*APIResponseStatus, error) {
+func (a *APIClient) CreateTaskConvertFileAndGetTaskID(ctx context.Context, fileURL string) (*uuid.UUID, error) {
 	data := APIRequestFile{
 		FileUrl: fileURL,
 	}
@@ -76,5 +76,10 @@ func (a *APIClient) ConvertFile(ctx context.Context, fileURL string) (*APIRespon
 	}
 
 	url := a.BaseURL + "/api/convert"
-	return getAPIResponse[APIResponseStatus](ctx, a, http.MethodPost, url, bytes.NewBuffer(jsonData))
+	response, err := getAPIResponse[APIResponseStatus](ctx, a, http.MethodPost, url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, fmt.Errorf("%s", err)
+	}
+
+	return &response.ID, nil
 }
