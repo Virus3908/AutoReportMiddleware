@@ -2,20 +2,20 @@ package common
 
 import (
 	"context"
-	"fmt"
+	// "fmt"
 	"main/internal/database"
 	"main/internal/database/queries"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
+	// "github.com/jackc/pgx/v5/pgtype"
 )
 
-func StrToPGUUID(strID string) (pgtype.UUID, error) {
+func StrToPGUUID(strID string) (uuid.UUID, error) {
 	id, err := uuid.Parse(strID)
 	if err != nil {
-		return pgtype.UUID{}, err
+		return uuid.UUID{}, err
 	}
-	return pgtype.UUID{Bytes: id, Valid: true}, nil
+	return id, nil
 }
 
 func StartTransaction(db *database.DataBase) (*queries.Queries, func(), func() (error), error) {
@@ -30,15 +30,4 @@ func StartTransaction(db *database.DataBase) (*queries.Queries, func(), func() (
 		return tx.Commit(context.Background())
 	}
 	return (&queries.Queries{}).WithTx(tx), rollback, commit, nil
-}
-
-func PGUUIDtoStr(ID pgtype.UUID) (string, error){
-	if !ID.Valid {
-		return "", fmt.Errorf("uuid не валидный")
-	}
-	u, err := uuid.FromBytes(ID.Bytes[:])
-	if err != nil {
-		return "", fmt.Errorf("ошибка uuid: %s", err)
-	}
-	return u.String(), nil
 }

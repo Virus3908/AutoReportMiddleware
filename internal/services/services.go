@@ -6,42 +6,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"main/internal/common"
 	"main/internal/config"
 	"net/http"
 	"time"
-
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type APIClient struct {
-	BaseURL string
-	Client *http.Client
-}
-
-type APIResponseStatus struct {
-	ID uuid.UUID
-	Status bool
-	Message string
-}
-
-type APIResponseSegments struct {
-	ID uuid.UUID
-	StartTime float64
-	EndTime float64
-	Speaker int32
-}
-
-type APIRequestFile struct {
-	FileUrl string `json:"fileURL"`
-}
-
-type APIRequestSegment struct {
-	FileUrl string
-	StartTime float64
-	EndTime float64
-}
 
 func NewAPIClient(cfg config.APIConfig) (*APIClient) {
 	return &APIClient{
@@ -52,10 +22,10 @@ func NewAPIClient(cfg config.APIConfig) (*APIClient) {
 	}
 }
 
-func getResponse[T any](ctx context.Context, a *APIClient, method, url string, body io.Reader) (*T, error){
+func getAPIResponse[T APIResponseSegments | APIResponseStatus](ctx context.Context, a *APIClient, method, url string, body io.Reader) (*T, error){
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка создания запроса по API: %s", err)
+		return nil, fmt.Errorf("error creating API request: %s", err)
 	}
 
 	resp, err := a.Client.Do(req)
@@ -65,34 +35,35 @@ func getResponse[T any](ctx context.Context, a *APIClient, method, url string, b
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("при запросе по API ошибка: %s", resp.Status)
+		return nil, fmt.Errorf("error API request: %s", resp.Status)
 	}
 
 	var response T
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return nil, fmt.Errorf("ошибка ответа в API: %s", err)
+		return nil, fmt.Errorf("error API response: %s", err)
 	}
 	return &response, nil 
 }
 
-func (a *APIClient) GetResponseStatus(ctx context.Context, ID pgtype.UUID) (*APIResponseStatus, error) {
-	idStr, err := common.PGUUIDtoStr(ID)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка конвертации pguuid в API: %s", err)
-	}
-	url := a.BaseURL + "/api/status/" + idStr
+func (a *APIClient) GetResponseStatus(ctx context.Context, ID string) (Status, error) {
+	url := a.BaseURL + "/api/status/" + ID
 
-	return getResponse[APIResponseStatus](ctx, a, http.MethodGet, url, nil)
+	response, err := getAPIResponse[APIResponseStatus](ctx, a, http.MethodGet, url, nil)
+	if err != nil {
+		return Error, fmt.Errorf("%s", err)
+	}
+
+	return response.status, nil
 }
 
-func (a *APIClient) GetResponseSegments(ctx context.Context, ID pgtype.UUID) (*APIResponseSegments, error) {
-	idStr, err := common.PGUUIDtoStr(ID)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка конвертации pguuid в API: %s", err)
-	}
-	url := a.BaseURL + "/api/segments/" + idStr
+func (a *APIClient) GetResponseSegments(ctx context.Context, ID uuid.UUID) ([]Segments, error) {
+	url := a.BaseURL + "/api/segments/" + ID.String()
 
-	return getResponse[APIResponseSegments](ctx, a, http.MethodGet, url, nil)
+	response, err := getAPIResponse[APIResponseSegments](ctx, a, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("%s", err)
+	}
+	return response.Segments, nil
 }
 
 func (a *APIClient) ConvertFile(ctx context.Context, fileURL string) (*APIResponseStatus, error) {
@@ -101,9 +72,9 @@ func (a *APIClient) ConvertFile(ctx context.Context, fileURL string) (*APIRespon
 	}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка маршалинга в API: %v", err)
+		return nil, fmt.Errorf("marshal error API: %v", err)
 	}
 
 	url := a.BaseURL + "/api/convert"
-	return getResponse[APIResponseStatus](ctx, a, http.MethodPost, url, bytes.NewBuffer(jsonData))
+	return getAPIResponse[APIResponseStatus](ctx, a, http.MethodPost, url, bytes.NewBuffer(jsonData))
 }

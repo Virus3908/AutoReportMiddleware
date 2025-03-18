@@ -3,75 +3,85 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto"; -- Включает поддержк�
 CREATE TABLE Conversations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     conversation_name VARCHAR(255) NOT NULL,
-    file_url VARCHAR(255),
-    status INTEGER DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    file_url VARCHAR(255) NOT NULL,
+    status INTEGER DEFAULT 0 NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 CREATE TABLE participants (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255),
     email VARCHAR(255) UNIQUE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 CREATE TABLE ConversationsParticipant (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES participants(id) ON DELETE CASCADE,
-    speaker INT,
-    conversation_id UUID REFERENCES Conversations(id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    user_id UUID REFERENCES participants(id) NOT NULL ,
+    speaker INTEGER,
+    conversation_id UUID REFERENCES Conversations(id) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE TABLE Segments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    conversation_id UUID REFERENCES Conversations(id) NOT NULL,
+    start_time FLOAT NOT NULL,
+    end_time FLOAT NOT NULL,
+    speaker INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 CREATE TABLE Convert (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    conversations_id UUID REFERENCES Conversations(id) ON DELETE CASCADE,
+    conversations_id UUID REFERENCES Conversations(id) NOT NULL,
     file_url VARCHAR(255),
-    task_id UUID,  -- UUID передается вручную
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    task_id UUID NOT NULL,
+    status INT DEFAULT 0 NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 CREATE TABLE Diarize (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    conversation_id UUID REFERENCES Conversations(id) ON DELETE CASCADE,
-    start_time FLOAT NOT NULL,
-    end_time FLOAT NOT NULL,
-    speaker INT NOT NULL,
-    task_id UUID,  -- UUID передается вручную
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    conversation_id UUID REFERENCES Conversations(id) NOT NULL,
+    task_id UUID NOT NULL, 
+    status INT DEFAULT 0 NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 CREATE TABLE Transcribe (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    conversation_id UUID REFERENCES Conversations(id) ON DELETE CASCADE,
-    segment_id UUID REFERENCES Diarize(id) ON DELETE CASCADE,
-    transcription TEXT NOT NULL,
-    task_id UUID,  -- UUID передается вручную
-    complete BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE Report (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    conversation_id UUID REFERENCES Conversations(id) ON DELETE CASCADE,
-    report TEXT NOT NULL,
-    promt_id UUID REFERENCES Promts(id) ON DELETE CASCADE,
-    task_id UUID,  -- UUID передается вручную
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    conversation_id UUID REFERENCES Conversations(id) NOT NULL,
+    segment_id UUID REFERENCES Diarize(id) NOT NULL,
+    transcription TEXT,
+    task_id UUID NOT NULL,
+    status INT DEFAULT 0 NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 CREATE TABLE Promts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     promt TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE TABLE Report (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    conversation_id UUID REFERENCES Conversations(id) NOT NULL,
+    report TEXT,
+    promt_id UUID REFERENCES Promts(id),
+    task_id UUID NOT NULL,
+    status INT DEFAULT 0 NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -114,6 +124,11 @@ EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trigger_update_report
 BEFORE UPDATE ON Report
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER trigger_update_segments
+BEFORE UPDATE ON Segments
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 

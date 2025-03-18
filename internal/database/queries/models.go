@@ -5,79 +5,91 @@
 package queries
 
 import (
-	"github.com/jackc/pgx/v5/pgtype"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 type Conversation struct {
-	ID               pgtype.UUID
-	ConversationName string
-	FileUrl          pgtype.Text
-	Status           pgtype.Int4
-	CreatedAt        pgtype.Timestamp
-	UpdatedAt        pgtype.Timestamp
+	ID               uuid.UUID `db:"id" json:"id"`
+	ConversationName string    `db:"conversation_name" json:"conversation_name"`
+	FileUrl          string    `db:"file_url" json:"file_url"`
+	Status           int32     `db:"status" json:"status"`
+	CreatedAt        time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt        time.Time `db:"updated_at" json:"updated_at"`
 }
 
 type Conversationsparticipant struct {
-	ID             pgtype.UUID
-	UserID         pgtype.UUID
-	Speaker        pgtype.Int4
-	ConversationID pgtype.UUID
-	CreatedAt      pgtype.Timestamp
-	UpdatedAt      pgtype.Timestamp
+	ID             uuid.UUID `db:"id" json:"id"`
+	UserID         uuid.UUID `db:"user_id" json:"user_id"`
+	Speaker        *int32    `db:"speaker" json:"speaker"`
+	ConversationID uuid.UUID `db:"conversation_id" json:"conversation_id"`
+	CreatedAt      time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt      time.Time `db:"updated_at" json:"updated_at"`
 }
 
 type Convert struct {
-	ID              pgtype.UUID
-	ConversationsID pgtype.UUID
-	FileUrl         pgtype.Text
-	TaskID          pgtype.UUID
-	CreatedAt       pgtype.Timestamp
-	UpdatedAt       pgtype.Timestamp
+	ID              uuid.UUID `db:"id" json:"id"`
+	ConversationsID uuid.UUID `db:"conversations_id" json:"conversations_id"`
+	FileUrl         string    `db:"file_url" json:"file_url"`
+	TaskID          uuid.UUID `db:"task_id" json:"task_id"`
+	Status          int32     `db:"status" json:"status"`
+	CreatedAt       time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt       time.Time `db:"updated_at" json:"updated_at"`
 }
 
 type Diarize struct {
-	ID             pgtype.UUID
-	ConversationID pgtype.UUID
-	StartTime      float64
-	EndTime        float64
-	Speaker        int32
-	TaskID         pgtype.UUID
-	CreatedAt      pgtype.Timestamp
-	UpdatedAt      pgtype.Timestamp
+	ID             uuid.UUID `db:"id" json:"id"`
+	ConversationID uuid.UUID `db:"conversation_id" json:"conversation_id"`
+	TaskID         uuid.UUID `db:"task_id" json:"task_id"`
+	Status         int32     `db:"status" json:"status"`
+	CreatedAt      time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt      time.Time `db:"updated_at" json:"updated_at"`
 }
 
 type Participant struct {
-	ID        pgtype.UUID
-	Name      string
-	Email     string
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
+	ID        uuid.UUID `db:"id" json:"id"`
+	Name      string    `db:"name" json:"name"`
+	Email     string    `db:"email" json:"email"`
+	CreatedAt time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
 }
 
 type Promt struct {
-	ID        pgtype.UUID
-	Promt     string
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
+	ID        uuid.UUID `db:"id" json:"id"`
+	Promt     string    `db:"promt" json:"promt"`
+	CreatedAt time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
 }
 
 type Report struct {
-	ID             pgtype.UUID
-	ConversationID pgtype.UUID
-	Report         string
-	PromtID        pgtype.UUID
-	TaskID         pgtype.UUID
-	CreatedAt      pgtype.Timestamp
-	UpdatedAt      pgtype.Timestamp
+	ID             uuid.UUID  `db:"id" json:"id"`
+	ConversationID uuid.UUID  `db:"conversation_id" json:"conversation_id"`
+	Report         *string    `db:"report" json:"report"`
+	PromtID        *uuid.UUID `db:"promt_id" json:"promt_id"`
+	TaskID         uuid.UUID  `db:"task_id" json:"task_id"`
+	Status         int32      `db:"status" json:"status"`
+	CreatedAt      time.Time  `db:"created_at" json:"created_at"`
+	UpdatedAt      time.Time  `db:"updated_at" json:"updated_at"`
+}
+
+type Segment struct {
+	ID             uuid.UUID `db:"id" json:"id"`
+	ConversationID uuid.UUID `db:"conversation_id" json:"conversation_id"`
+	StartTime      float64   `db:"start_time" json:"start_time"`
+	EndTime        float64   `db:"end_time" json:"end_time"`
+	Speaker        int32     `db:"speaker" json:"speaker"`
+	CreatedAt      time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt      time.Time `db:"updated_at" json:"updated_at"`
 }
 
 type Transcribe struct {
-	ID             pgtype.UUID
-	ConversationID pgtype.UUID
-	SegmentID      pgtype.UUID
-	Transcription  string
-	TaskID         pgtype.UUID
-	Complete       pgtype.Bool
-	CreatedAt      pgtype.Timestamp
-	UpdatedAt      pgtype.Timestamp
+	ID             uuid.UUID `db:"id" json:"id"`
+	ConversationID uuid.UUID `db:"conversation_id" json:"conversation_id"`
+	SegmentID      uuid.UUID `db:"segment_id" json:"segment_id"`
+	Transcription  *string   `db:"transcription" json:"transcription"`
+	TaskID         uuid.UUID `db:"task_id" json:"task_id"`
+	Status         int32     `db:"status" json:"status"`
+	CreatedAt      time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt      time.Time `db:"updated_at" json:"updated_at"`
 }

@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"mime/multipart"
-	cfg "main/internal/config"
 )
 
 type S3Client struct {
@@ -18,7 +17,7 @@ type S3Client struct {
 	Endpoint string
 }
 
-func NewStorage(cfg cfg.S3Config) (*S3Client, error) {
+func NewStorage(cfg S3Config) (*S3Client, error) {
 	awsCfg, err := config.LoadDefaultConfig(context.TODO(),
 		config.WithRegion(cfg.Region),
 		config.WithCredentialsProvider(credentials.StaticCredentialsProvider{

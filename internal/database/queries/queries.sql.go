@@ -8,61 +8,61 @@ package queries
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 )
 
-const createConversation = `-- name: CreateConversation :exec
+const CreateConversation = `-- name: CreateConversation :exec
 INSERT INTO Conversations (conversation_name, file_url) VALUES ($1, $2)
 `
 
 type CreateConversationParams struct {
-	ConversationName string
-	FileUrl          pgtype.Text
+	ConversationName string `db:"conversation_name" json:"conversation_name"`
+	FileUrl          string `db:"file_url" json:"file_url"`
 }
 
 func (q *Queries) CreateConversation(ctx context.Context, arg CreateConversationParams) error {
-	_, err := q.db.Exec(ctx, createConversation, arg.ConversationName, arg.FileUrl)
+	_, err := q.db.Exec(ctx, CreateConversation, arg.ConversationName, arg.FileUrl)
 	return err
 }
 
-const createParticipant = `-- name: CreateParticipant :exec
+const CreateParticipant = `-- name: CreateParticipant :exec
 INSERT INTO Participants (name, email) VALUES ($1, $2)
 `
 
 type CreateParticipantParams struct {
-	Name  string
-	Email string
+	Name  string `db:"name" json:"name"`
+	Email string `db:"email" json:"email"`
 }
 
 func (q *Queries) CreateParticipant(ctx context.Context, arg CreateParticipantParams) error {
-	_, err := q.db.Exec(ctx, createParticipant, arg.Name, arg.Email)
+	_, err := q.db.Exec(ctx, CreateParticipant, arg.Name, arg.Email)
 	return err
 }
 
-const deleteConversationByID = `-- name: DeleteConversationByID :exec
+const DeleteConversationByID = `-- name: DeleteConversationByID :exec
 DELETE FROM Conversations WHERE id = $1
 `
 
-func (q *Queries) DeleteConversationByID(ctx context.Context, id pgtype.UUID) error {
-	_, err := q.db.Exec(ctx, deleteConversationByID, id)
+func (q *Queries) DeleteConversationByID(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, DeleteConversationByID, id)
 	return err
 }
 
-const deleteParticipantByID = `-- name: DeleteParticipantByID :exec
+const DeleteParticipantByID = `-- name: DeleteParticipantByID :exec
 DELETE FROM Participants WHERE id = $1
 `
 
-func (q *Queries) DeleteParticipantByID(ctx context.Context, id pgtype.UUID) error {
-	_, err := q.db.Exec(ctx, deleteParticipantByID, id)
+func (q *Queries) DeleteParticipantByID(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, DeleteParticipantByID, id)
 	return err
 }
 
-const getConversationByID = `-- name: GetConversationByID :one
+const GetConversationByID = `-- name: GetConversationByID :one
 SELECT id, conversation_name, file_url, status, created_at, updated_at FROM Conversations WHERE id = $1
 `
 
-func (q *Queries) GetConversationByID(ctx context.Context, id pgtype.UUID) (Conversation, error) {
-	row := q.db.QueryRow(ctx, getConversationByID, id)
+func (q *Queries) GetConversationByID(ctx context.Context, id uuid.UUID) (Conversation, error) {
+	row := q.db.QueryRow(ctx, GetConversationByID, id)
 	var i Conversation
 	err := row.Scan(
 		&i.ID,
@@ -75,17 +75,17 @@ func (q *Queries) GetConversationByID(ctx context.Context, id pgtype.UUID) (Conv
 	return i, err
 }
 
-const getConversations = `-- name: GetConversations :many
+const GetConversations = `-- name: GetConversations :many
 SELECT id, conversation_name, file_url, status, created_at, updated_at FROM Conversations
 `
 
 func (q *Queries) GetConversations(ctx context.Context) ([]Conversation, error) {
-	rows, err := q.db.Query(ctx, getConversations)
+	rows, err := q.db.Query(ctx, GetConversations)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Conversation
+	items := []Conversation{}
 	for rows.Next() {
 		var i Conversation
 		if err := rows.Scan(
@@ -106,12 +106,12 @@ func (q *Queries) GetConversations(ctx context.Context) ([]Conversation, error) 
 	return items, nil
 }
 
-const getParticipantByID = `-- name: GetParticipantByID :one
+const GetParticipantByID = `-- name: GetParticipantByID :one
 SELECT id, name, email, created_at, updated_at FROM Participants WHERE id = $1
 `
 
-func (q *Queries) GetParticipantByID(ctx context.Context, id pgtype.UUID) (Participant, error) {
-	row := q.db.QueryRow(ctx, getParticipantByID, id)
+func (q *Queries) GetParticipantByID(ctx context.Context, id uuid.UUID) (Participant, error) {
+	row := q.db.QueryRow(ctx, GetParticipantByID, id)
 	var i Participant
 	err := row.Scan(
 		&i.ID,
@@ -123,17 +123,17 @@ func (q *Queries) GetParticipantByID(ctx context.Context, id pgtype.UUID) (Parti
 	return i, err
 }
 
-const getParticipants = `-- name: GetParticipants :many
+const GetParticipants = `-- name: GetParticipants :many
 SELECT id, name, email, created_at, updated_at FROM Participants
 `
 
 func (q *Queries) GetParticipants(ctx context.Context) ([]Participant, error) {
-	rows, err := q.db.Query(ctx, getParticipants)
+	rows, err := q.db.Query(ctx, GetParticipants)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Participant
+	items := []Participant{}
 	for rows.Next() {
 		var i Participant
 		if err := rows.Scan(
@@ -153,31 +153,31 @@ func (q *Queries) GetParticipants(ctx context.Context) ([]Participant, error) {
 	return items, nil
 }
 
-const updateConversationNameByID = `-- name: UpdateConversationNameByID :exec
+const UpdateConversationNameByID = `-- name: UpdateConversationNameByID :exec
 UPDATE Conversations SET conversation_name = $1 WHERE id = $2
 `
 
 type UpdateConversationNameByIDParams struct {
-	ConversationName string
-	ID               pgtype.UUID
+	ConversationName string    `db:"conversation_name" json:"conversation_name"`
+	ID               uuid.UUID `db:"id" json:"id"`
 }
 
 func (q *Queries) UpdateConversationNameByID(ctx context.Context, arg UpdateConversationNameByIDParams) error {
-	_, err := q.db.Exec(ctx, updateConversationNameByID, arg.ConversationName, arg.ID)
+	_, err := q.db.Exec(ctx, UpdateConversationNameByID, arg.ConversationName, arg.ID)
 	return err
 }
 
-const updateParticipantByID = `-- name: UpdateParticipantByID :exec
+const UpdateParticipantByID = `-- name: UpdateParticipantByID :exec
 UPDATE Participants SET name = $1, email = $2 WHERE id = $3
 `
 
 type UpdateParticipantByIDParams struct {
-	Name  string
-	Email string
-	ID    pgtype.UUID
+	Name  string    `db:"name" json:"name"`
+	Email string    `db:"email" json:"email"`
+	ID    uuid.UUID `db:"id" json:"id"`
 }
 
 func (q *Queries) UpdateParticipantByID(ctx context.Context, arg UpdateParticipantByIDParams) error {
-	_, err := q.db.Exec(ctx, updateParticipantByID, arg.Name, arg.Email, arg.ID)
+	_, err := q.db.Exec(ctx, UpdateParticipantByID, arg.Name, arg.Email, arg.ID)
 	return err
 }

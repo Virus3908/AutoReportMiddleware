@@ -9,10 +9,8 @@ import (
 	"main/internal/database/queries"
 	"main/internal/storage"
 	"net/http"
-	// "github.com/jackc/pgx/v5/pgtype"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func conversationHandlers(w http.ResponseWriter, r *http.Request, db *database.DataBase, storage *storage.S3Client) {
@@ -163,7 +161,7 @@ func createConversationHandler(w http.ResponseWriter, r *http.Request, db *datab
 
 	conversation := queries.CreateConversationParams{
 		ConversationName: conversationName,
-		FileUrl:          pgtype.Text{String: fileURL, Valid: true},
+		FileUrl:          fileURL,
 	}
 
 	tx, rollback, commit, err := common.StartTransaction(db)
