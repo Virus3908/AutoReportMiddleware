@@ -24,7 +24,7 @@ const (
 	Error      Status = 3
 )
 
-type Segments struct {
+type Segment struct {
 	StartTime float64
 	EndTime   float64
 	Speaker   int32
@@ -32,7 +32,7 @@ type Segments struct {
 
 type APIResponseSegments struct {
 	ID       uuid.UUID
-	Segments []Segments
+	Segments []Segment
 }
 
 type APIRequestFile struct {

@@ -56,7 +56,7 @@ func (a *APIClient) GetTaskStatusByID(ctx context.Context, ID string) (Status, e
 	return response.status, nil
 }
 
-func (a *APIClient) GetDiarizationSegmentsByTaskID(ctx context.Context, ID uuid.UUID) ([]Segments, error) {
+func (a *APIClient) GetDiarizationSegmentsByTaskID(ctx context.Context, ID uuid.UUID) ([]Segment, error) {
 	url := a.BaseURL + "/api/segments/" + ID.String()
 
 	response, err := getAPIResponse[APIResponseSegments](ctx, a, http.MethodGet, url, nil)
