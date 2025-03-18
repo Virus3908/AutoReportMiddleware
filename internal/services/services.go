@@ -5,30 +5,37 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"io"
-	"main/internal/config"
 	"net/http"
 	"time"
-	"github.com/google/uuid"
 )
 
-
-func NewAPIClient(cfg config.APIConfig) (*APIClient) {
-	return &APIClient{
-		BaseURL: cfg.BaseUrl,
+func NewAPIClient(cfg APIConfig) (*APIClient, error) {
+	if cfg.Timeout < 1 {
+		return nil, fmt.Errorf("timeout can't be less 1")
+	}
+	client := APIClient{
+		Config: cfg,
 		Client: &http.Client{
 			Timeout: time.Duration(cfg.Timeout) * time.Second,
 		},
 	}
+	url := cfg.BaseURL + "/info"
+	_, err := getAPIResponse[ResponseInfo](context.Background(), client.Client, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create client connection: %s", err)
+	}
+	return &client, nil
 }
 
-func getAPIResponse[T APIResponseSegments | APIResponseStatus](ctx context.Context, a *APIClient, method, url string, body io.Reader) (*T, error){
+func getAPIResponse[T ResponseSegments | ResponseStatus | ResponseInfo](ctx context.Context, a *http.Client, method, url string, body io.Reader) (*T, error) {
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
 		return nil, fmt.Errorf("error creating API request: %s", err)
 	}
 
-	resp, err := a.Client.Do(req)
+	resp, err := a.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -42,13 +49,13 @@ func getAPIResponse[T APIResponseSegments | APIResponseStatus](ctx context.Conte
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, fmt.Errorf("error API response: %s", err)
 	}
-	return &response, nil 
+	return &response, nil
 }
 
 func (a *APIClient) GetTaskStatusByID(ctx context.Context, ID string) (Status, error) {
-	url := a.BaseURL + "/api/status/" + ID
+	url := a.Config.BaseURL + "/api/status/" + ID
 
-	response, err := getAPIResponse[APIResponseStatus](ctx, a, http.MethodGet, url, nil)
+	response, err := getAPIResponse[ResponseStatus](ctx, a.Client, http.MethodGet, url, nil)
 	if err != nil {
 		return Error, fmt.Errorf("%s", err)
 	}
@@ -57,9 +64,9 @@ func (a *APIClient) GetTaskStatusByID(ctx context.Context, ID string) (Status, e
 }
 
 func (a *APIClient) GetDiarizationSegmentsByTaskID(ctx context.Context, ID uuid.UUID) ([]Segment, error) {
-	url := a.BaseURL + "/api/segments/" + ID.String()
+	url := a.Config.BaseURL + "/api/segments/" + ID.String()
 
-	response, err := getAPIResponse[APIResponseSegments](ctx, a, http.MethodGet, url, nil)
+	response, err := getAPIResponse[ResponseSegments](ctx, a.Client, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("%s", err)
 	}
@@ -67,7 +74,7 @@ func (a *APIClient) GetDiarizationSegmentsByTaskID(ctx context.Context, ID uuid.
 }
 
 func (a *APIClient) CreateTaskConvertFileAndGetTaskID(ctx context.Context, fileURL string) (*uuid.UUID, error) {
-	data := APIRequestFile{
+	data := RequestFile{
 		FileUrl: fileURL,
 	}
 	jsonData, err := json.Marshal(data)
@@ -75,8 +82,8 @@ func (a *APIClient) CreateTaskConvertFileAndGetTaskID(ctx context.Context, fileU
 		return nil, fmt.Errorf("marshal error API: %v", err)
 	}
 
-	url := a.BaseURL + "/api/convert"
-	response, err := getAPIResponse[APIResponseStatus](ctx, a, http.MethodPost, url, bytes.NewBuffer(jsonData))
+	url := a.Config.BaseURL + "/api/convert"
+	response, err := getAPIResponse[ResponseStatus](ctx, a.Client, http.MethodPost, url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("%s", err)
 	}

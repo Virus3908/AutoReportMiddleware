@@ -1,9 +1,9 @@
 package storage
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"bytes"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
@@ -13,8 +13,7 @@ import (
 
 type S3Client struct {
 	Client   *s3.Client
-	Bucket   string
-	Endpoint string
+	Config   S3Config
 }
 
 func NewStorage(cfg S3Config) (*S3Client, error) {
@@ -37,8 +36,7 @@ func NewStorage(cfg S3Config) (*S3Client, error) {
 
 	return &S3Client{
 		Client:   client,
-		Bucket:   cfg.Bucket,
-		Endpoint: cfg.Endpoint,
+		Config:   cfg,
 	}, nil
 }
 
@@ -50,7 +48,7 @@ func (s *S3Client) UploadFile(file multipart.File, fileKey string) error {
 	}
 
 	_, err = s.Client.PutObject(context.TODO(), &s3.PutObjectInput{
-		Bucket: aws.String(s.Bucket),
+		Bucket: aws.String(s.Config.Bucket),
 		Key:    aws.String(fileKey),
 		Body:   bytes.NewReader(buf.Bytes()),
 	})

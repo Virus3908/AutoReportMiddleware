@@ -9,7 +9,7 @@ import (
 
 var ready int32
 
-type InfoResponse struct {
+type ResponseInfo struct {
 	Version   string `json:"version"`
 	Timestamp string `json:"timestamp"`
 	Status    string `json:"status"`
@@ -29,7 +29,7 @@ func ReadinessHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func InfoHandler(w http.ResponseWriter, r *http.Request) {
-	info := InfoResponse{
+	info := ResponseInfo{
 		Version:   "1.0.0",
 		Timestamp: time.Now().Format(time.RFC3339),
 		Status:    "running",

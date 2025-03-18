@@ -157,7 +157,7 @@ func createConversationHandler(w http.ResponseWriter, r *http.Request, db *datab
 		return
 	}
 
-	fileURL := fmt.Sprintf("%s/%s/%s", storage.Endpoint, storage.Bucket, fileKey)
+	fileURL := fmt.Sprintf("%s/%s/%s", storage.Config.Endpoint, storage.Config.Bucket, fileKey)
 
 	conversation := queries.CreateConversationParams{
 		ConversationName: conversationName,

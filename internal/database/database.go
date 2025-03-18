@@ -3,17 +3,17 @@ package database
 import (
 	"context"
 	"fmt"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type DataBase struct {
-
-	Pool *pgxpool.Pool
+	Config DBConfig
+	Pool   *pgxpool.Pool
 }
 
-func New(cfg DBConnection) (*DataBase, error) {
+func New(cfg DBConfig) (*DataBase, error) {
 
 	connectionInfo := fmt.Sprintf(
 		"postgres://%s:%s@%s:%d/%s?sslmode=disable",
@@ -27,14 +27,17 @@ func New(cfg DBConnection) (*DataBase, error) {
 
 	if err != nil {
 		return nil, status.Error(codes.Internal, fmt.Sprintf("Database connection error: %s", err))
-		
+
 	}
 
 	if err = pool.Ping(context.Background()); err != nil {
 		return nil, status.Error(codes.Internal, fmt.Sprintf("Database ping error: %s", err))
 	}
 
-	return &DataBase{Pool: pool}, nil
+	return &DataBase{
+		Pool:   pool,
+		Config: cfg,
+	}, nil
 }
 
 func (d *DataBase) Close() {

@@ -6,13 +6,19 @@ import (
 )
 
 type APIClient struct {
-	BaseURL string
+	Config APIConfig
 	Client  *http.Client
 }
 
 type Status int
 
-type APIResponseStatus struct {
+type ResponseInfo struct {
+	Version   string `json:"version"`
+	Timestamp string `json:"timestamp"`
+	Status    string `json:"status"`
+}
+
+type ResponseStatus struct {
 	ID     uuid.UUID
 	status Status
 }
@@ -30,16 +36,16 @@ type Segment struct {
 	Speaker   int32
 }
 
-type APIResponseSegments struct {
+type ResponseSegments struct {
 	ID       uuid.UUID
 	Segments []Segment
 }
 
-type APIRequestFile struct {
+type RequestFile struct {
 	FileUrl string `json:"fileURL"`
 }
 
-type APIRequestSegment struct {
+type RequestSegment struct {
 	FileUrl   string
 	StartTime float64
 	EndTime   float64
