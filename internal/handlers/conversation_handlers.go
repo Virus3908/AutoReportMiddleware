@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"main/internal/common"
 	"main/internal/database"
-	"main/internal/database/queries"
+	"main/internal/repositories"
 	"main/internal/storage"
 	"net/http"
 	"github.com/google/uuid"
@@ -16,9 +16,9 @@ import (
 func conversationHandlers(w http.ResponseWriter, r *http.Request, db *database.DataBase, storage *storage.S3Client) {
 	switch r.Method {
 	case http.MethodGet:
-		getConversationsHandler(w, r, db)
+		
 	case http.MethodPost:
-		createConversationHandler(w, r, db, storage)
+		
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
@@ -38,7 +38,7 @@ func conversationHandlersWithID(w http.ResponseWriter, r *http.Request, db *data
 }
 
 func getConversationsHandler(w http.ResponseWriter, _ *http.Request, db *database.DataBase) {
-	querry := queries.New(db.Pool)
+	querry := repositories.New(db.Pool)
 	conversations, err := querry.GetConversations(context.Background())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -53,7 +53,7 @@ func deleteConversationByIDHandler(w http.ResponseWriter, r *http.Request, db *d
 	params := mux.Vars(r)
 	strID := params["id"]
 
-	pgUUID, err := common.StrToPGUUID(strID)
+	UUID, err := uuid.Parse(strID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -66,7 +66,7 @@ func deleteConversationByIDHandler(w http.ResponseWriter, r *http.Request, db *d
 	}
 
 	defer rollback()
-	err = tx.DeleteConversationByID(context.Background(), pgUUID)
+	err = tx.DeleteConversationByID(context.Background(), UUID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -79,14 +79,14 @@ func getConversationByIDHandler(w http.ResponseWriter, r *http.Request, db *data
 	params := mux.Vars(r)
 	strID := params["id"]
 
-	pgUUID, err := common.StrToPGUUID(strID)
+	UUID, err := uuid.Parse(strID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	querry := queries.New(db.Pool)
-	conversation, err := querry.GetConversationByID(context.Background(), pgUUID)
+	querry := repositories.New(db.Pool)
+	conversation, err := querry.GetConversationByID(context.Background(), UUID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -99,20 +99,20 @@ func updateConversationNameByIDHandler(w http.ResponseWriter, r *http.Request, d
 	params := mux.Vars(r)
 	strID := params["id"]
 
-	pgUUID, err := common.StrToPGUUID(strID)
+	UUID, err := uuid.Parse(strID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	var conversation queries.UpdateConversationNameByIDParams
+	var conversation repositories.UpdateConversationNameByIDParams
 	err = json.NewDecoder(r.Body).Decode(&conversation)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	conversation.ID = pgUUID
+	conversation.ID = UUID
 	tx, rollback, commit, err := common.StartTransaction(db)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -159,7 +159,7 @@ func createConversationHandler(w http.ResponseWriter, r *http.Request, db *datab
 
 	fileURL := fmt.Sprintf("%s/%s/%s", storage.Config.Endpoint, storage.Config.Bucket, fileKey)
 
-	conversation := queries.CreateConversationParams{
+	conversation := repositories.CreateConversationParams{
 		ConversationName: conversationName,
 		FileUrl:          fileURL,
 	}

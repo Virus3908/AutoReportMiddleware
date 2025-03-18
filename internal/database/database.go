@@ -8,6 +8,14 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+type DBConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
+	Database string `yaml:"database"`
+}
+
 type DataBase struct {
 	Config DBConfig
 	Pool   *pgxpool.Pool
