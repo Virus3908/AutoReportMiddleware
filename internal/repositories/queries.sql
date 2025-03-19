@@ -27,3 +27,18 @@ UPDATE Conversations SET conversation_name = $1 WHERE id = $2;
 
 -- name: CreateConversation :exec
 INSERT INTO Conversations (conversation_name, file_url) VALUES ($1, $2);
+
+-- name: GetPromts :many
+SELECT * FROM Promts;
+
+-- name: GetPromtByID :one
+SELECT * FROM Promts WHERE id = $1;
+
+-- name: CreatePromt :exec
+INSERT INTO Promts (promt) VALUES ($1);
+
+-- name: UpdatePromtByID :exec
+UPDATE Promts SET promt = $1 WHERE id = $2;
+
+-- name: DeletePromtByID :exec
+DELETE FROM Promts WHERE id = $1;

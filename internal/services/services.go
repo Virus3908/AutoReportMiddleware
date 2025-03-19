@@ -5,5 +5,9 @@ import (
 )
 
 type Service interface {
-	
+
+}
+
+type ASS struct {
+	Handler 
 }

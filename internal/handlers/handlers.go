@@ -3,61 +3,80 @@ package handlers
 import (
 	"main/internal/database"
 	"main/internal/logging"
-	"main/internal/storage"
 	"main/internal/services"
+	"main/internal/storage"
+
 	"net/http"
+	"sync/atomic"
 
 	"github.com/gorilla/mux"
 )
 
-type Router struct {
-	Router *mux.Router
-	DB database.Database
+var ready int32
+
+type Router interface {
+	CreateHandlers()
+	SetReady()
+	// createLogAndInfoHandlers()
+	// conversationHandler()
+	// participantsHandler()
+}
+
+type RouterStruct struct {
+	Router  *mux.Router
+	DB      database.Database
 	Storage storage.Storage
 	Service services.Service
 }
 
-func NewRouter(db database.Database, storage storage.Storage) *Router {
-	return &Router{
-		Router: mux.NewRouter(),
+func NewRouter(db database.Database, storage storage.Storage) *RouterStruct {
+	return &RouterStruct{
+		Router:  mux.NewRouter(),
 		Service: nil,
 		Storage: storage,
-		DB: db,
+		DB:      db,
 	}
 }
 
-func (r *Router) CreateHandlers() {
-	r.createLogAndInfoHandlers()
-	r.conversationHandler()
-	r.participantsHandler()
-
+func (_ *RouterStruct) SetReady() {
+	atomic.StoreInt32(&ready, 1)
 }
 
-func (r *Router) createLogAndInfoHandlers() {
+func (r *RouterStruct) CreateHandlers() {
+	r.logAndInfoHandlers()
+	r.conversationHandlers()
+	r.participantsHandlers()
+	r.promtHandlers()
+}
+
+func (r *RouterStruct) logAndInfoHandlers() {
 	r.Router.Use(logging.LoggingMidleware)
 
-	r.Router.HandleFunc("/liveness", LivenessHandler).Methods(http.MethodGet)
-	r.Router.HandleFunc("/readiness", ReadinessHandler).Methods(http.MethodGet)
-	r.Router.HandleFunc("/info", InfoHandler).Methods(http.MethodGet)
+	r.Router.HandleFunc("/liveness", r.livenessHandler).Methods(http.MethodGet)
+	r.Router.HandleFunc("/readiness", r.readinessHandler).Methods(http.MethodGet)
+	r.Router.HandleFunc("/info", r.infoHandler).Methods(http.MethodGet)
 }
 
-func (router *Router) conversationHandler() {
-	router.Router.HandleFunc("/conversations", func(w http.ResponseWriter, r *http.Request) {
-		router.getConversationsHandler(w, r)
-	}).Methods(http.MethodGet)
-	router.Router.HandleFunc("/conversations", func(w http.ResponseWriter, r *http.Request) {
-		router.createConversationHandler(w, r)
-	}).Methods(http.MethodPost)
+func (r *RouterStruct) conversationHandlers() {
+	r.Router.HandleFunc("/api/conversations", r.getConversationsHandler).Methods(http.MethodGet)
+	r.Router.HandleFunc("/api/conversations", r.createConversationHandler).Methods(http.MethodPost)
+	r.Router.HandleFunc("/api/conversations/{id}", r.getConversationByIDHandler).Methods(http.MethodGet)
+	r.Router.HandleFunc("/api/conversations/{id}", r.updateConversationNameByIDHandler).Methods(http.MethodPut)
+	r.Router.HandleFunc("/api/conversations/{id}", r.deleteConversationByIDHandler).Methods(http.MethodDelete)
 }
 
-func (router *Router) participantsHandler() {
-	router.Router.HandleFunc("/conversations/{id}", func(w http.ResponseWriter, r *http.Request) {
-		router.conversationHandlersWithID(w, r)
-	})
-	router.Router.HandleFunc("/participant", func(w http.ResponseWriter, r *http.Request) {
-		router.participantHandlers(w, r)
-	})
-	router.Router.HandleFunc("/participant/{id}", func(w http.ResponseWriter, r *http.Request) {
-		router.participantHandlersWithID(w, r)
-	})
+func (r *RouterStruct) participantsHandlers() {
+	r.Router.HandleFunc("/api/participant", r.getParticipantsHandler).Methods(http.MethodGet)
+	r.Router.HandleFunc("/api/participant/{id}", r.getParticipantByIDHandler).Methods(http.MethodGet)
+	r.Router.HandleFunc("/api/participant", r.createParticipantHandler).Methods(http.MethodPost)	
+	r.Router.HandleFunc("/api/participant/{id}", r.updateParticipantByIDHandler).Methods(http.MethodPut)
+	r.Router.HandleFunc("/api/participant", r.deleteParticipantByIDHandler).Methods(http.MethodDelete)
+}
+
+func (r *RouterStruct) promtHandlers() {
+	r.Router.HandleFunc("/api/promt", r.getPromtsHandler).Methods(http.MethodGet)
+	r.Router.HandleFunc("/api/promt/{id}", r.getPromtByIDHandler).Methods(http.MethodGet)
+	r.Router.HandleFunc("/api/promt", r.createPromtHandler).Methods(http.MethodPost)	
+	r.Router.HandleFunc("/api/promt/{id}", r.updatePromtByIDHandler).Methods(http.MethodPut)
+	r.Router.HandleFunc("/api/promt", r.deletePromtByIDHandler).Methods(http.MethodDelete)
 }

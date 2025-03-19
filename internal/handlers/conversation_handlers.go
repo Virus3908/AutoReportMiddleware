@@ -10,31 +10,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (router *Router) conversationHandlers(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		
-	case http.MethodPost:
-		
-	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	}
-}
-
-func (router *Router) conversationHandlersWithID(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		router.getConversationByIDHandler(w, r)
-	case http.MethodPost:
-		router.updateConversationNameByIDHandler(w, r)
-	case http.MethodDelete:
-		router.deleteConversationByIDHandler(w, r)
-	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	}
-}
-
-func (router *Router) getConversationsHandler(w http.ResponseWriter, _ *http.Request) {
+func (router *RouterStruct) getConversationsHandler(w http.ResponseWriter, _ *http.Request) {
 	querry := router.DB.NewQuerry()
 	conversations, err := querry.GetConversations(context.Background())
 	if err != nil {
@@ -46,7 +22,7 @@ func (router *Router) getConversationsHandler(w http.ResponseWriter, _ *http.Req
 
 }
 
-func (router *Router) deleteConversationByIDHandler(w http.ResponseWriter, r *http.Request) {
+func (router *RouterStruct) deleteConversationByIDHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	strID := params["id"]
 
@@ -72,7 +48,7 @@ func (router *Router) deleteConversationByIDHandler(w http.ResponseWriter, r *ht
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (router *Router) getConversationByIDHandler(w http.ResponseWriter, r *http.Request) {
+func (router *RouterStruct) getConversationByIDHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	strID := params["id"]
 
@@ -92,7 +68,7 @@ func (router *Router) getConversationByIDHandler(w http.ResponseWriter, r *http.
 	json.NewEncoder(w).Encode(conversation)
 }
 
-func (router *Router) updateConversationNameByIDHandler(w http.ResponseWriter, r *http.Request) {
+func (router *RouterStruct) updateConversationNameByIDHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	strID := params["id"]
 
@@ -125,7 +101,7 @@ func (router *Router) updateConversationNameByIDHandler(w http.ResponseWriter, r
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (router *Router) createConversationHandler(w http.ResponseWriter, r *http.Request) {
+func (router *RouterStruct) createConversationHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
 		http.Error(w, "Ошибка парсинга формы: "+err.Error(), http.StatusBadRequest)

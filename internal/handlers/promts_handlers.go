@@ -3,16 +3,17 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"main/internal/repositories"
 	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+
+	"main/internal/repositories"
 )
 
-func (router *RouterStruct) getParticipantsHandler(w http.ResponseWriter, _ *http.Request) {
+func (router *RouterStruct) getPromtsHandler(w http.ResponseWriter, r *http.Request) {
 	querry := router.DB.NewQuerry()
-	users, err := querry.GetParticipants(context.Background())
+	users, err := querry.GetPromts(context.Background())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -21,29 +22,7 @@ func (router *RouterStruct) getParticipantsHandler(w http.ResponseWriter, _ *htt
 	json.NewEncoder(w).Encode(users)
 }
 
-func (router *RouterStruct) createParticipantHandler(w http.ResponseWriter, r *http.Request) {
-	var user repositories.CreateParticipantParams
-	err := json.NewDecoder(r.Body).Decode(&user)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	tx, rollback, commit, err := router.DB.StartTransaction()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer rollback()
-	err = tx.CreateParticipant(context.Background(), user)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	commit()
-}
-
-func (router *RouterStruct) getParticipantByIDHandler(w http.ResponseWriter, r *http.Request) {
+func (router *RouterStruct) getPromtByIDHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	strID := params["id"]
 
@@ -54,41 +33,30 @@ func (router *RouterStruct) getParticipantByIDHandler(w http.ResponseWriter, r *
 	}
 
 	querry := router.DB.NewQuerry()
-	user, err := querry.GetParticipantByID(context.Background(), UUID)
+	promt, err := querry.GetPromtByID(context.Background(), UUID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
+	json.NewEncoder(w).Encode(promt)
 }
 
-func (router *RouterStruct) updateParticipantByIDHandler(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	strID := params["id"]
-
-	UUID, err := uuid.Parse(strID)
+func (router *RouterStruct) createPromtHandler(w http.ResponseWriter, r *http.Request) {
+	var promt string
+	err := json.NewDecoder(r.Body).Decode(&promt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	var user repositories.UpdateParticipantByIDParams
-	err = json.NewDecoder(r.Body).Decode(&user)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	user.ID = UUID
 	tx, rollback, commit, err := router.DB.StartTransaction()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	defer rollback()
-	err = tx.UpdateParticipantByID(context.Background(), user)
+	err = tx.CreatePromt(context.Background(), promt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -96,7 +64,40 @@ func (router *RouterStruct) updateParticipantByIDHandler(w http.ResponseWriter, 
 	commit()
 }
 
-func (router *RouterStruct) deleteParticipantByIDHandler(w http.ResponseWriter, r *http.Request) {
+func (router *RouterStruct) updatePromtByIDHandler(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	strID := params["id"]
+
+	UUID, err := uuid.Parse(strID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var promt repositories.UpdatePromtByIDParams
+	err = json.NewDecoder(r.Body).Decode(&promt)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	promt.ID = UUID
+	tx, rollback, commit, err := router.DB.StartTransaction()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	defer rollback()
+	err = tx.UpdatePromtByID(context.Background(), promt)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	commit()
+}
+
+func (router *RouterStruct) deletePromtByIDHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	strID := params["id"]
 
@@ -113,7 +114,7 @@ func (router *RouterStruct) deleteParticipantByIDHandler(w http.ResponseWriter, 
 	}
 
 	defer rollback()
-	err = tx.DeleteParticipantByID(context.Background(), UUID)
+	err = tx.DeletePromtByID(context.Background(), UUID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
