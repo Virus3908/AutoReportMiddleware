@@ -25,6 +25,12 @@ type S3Client struct {
 	Config   S3Config
 }
 
+type Storage interface{
+	UploadFile(file multipart.File, fileKey string) error
+	GetStorageBucket() string
+	GetStorageEndpoint() string
+}
+
 func NewStorage(cfg S3Config) (*S3Client, error) {
 	awsCfg, err := config.LoadDefaultConfig(context.TODO(),
 		config.WithRegion(cfg.Region),
@@ -65,4 +71,12 @@ func (s *S3Client) UploadFile(file multipart.File, fileKey string) error {
 		return fmt.Errorf("ошибка загрузки файла в S3: %w", err)
 	}
 	return nil
+}
+
+func (s *S3Client) GetStorageEndpoint() string {
+	return s.Config.Endpoint
+}
+
+func (s *S3Client) GetStorageBucket() string {
+	return s.Config.Bucket
 }

@@ -39,6 +39,15 @@ func (q *Queries) CreateParticipant(ctx context.Context, arg CreateParticipantPa
 	return err
 }
 
+const CreatePromt = `-- name: CreatePromt :exec
+INSERT INTO Promts (promt) VALUES ($1)
+`
+
+func (q *Queries) CreatePromt(ctx context.Context, promt string) error {
+	_, err := q.db.Exec(ctx, CreatePromt, promt)
+	return err
+}
+
 const DeleteConversationByID = `-- name: DeleteConversationByID :exec
 DELETE FROM Conversations WHERE id = $1
 `
@@ -54,6 +63,15 @@ DELETE FROM Participants WHERE id = $1
 
 func (q *Queries) DeleteParticipantByID(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, DeleteParticipantByID, id)
+	return err
+}
+
+const DeletePromtByID = `-- name: DeletePromtByID :exec
+DELETE FROM Promts WHERE id = $1
+`
+
+func (q *Queries) DeletePromtByID(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, DeletePromtByID, id)
 	return err
 }
 
@@ -153,6 +171,51 @@ func (q *Queries) GetParticipants(ctx context.Context) ([]Participant, error) {
 	return items, nil
 }
 
+const GetPromtByID = `-- name: GetPromtByID :one
+SELECT id, promt, created_at, updated_at FROM Promts WHERE id = $1
+`
+
+func (q *Queries) GetPromtByID(ctx context.Context, id uuid.UUID) (Promt, error) {
+	row := q.db.QueryRow(ctx, GetPromtByID, id)
+	var i Promt
+	err := row.Scan(
+		&i.ID,
+		&i.Promt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const GetPromts = `-- name: GetPromts :many
+SELECT id, promt, created_at, updated_at FROM Promts
+`
+
+func (q *Queries) GetPromts(ctx context.Context) ([]Promt, error) {
+	rows, err := q.db.Query(ctx, GetPromts)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Promt{}
+	for rows.Next() {
+		var i Promt
+		if err := rows.Scan(
+			&i.ID,
+			&i.Promt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const UpdateConversationNameByID = `-- name: UpdateConversationNameByID :exec
 UPDATE Conversations SET conversation_name = $1 WHERE id = $2
 `
@@ -179,5 +242,19 @@ type UpdateParticipantByIDParams struct {
 
 func (q *Queries) UpdateParticipantByID(ctx context.Context, arg UpdateParticipantByIDParams) error {
 	_, err := q.db.Exec(ctx, UpdateParticipantByID, arg.Name, arg.Email, arg.ID)
+	return err
+}
+
+const UpdatePromtByID = `-- name: UpdatePromtByID :exec
+UPDATE Promts SET promt = $1 WHERE id = $2
+`
+
+type UpdatePromtByIDParams struct {
+	Promt string    `db:"promt" json:"promt"`
+	ID    uuid.UUID `db:"id" json:"id"`
+}
+
+func (q *Queries) UpdatePromtByID(ctx context.Context, arg UpdatePromtByIDParams) error {
+	_, err := q.db.Exec(ctx, UpdatePromtByID, arg.Promt, arg.ID)
 	return err
 }

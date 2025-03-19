@@ -4,41 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"main/internal/common"
-	"main/internal/database"
 	"main/internal/repositories"
-	"main/internal/storage"
 	"net/http"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
-func conversationHandlers(w http.ResponseWriter, r *http.Request, db *database.DataBase, storage *storage.S3Client) {
-	switch r.Method {
-	case http.MethodGet:
-		
-	case http.MethodPost:
-		
-	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	}
-}
-
-func conversationHandlersWithID(w http.ResponseWriter, r *http.Request, db *database.DataBase) {
-	switch r.Method {
-	case http.MethodGet:
-		getConversationByIDHandler(w, r, db)
-	case http.MethodPost:
-		updateConversationNameByIDHandler(w, r, db)
-	case http.MethodDelete:
-		deleteConversationByIDHandler(w, r, db)
-	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	}
-}
-
-func getConversationsHandler(w http.ResponseWriter, _ *http.Request, db *database.DataBase) {
-	querry := repositories.New(db.Pool)
+func (router *RouterStruct) getConversationsHandler(w http.ResponseWriter, _ *http.Request) {
+	querry := router.DB.NewQuerry()
 	conversations, err := querry.GetConversations(context.Background())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -49,7 +22,7 @@ func getConversationsHandler(w http.ResponseWriter, _ *http.Request, db *databas
 
 }
 
-func deleteConversationByIDHandler(w http.ResponseWriter, r *http.Request, db *database.DataBase) {
+func (router *RouterStruct) deleteConversationByIDHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	strID := params["id"]
 
@@ -59,7 +32,7 @@ func deleteConversationByIDHandler(w http.ResponseWriter, r *http.Request, db *d
 		return
 	}
 
-	tx, rollback, commit, err := common.StartTransaction(db)
+	tx, rollback, commit, err := router.DB.StartTransaction()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -75,7 +48,7 @@ func deleteConversationByIDHandler(w http.ResponseWriter, r *http.Request, db *d
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func getConversationByIDHandler(w http.ResponseWriter, r *http.Request, db *database.DataBase) {
+func (router *RouterStruct) getConversationByIDHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	strID := params["id"]
 
@@ -85,7 +58,7 @@ func getConversationByIDHandler(w http.ResponseWriter, r *http.Request, db *data
 		return
 	}
 
-	querry := repositories.New(db.Pool)
+	querry := router.DB.NewQuerry()
 	conversation, err := querry.GetConversationByID(context.Background(), UUID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -95,7 +68,7 @@ func getConversationByIDHandler(w http.ResponseWriter, r *http.Request, db *data
 	json.NewEncoder(w).Encode(conversation)
 }
 
-func updateConversationNameByIDHandler(w http.ResponseWriter, r *http.Request, db *database.DataBase) {
+func (router *RouterStruct) updateConversationNameByIDHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	strID := params["id"]
 
@@ -113,7 +86,7 @@ func updateConversationNameByIDHandler(w http.ResponseWriter, r *http.Request, d
 	}
 
 	conversation.ID = UUID
-	tx, rollback, commit, err := common.StartTransaction(db)
+	tx, rollback, commit, err := router.DB.StartTransaction()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -128,7 +101,7 @@ func updateConversationNameByIDHandler(w http.ResponseWriter, r *http.Request, d
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func createConversationHandler(w http.ResponseWriter, r *http.Request, db *database.DataBase, storage *storage.S3Client) {
+func (router *RouterStruct) createConversationHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
 		http.Error(w, "Ошибка парсинга формы: "+err.Error(), http.StatusBadRequest)
@@ -151,20 +124,20 @@ func createConversationHandler(w http.ResponseWriter, r *http.Request, db *datab
 	fileID := uuid.New().String()
 	fileKey := fmt.Sprintf("uploads/%s_%s", fileID, header.Filename)
 
-	err = storage.UploadFile(file, fileKey)
+	err = router.Storage.UploadFile(file, fileKey)
 	if err != nil {
 		http.Error(w, "Ошибка загрузки файла в S3: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	fileURL := fmt.Sprintf("%s/%s/%s", storage.Config.Endpoint, storage.Config.Bucket, fileKey)
+	fileURL := fmt.Sprintf("%s/%s/%s", router.Storage.GetStorageEndpoint(), router.Storage.GetStorageBucket(), fileKey)
 
 	conversation := repositories.CreateConversationParams{
 		ConversationName: conversationName,
 		FileUrl:          fileURL,
 	}
 
-	tx, rollback, commit, err := common.StartTransaction(db)
+	tx, rollback, commit, err := router.DB.StartTransaction()
 	if err != nil {
 		http.Error(w, "Ошибка начала транзакции: "+err.Error(), http.StatusInternalServerError)
 		return

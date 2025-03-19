@@ -7,20 +7,18 @@ import (
 	"time"
 )
 
-var ready int32
-
 type ResponseInfo struct {
 	Version   string `json:"version"`
 	Timestamp string `json:"timestamp"`
 	Status    string `json:"status"`
 }
 
-func LivenessHandler(w http.ResponseWriter, r *http.Request) {
+func (_ *RouterStruct) livenessHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
 // Readiness: сервис готов только после успешного старта
-func ReadinessHandler(w http.ResponseWriter, r *http.Request) {
+func (_ *RouterStruct) readinessHandler(w http.ResponseWriter, r *http.Request) {
 	if atomic.LoadInt32(&ready) == 1 {
 		w.WriteHeader(http.StatusOK)
 	} else {
@@ -28,7 +26,7 @@ func ReadinessHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func InfoHandler(w http.ResponseWriter, r *http.Request) {
+func (_ *RouterStruct) infoHandler(w http.ResponseWriter, r *http.Request) {
 	info := ResponseInfo{
 		Version:   "1.0.0",
 		Timestamp: time.Now().Format(time.RFC3339),
@@ -39,6 +37,3 @@ func InfoHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(info)
 }
 
-func SetReady() {
-	atomic.StoreInt32(&ready, 1)
-}
