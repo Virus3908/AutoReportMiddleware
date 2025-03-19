@@ -3,8 +3,6 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"main/internal/common"
-	"main/internal/database"
 	"main/internal/repositories"
 	"net/http"
 
@@ -12,32 +10,32 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func participantHandlers(w http.ResponseWriter, r *http.Request, db *database.DataBase) {
+func (router *Router) participantHandlers(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		getParticipantsHandler(w, r, db)
+		router.getParticipantsHandler(w, r)
 	case http.MethodPost:
-		createParticipantsHandler(w, r, db)
+		router.createParticipantHandler(w, r)
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
-func participantHandlersWithID(w http.ResponseWriter, r *http.Request, db *database.DataBase) {
+func (router *Router) participantHandlersWithID(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		getParticipantByIDHandler(w, r, db)
+		router.getParticipantByIDHandler(w, r)
 	case http.MethodPost:
-		updateParticipantByIDHandler(w, r, db)
+		router.updateParticipantByIDHandler(w, r)
 	case http.MethodDelete:
-		deleteParticipantByIDHandler(w, r, db)
+		router.deleteParticipantByIDHandler(w, r)
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
-func getParticipantsHandler(w http.ResponseWriter, _ *http.Request, db *database.DataBase) {
-	querry := repositories.New(db.Pool)
+func (router *Router) getParticipantsHandler(w http.ResponseWriter, _ *http.Request) {
+	querry := router.DB.NewQuerry()
 	users, err := querry.GetParticipants(context.Background())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -47,7 +45,7 @@ func getParticipantsHandler(w http.ResponseWriter, _ *http.Request, db *database
 	json.NewEncoder(w).Encode(users)
 }
 
-func createParticipantsHandler(w http.ResponseWriter, r *http.Request, db *database.DataBase) {
+func (router *Router) createParticipantHandler(w http.ResponseWriter, r *http.Request) {
 	var user repositories.CreateParticipantParams
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
@@ -55,7 +53,7 @@ func createParticipantsHandler(w http.ResponseWriter, r *http.Request, db *datab
 		return
 	}
 
-	tx, rollback, commit, err := common.StartTransaction(db)
+	tx, rollback, commit, err := router.DB.StartTransaction()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -69,7 +67,7 @@ func createParticipantsHandler(w http.ResponseWriter, r *http.Request, db *datab
 	commit()
 }
 
-func getParticipantByIDHandler(w http.ResponseWriter, r *http.Request, db *database.DataBase) {
+func (router *Router) getParticipantByIDHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	strID := params["id"]
 
@@ -79,7 +77,7 @@ func getParticipantByIDHandler(w http.ResponseWriter, r *http.Request, db *datab
 		return
 	}
 
-	querry := repositories.New(db.Pool)
+	querry := router.DB.NewQuerry()
 	user, err := querry.GetParticipantByID(context.Background(), UUID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -89,7 +87,7 @@ func getParticipantByIDHandler(w http.ResponseWriter, r *http.Request, db *datab
 	json.NewEncoder(w).Encode(user)
 }
 
-func updateParticipantByIDHandler(w http.ResponseWriter, r *http.Request, db *database.DataBase) {
+func (router *Router) updateParticipantByIDHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	strID := params["id"]
 
@@ -107,7 +105,7 @@ func updateParticipantByIDHandler(w http.ResponseWriter, r *http.Request, db *da
 	}
 
 	user.ID = UUID
-	tx, rollback, commit, err := common.StartTransaction(db)
+	tx, rollback, commit, err := router.DB.StartTransaction()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -122,7 +120,7 @@ func updateParticipantByIDHandler(w http.ResponseWriter, r *http.Request, db *da
 	commit()
 }
 
-func deleteParticipantByIDHandler(w http.ResponseWriter, r *http.Request, db *database.DataBase) {
+func (router *Router) deleteParticipantByIDHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	strID := params["id"]
 
@@ -132,7 +130,7 @@ func deleteParticipantByIDHandler(w http.ResponseWriter, r *http.Request, db *da
 		return
 	}
 
-	tx, rollback, commit, err := common.StartTransaction(db)
+	tx, rollback, commit, err := router.DB.StartTransaction()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

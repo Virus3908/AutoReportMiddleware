@@ -12,17 +12,24 @@ import (
 
 type Router struct {
 	Router *mux.Router
-	Service *services.Service
+	DB database.Database
+	Storage storage.Storage
+	Service services.Service
 }
 
-func NewRouter() *mux.Router {
-	return mux.NewRouter()
+func NewRouter(db database.Database, storage storage.Storage) *Router {
+	return &Router{
+		Router: mux.NewRouter(),
+		Service: nil,
+		Storage: storage,
+		DB: db,
+	}
 }
 
-func (r *Router) CreateHandlers(db *database.DataBase, storage *storage.S3Client) {
+func (r *Router) CreateHandlers() {
 	r.createLogAndInfoHandlers()
-	r.createConversationHandler(db, storage)
-	r.createParticipantsHandler(db)
+	r.conversationHandler()
+	r.participantsHandler()
 
 }
 
@@ -34,23 +41,23 @@ func (r *Router) createLogAndInfoHandlers() {
 	r.Router.HandleFunc("/info", InfoHandler).Methods(http.MethodGet)
 }
 
-func (r *Router) createConversationHandler(db *database.DataBase, storage *storage.S3Client) {
-	r.Router.HandleFunc("/conversations", func(w http.ResponseWriter, r *http.Request) {
-		getConversationsHandler(w, r, db)
+func (router *Router) conversationHandler() {
+	router.Router.HandleFunc("/conversations", func(w http.ResponseWriter, r *http.Request) {
+		router.getConversationsHandler(w, r)
 	}).Methods(http.MethodGet)
-	r.Router.HandleFunc("/conversations", func(w http.ResponseWriter, r *http.Request) {
-		createConversationHandler(w, r, db, storage)
+	router.Router.HandleFunc("/conversations", func(w http.ResponseWriter, r *http.Request) {
+		router.createConversationHandler(w, r)
 	}).Methods(http.MethodPost)
 }
 
-func (r *Router) createParticipantsHandler(db *database.DataBase) {
-	r.Router.HandleFunc("/conversations/{id}", func(w http.ResponseWriter, r *http.Request) {
-		conversationHandlersWithID(w, r, db)
+func (router *Router) participantsHandler() {
+	router.Router.HandleFunc("/conversations/{id}", func(w http.ResponseWriter, r *http.Request) {
+		router.conversationHandlersWithID(w, r)
 	})
-	r.Router.HandleFunc("/participant", func(w http.ResponseWriter, r *http.Request) {
-		participantHandlers(w, r, db)
+	router.Router.HandleFunc("/participant", func(w http.ResponseWriter, r *http.Request) {
+		router.participantHandlers(w, r)
 	})
-	r.Router.HandleFunc("/participant/{id}", func(w http.ResponseWriter, r *http.Request) {
-		participantHandlersWithID(w, r, db)
+	router.Router.HandleFunc("/participant/{id}", func(w http.ResponseWriter, r *http.Request) {
+		router.participantHandlersWithID(w, r)
 	})
 }

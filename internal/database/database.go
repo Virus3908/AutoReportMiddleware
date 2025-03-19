@@ -6,6 +6,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"main/internal/repositories"
 )
 
 type DBConfig struct {
@@ -16,12 +17,18 @@ type DBConfig struct {
 	Database string `yaml:"database"`
 }
 
-type DataBase struct {
+type Database interface {
+	CloseConnection()
+	StartTransaction() (*repositories.Queries, func(), func() error, error)
+	NewQuerry() *repositories.Queries 
+}
+
+type PGdatabase struct {
 	Config DBConfig
 	Pool   *pgxpool.Pool
 }
 
-func New(cfg DBConfig) (*DataBase, error) {
+func NewDatabase(cfg DBConfig) (*PGdatabase, error) {
 
 	connectionInfo := fmt.Sprintf(
 		"postgres://%s:%s@%s:%d/%s?sslmode=disable",
@@ -42,14 +49,32 @@ func New(cfg DBConfig) (*DataBase, error) {
 		return nil, status.Error(codes.Internal, fmt.Sprintf("Database ping error: %s", err))
 	}
 
-	return &DataBase{
+	return &PGdatabase{
 		Pool:   pool,
 		Config: cfg,
 	}, nil
 }
 
-func (d *DataBase) Close() {
+func (d *PGdatabase) CloseConnection() {
 	if d.Pool != nil {
 		d.Pool.Close()
 	}
+}
+
+func (d *PGdatabase) StartTransaction() (*repositories.Queries, func(), func() error, error) {
+	tx, err := d.Pool.Begin(context.Background())
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	rollback := func() {
+		tx.Rollback(context.Background())
+	}
+	commit := func() error {
+		return tx.Commit(context.Background())
+	}
+	return (&repositories.Queries{}).WithTx(tx), rollback, commit, nil
+}
+
+func (d *PGdatabase) NewQuerry() *repositories.Queries {
+	return repositories.New(d.Pool)
 }

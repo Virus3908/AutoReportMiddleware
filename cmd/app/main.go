@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"main/internal/clients"
 	"main/internal/config"
 	"main/internal/database"
 	"main/internal/handlers"
@@ -13,28 +15,34 @@ import (
 func main() {
 	cfg, err := config.GetConfig()
 	if err != nil {
-		log.Fatalf("Ошибка файла конфигурации: %s", err)
+		log.Fatalf("Config file error: %s", err)
 	}
 
-	db, err := database.New(cfg.DB)
+	db, err := database.NewDatabase(cfg.DB)
 	if err != nil {
-		log.Fatalf("Ошибка подключения к базе данных: %s", err)
+		log.Fatalf("DB connection error: %s", err)
 	}
-	defer db.Close()
+	defer db.CloseConnection()
 
 	storage, err := storage.NewStorage(cfg.S3)
 	if err != nil {
-		log.Fatalf("Ошибка подключения к хранилищу: %s", err)
+		log.Fatalf("Storage connection error: %s", err)
 	}
 
-	router := handlers.CreateHandlers(db, storage)
+	_, err = clients.NewAPIClient(context.Background(), cfg.API)
+	if err != nil {
+		log.Fatalf("Client connection error: %s", err)
+	}
+
+	router := handlers.NewRouter(db, storage)
+	router.CreateHandlers()
 
 	serverSettings := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 
 	handlers.SetReady()
-	log.Printf("Сервер запущен по адресу: %s", serverSettings)
-	err = http.ListenAndServe(serverSettings, router)
+	log.Printf("Server is ready: %s", serverSettings)
+	err = http.ListenAndServe(serverSettings, router.Router)
 	if err != nil {
-		log.Fatalf("Ошибка запуска сервера: %s", err)
+		log.Fatalf("Server stating error: %s", err)
 	}
 }
