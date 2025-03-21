@@ -104,19 +104,19 @@ func (router *RouterStruct) updateConversationNameByIDHandler(w http.ResponseWri
 func (router *RouterStruct) createConversationHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
-		http.Error(w, "Ошибка парсинга формы: "+err.Error(), http.StatusBadRequest)
+		http.Error(w, "Error form parsing: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	conversationName := r.FormValue("ConversationName")
+	conversationName := r.FormValue("conversation_name")
 	if conversationName == "" {
-		http.Error(w, "ConversationName обязателен", http.StatusBadRequest)
+		http.Error(w, "conversation_name required", http.StatusBadRequest)
 		return
 	}
 
-	file, header, err := r.FormFile("FileUrl")
+	file, header, err := r.FormFile("file")
 	if err != nil {
-		http.Error(w, "Ошибка получения файла: "+err.Error(), http.StatusBadRequest)
+		http.Error(w, "Error file recive: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 	defer file.Close()
@@ -126,7 +126,7 @@ func (router *RouterStruct) createConversationHandler(w http.ResponseWriter, r *
 
 	err = router.Storage.UploadFile(file, fileKey)
 	if err != nil {
-		http.Error(w, "Ошибка загрузки файла в S3: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Upload to S3 error: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -139,14 +139,14 @@ func (router *RouterStruct) createConversationHandler(w http.ResponseWriter, r *
 
 	tx, rollback, commit, err := router.DB.StartTransaction()
 	if err != nil {
-		http.Error(w, "Ошибка начала транзакции: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Transaction start error: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer rollback()
 
 	err = tx.CreateConversation(context.Background(), conversation)
 	if err != nil {
-		http.Error(w, "Ошибка записи в БД: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Error writing to db: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -154,7 +154,7 @@ func (router *RouterStruct) createConversationHandler(w http.ResponseWriter, r *
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{
-		"message":  "Разговор создан",
+		"message":  "Conversation created",
 		"file_url": fileURL,
 	})
 }

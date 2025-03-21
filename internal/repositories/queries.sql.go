@@ -25,6 +25,20 @@ func (q *Queries) CreateConversation(ctx context.Context, arg CreateConversation
 	return err
 }
 
+const CreateConvertTask = `-- name: CreateConvertTask :exec
+INSERT INTO Convert (conversations_id, task_id) VALUES ($1, $2)
+`
+
+type CreateConvertTaskParams struct {
+	ConversationsID uuid.UUID `db:"conversations_id" json:"conversations_id"`
+	TaskID          uuid.UUID `db:"task_id" json:"task_id"`
+}
+
+func (q *Queries) CreateConvertTask(ctx context.Context, arg CreateConvertTaskParams) error {
+	_, err := q.db.Exec(ctx, CreateConvertTask, arg.ConversationsID, arg.TaskID)
+	return err
+}
+
 const CreateParticipant = `-- name: CreateParticipant :exec
 INSERT INTO Participants (name, email) VALUES ($1, $2)
 `
@@ -91,6 +105,17 @@ func (q *Queries) GetConversationByID(ctx context.Context, id uuid.UUID) (Conver
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const GetConversationFileURL = `-- name: GetConversationFileURL :one
+SELECT file_url FROM conversations WHERE id = $1
+`
+
+func (q *Queries) GetConversationFileURL(ctx context.Context, id uuid.UUID) (string, error) {
+	row := q.db.QueryRow(ctx, GetConversationFileURL, id)
+	var file_url string
+	err := row.Scan(&file_url)
+	return file_url, err
 }
 
 const GetConversations = `-- name: GetConversations :many
@@ -227,6 +252,21 @@ type UpdateConversationNameByIDParams struct {
 
 func (q *Queries) UpdateConversationNameByID(ctx context.Context, arg UpdateConversationNameByIDParams) error {
 	_, err := q.db.Exec(ctx, UpdateConversationNameByID, arg.ConversationName, arg.ID)
+	return err
+}
+
+const UpdateConvertTask = `-- name: UpdateConvertTask :exec
+UPDATE Convert SET file_url = $1, audio_len = $2 WHERE task_id = $3
+`
+
+type UpdateConvertTaskParams struct {
+	FileUrl  *string   `db:"file_url" json:"file_url"`
+	AudioLen *float64  `db:"audio_len" json:"audio_len"`
+	TaskID   uuid.UUID `db:"task_id" json:"task_id"`
+}
+
+func (q *Queries) UpdateConvertTask(ctx context.Context, arg UpdateConvertTaskParams) error {
+	_, err := q.db.Exec(ctx, UpdateConvertTask, arg.FileUrl, arg.AudioLen, arg.TaskID)
 	return err
 }
 

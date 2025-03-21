@@ -18,6 +18,8 @@ func main() {
 		log.Fatalf("Config file error: %s", err)
 	}
 
+	serverSettings := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
+
 	db, err := database.NewDatabase(cfg.DB)
 	if err != nil {
 		log.Fatalf("DB connection error: %s", err)
@@ -29,17 +31,15 @@ func main() {
 		log.Fatalf("Storage connection error: %s", err)
 	}
 
-	_, err = clients.NewAPIClient(context.Background(), cfg.API)
+	client, err := clients.NewAPIClient(context.Background(), cfg.API, serverSettings)
 	if err != nil {
 		log.Fatalf("Client connection error: %s", err)
 	}
 
-	router := handlers.NewRouter(db, storage)
+	router := handlers.NewRouter(db, storage, client)
 	router.CreateHandlers()
 
-	serverSettings := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
-
-	handlers.SetReady()
+	router.SetReady()
 	log.Printf("Server is ready: %s", serverSettings)
 	err = http.ListenAndServe(serverSettings, router.Router)
 	if err != nil {

@@ -3,16 +3,14 @@ package handlers
 import (
 	"main/internal/database"
 	"main/internal/logging"
-	"main/internal/services"
 	"main/internal/storage"
+	"main/internal/clients"
 
 	"net/http"
 	"sync/atomic"
 
 	"github.com/gorilla/mux"
 )
-
-var ready int32
 
 type Router interface {
 	CreateHandlers()
@@ -23,23 +21,26 @@ type Router interface {
 }
 
 type RouterStruct struct {
+	Client 	clients.Client
 	Router  *mux.Router
 	DB      database.Database
 	Storage storage.Storage
-	Service services.Service
+	CallbackURL string
+	ready int32
 }
 
-func NewRouter(db database.Database, storage storage.Storage) *RouterStruct {
+func NewRouter(db database.Database, storage storage.Storage, client clients.Client) *RouterStruct {
 	return &RouterStruct{
+		Client: client,
 		Router:  mux.NewRouter(),
-		Service: nil,
 		Storage: storage,
 		DB:      db,
+		ready: 0,
 	}
 }
 
-func (_ *RouterStruct) SetReady() {
-	atomic.StoreInt32(&ready, 1)
+func (r *RouterStruct) SetReady() {
+	atomic.StoreInt32(&r.ready, 1)
 }
 
 func (r *RouterStruct) CreateHandlers() {
@@ -47,6 +48,8 @@ func (r *RouterStruct) CreateHandlers() {
 	r.conversationHandlers()
 	r.participantsHandlers()
 	r.promtHandlers()
+	r.updateTaskHandlers()
+	r.createTaskHandlers()
 }
 
 func (r *RouterStruct) logAndInfoHandlers() {
@@ -79,4 +82,12 @@ func (r *RouterStruct) promtHandlers() {
 	r.Router.HandleFunc("/api/promt", r.createPromtHandler).Methods(http.MethodPost)	
 	r.Router.HandleFunc("/api/promt/{id}", r.updatePromtByIDHandler).Methods(http.MethodPut)
 	r.Router.HandleFunc("/api/promt", r.deletePromtByIDHandler).Methods(http.MethodDelete)
+}
+
+func (r *RouterStruct) updateTaskHandlers() {
+	r.Router.HandleFunc("/api/update/convert/{id}", r.acceptConvertFileHandler).Methods(http.MethodPut)
+}
+
+func (r *RouterStruct) createTaskHandlers() {
+	r.Router.HandleFunc("/api/create/convert/{id}", r.createConvertFileTaskHandlerd).Methods(http.MethodPost)
 }
