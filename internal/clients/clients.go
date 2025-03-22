@@ -19,6 +19,7 @@ type Client interface {
 	GetTaskStatusByID(ctx context.Context, ID uuid.UUID) (Status, error)
 	GetDiarizationSegments(responseBody []byte) ([]Segment, error)
 	GetConvertedFileURLAudioLen(responseBody []byte) (*string, *float64, error)
+	GetMessage(responseBody []byte) (*string, error)
 }
 
 type APIConfig struct {
@@ -68,9 +69,9 @@ type responseConvertedAudioFile struct {
 	AudioLen float64 `json:"audio_len"`
 }
 
-// type responseMessage struct {
-// 	Message string `json:"message"`
-// }
+type responseMessage struct {
+	Message string `json:"message"`
+}
 
 
 
@@ -237,6 +238,14 @@ func (a *APIClient) GetConvertedFileURLAudioLen(responseBody []byte) (*string, *
 		return nil, nil, fmt.Errorf("parsing backend response error %s", err)
 	}
 	return &response.FileURL, &response.AudioLen, nil
+}
+
+func (a *APIClient) GetMessage(responseBody []byte) (*string, error) {
+	var response responseMessage
+	if err := json.Unmarshal(responseBody, &response); err != nil {
+		return nil, fmt.Errorf("parsing backend response error %s", err)
+	}
+	return &response.Message, nil
 }
 
 // func (a *APIClient) GetMessageByTaskID(ctx context.Context, ID uuid.UUID) (*string, error) {

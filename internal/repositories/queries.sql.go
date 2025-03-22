@@ -104,6 +104,22 @@ func (q *Queries) CreateSegments(ctx context.Context, arg CreateSegmentsParams) 
 	return err
 }
 
+const CreateTranscribeTaske = `-- name: CreateTranscribeTaske :exec
+INSERT INTO transcribe (conversation_id, segment_id, task_id)
+VALUES ($1, $2, $3)
+`
+
+type CreateTranscribeTaskeParams struct {
+	ConversationID uuid.UUID `db:"conversation_id" json:"conversation_id"`
+	SegmentID      uuid.UUID `db:"segment_id" json:"segment_id"`
+	TaskID         uuid.UUID `db:"task_id" json:"task_id"`
+}
+
+func (q *Queries) CreateTranscribeTaske(ctx context.Context, arg CreateTranscribeTaskeParams) error {
+	_, err := q.db.Exec(ctx, CreateTranscribeTaske, arg.ConversationID, arg.SegmentID, arg.TaskID)
+	return err
+}
+
 const DeleteConversationByID = `-- name: DeleteConversationByID :exec
 DELETE FROM Conversations WHERE id = $1
 `
@@ -192,6 +208,36 @@ func (q *Queries) GetConversations(ctx context.Context) ([]Conversation, error) 
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const GetConversationsSegments = `-- name: GetConversationsSegments :many
+SELECT id, start_time, end_time FROM segments WHERE conversation_id = $1
+`
+
+type GetConversationsSegmentsRow struct {
+	ID        uuid.UUID `db:"id" json:"id"`
+	StartTime float64   `db:"start_time" json:"start_time"`
+	EndTime   float64   `db:"end_time" json:"end_time"`
+}
+
+func (q *Queries) GetConversationsSegments(ctx context.Context, conversationID uuid.UUID) ([]GetConversationsSegmentsRow, error) {
+	rows, err := q.db.Query(ctx, GetConversationsSegments, conversationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetConversationsSegmentsRow{}
+	for rows.Next() {
+		var i GetConversationsSegmentsRow
+		if err := rows.Scan(&i.ID, &i.StartTime, &i.EndTime); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -360,5 +406,19 @@ type UpdatePromtByIDParams struct {
 
 func (q *Queries) UpdatePromtByID(ctx context.Context, arg UpdatePromtByIDParams) error {
 	_, err := q.db.Exec(ctx, UpdatePromtByID, arg.Promt, arg.ID)
+	return err
+}
+
+const UpdateTranscribeByTaskID = `-- name: UpdateTranscribeByTaskID :exec
+UPDATE transcribe SET transcription = $1 WHERE task_id = $2
+`
+
+type UpdateTranscribeByTaskIDParams struct {
+	Transcription *string   `db:"transcription" json:"transcription"`
+	TaskID        uuid.UUID `db:"task_id" json:"task_id"`
+}
+
+func (q *Queries) UpdateTranscribeByTaskID(ctx context.Context, arg UpdateTranscribeByTaskIDParams) error {
+	_, err := q.db.Exec(ctx, UpdateTranscribeByTaskID, arg.Transcription, arg.TaskID)
 	return err
 }

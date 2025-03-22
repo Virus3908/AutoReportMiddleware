@@ -25,7 +25,6 @@ type RouterStruct struct {
 	Router  *mux.Router
 	DB      database.Database
 	Storage storage.Storage
-	CallbackURL string
 	ready int32
 }
 
@@ -87,9 +86,11 @@ func (r *RouterStruct) promtHandlers() {
 func (r *RouterStruct) updateTaskHandlers() {
 	r.Router.HandleFunc("/api/update/convert/{id}", r.acceptConvertFileHandler).Methods(http.MethodPut)
 	r.Router.HandleFunc("/api/update/diarize/{id}", r.acceptDiarizeSegmentsHandler).Methods(http.MethodPost)
+	r.Router.HandleFunc("/api/update/transctibe/{id}", r.acceptTranscibeHandler).Methods(http.MethodPut)
 }
 
 func (r *RouterStruct) createTaskHandlers() {
 	r.Router.HandleFunc("/api/create/convert/{id}", r.createConvertFileTaskHandler).Methods(http.MethodPost)
 	r.Router.HandleFunc("/api/create/diarize/{id}", r.createDiarizeTaskeHandler).Methods(http.MethodPost)
+	r.Router.HandleFunc("/api/create/transcribe/{id}", r.createTranscribeTaskHandler).Methods(http.MethodPost)
 }

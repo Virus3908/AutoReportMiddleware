@@ -109,3 +109,49 @@ func (router *RouterStruct) acceptDiarizeSegmentsHandler(w http.ResponseWriter, 
 
 	commit()
 }
+
+func (router *RouterStruct) acceptTranscibeHandler(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	strID, ok := params["id"]
+	if !ok {
+		http.Error(w, "missing id in request", http.StatusBadRequest)
+		return
+	}
+	taskID, err := uuid.Parse(strID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 1048576)) // 1MB max
+	if err != nil {
+		http.Error(w, "Error request reading: " + err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+	
+	transcription, err := router.Client.GetMessage(body)
+	if err != nil {
+		http.Error(w, "Error reading body request: " + err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	tx, rollback, commit, err := router.DB.StartTransaction()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rollback()
+
+	updatedData := repositories.UpdateTranscribeByTaskIDParams{
+		Transcription: transcription,
+		TaskID: taskID,
+	}
+
+	err = tx.UpdateTranscribeByTaskID(r.Context(), updatedData)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	commit()
+}
