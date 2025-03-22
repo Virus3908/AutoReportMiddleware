@@ -82,6 +82,28 @@ func (q *Queries) CreatePromt(ctx context.Context, promt string) error {
 	return err
 }
 
+const CreateSegments = `-- name: CreateSegments :exec
+INSERT INTO segments (conversation_id, start_time, end_time, speaker)
+VALUES ($1, $2, $3, $4)
+`
+
+type CreateSegmentsParams struct {
+	ConversationID uuid.UUID `db:"conversation_id" json:"conversation_id"`
+	StartTime      float64   `db:"start_time" json:"start_time"`
+	EndTime        float64   `db:"end_time" json:"end_time"`
+	Speaker        int32     `db:"speaker" json:"speaker"`
+}
+
+func (q *Queries) CreateSegments(ctx context.Context, arg CreateSegmentsParams) error {
+	_, err := q.db.Exec(ctx, CreateSegments,
+		arg.ConversationID,
+		arg.StartTime,
+		arg.EndTime,
+		arg.Speaker,
+	)
+	return err
+}
+
 const DeleteConversationByID = `-- name: DeleteConversationByID :exec
 DELETE FROM Conversations WHERE id = $1
 `
@@ -136,6 +158,17 @@ func (q *Queries) GetConversationFileURL(ctx context.Context, id uuid.UUID) (str
 	var file_url string
 	err := row.Scan(&file_url)
 	return file_url, err
+}
+
+const GetConversationIDByDiarizeTaskID = `-- name: GetConversationIDByDiarizeTaskID :one
+SELECT conversation_id FROM diarize WHERE task_id = $1
+`
+
+func (q *Queries) GetConversationIDByDiarizeTaskID(ctx context.Context, taskID uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, GetConversationIDByDiarizeTaskID, taskID)
+	var conversation_id uuid.UUID
+	err := row.Scan(&conversation_id)
+	return conversation_id, err
 }
 
 const GetConversations = `-- name: GetConversations :many

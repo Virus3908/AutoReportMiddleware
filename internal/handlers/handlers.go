@@ -86,6 +86,7 @@ func (r *RouterStruct) promtHandlers() {
 
 func (r *RouterStruct) updateTaskHandlers() {
 	r.Router.HandleFunc("/api/update/convert/{id}", r.acceptConvertFileHandler).Methods(http.MethodPut)
+	r.Router.HandleFunc("/api/update/diarize/{id}", r.acceptDiarizeSegmentsHandler).Methods(http.MethodPost)
 }
 
 func (r *RouterStruct) createTaskHandlers() {

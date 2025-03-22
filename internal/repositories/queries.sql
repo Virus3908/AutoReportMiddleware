@@ -64,3 +64,10 @@ INSERT INTO diarize (conversation_id, task_id)
 VALUES ($1, $2)
 ON CONFLICT (conversation_id) DO UPDATE
 SET task_id = $2;
+
+-- name: GetConversationIDByDiarizeTaskID :one
+SELECT conversation_id FROM diarize WHERE task_id = $1;
+
+-- name: CreateSegments :exec
+INSERT INTO segments (conversation_id, start_time, end_time, speaker)
+VALUES ($1, $2, $3, $4);

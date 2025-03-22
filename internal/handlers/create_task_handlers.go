@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"main/internal/repositories"
 	"net/http"
 	"github.com/gorilla/mux"
@@ -26,13 +25,13 @@ func (router *RouterStruct) createConvertFileTaskHandler(w http.ResponseWriter, 
 	}
 	defer rollback()
 
-	fileURL, err := tx.GetConversationFileURL(context.Background(), UUID)
+	fileURL, err := tx.GetConversationFileURL(r.Context(), UUID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	taskUUID, err := router.Client.CreateTaskConvertFileAndGetTaskID(context.Background(), fileURL)
+	taskUUID, err := router.Client.CreateTaskConvertFileAndGetTaskID(r.Context(), fileURL)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -46,7 +45,7 @@ func (router *RouterStruct) createConvertFileTaskHandler(w http.ResponseWriter, 
 		ConversationsID: UUID,
 		TaskID: *taskUUID,
 	}
-	err = tx.CreateConvertTask(context.Background(), createTask)
+	err = tx.CreateConvertTask(r.Context(), createTask)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -78,7 +77,7 @@ func (router *RouterStruct) createDiarizeTaskeHandler(w http.ResponseWriter, r *
 	}
 	defer rollback()
 
-	fileURL, err := tx.GetConvertFileURL(context.Background(), UUID)
+	fileURL, err := tx.GetConvertFileURL(r.Context(), UUID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -88,7 +87,7 @@ func (router *RouterStruct) createDiarizeTaskeHandler(w http.ResponseWriter, r *
 		return
 	}
 
-	taskUUID, err := router.Client.CreateTaskDiarizeFileAndGetTaskID(context.Background(), *fileURL)
+	taskUUID, err := router.Client.CreateTaskDiarizeFileAndGetTaskID(r.Context(), *fileURL)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -103,7 +102,7 @@ func (router *RouterStruct) createDiarizeTaskeHandler(w http.ResponseWriter, r *
 		ConversationID: UUID,
 		TaskID: *taskUUID,
 	}
-	err = tx.CreateDiarizeTask(context.Background(), createTask)
+	err = tx.CreateDiarizeTask(r.Context(), createTask)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

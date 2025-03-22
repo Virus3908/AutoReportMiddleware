@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"main/internal/repositories"
@@ -10,9 +9,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (router *RouterStruct) getConversationsHandler(w http.ResponseWriter, _ *http.Request) {
+func (router *RouterStruct) getConversationsHandler(w http.ResponseWriter, r *http.Request) {
 	querry := router.DB.NewQuerry()
-	conversations, err := querry.GetConversations(context.Background())
+	conversations, err := querry.GetConversations(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -24,9 +23,12 @@ func (router *RouterStruct) getConversationsHandler(w http.ResponseWriter, _ *ht
 
 func (router *RouterStruct) deleteConversationByIDHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	strID := params["id"]
-
-	UUID, err := uuid.Parse(strID)
+	strID, ok := params["id"]
+	if !ok {
+		http.Error(w, "missing id in request", http.StatusBadRequest)
+		return
+	}
+	id, err := uuid.Parse(strID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -39,7 +41,7 @@ func (router *RouterStruct) deleteConversationByIDHandler(w http.ResponseWriter,
 	}
 
 	defer rollback()
-	err = tx.DeleteConversationByID(context.Background(), UUID)
+	err = tx.DeleteConversationByID(r.Context(), id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -50,16 +52,19 @@ func (router *RouterStruct) deleteConversationByIDHandler(w http.ResponseWriter,
 
 func (router *RouterStruct) getConversationByIDHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	strID := params["id"]
-
-	UUID, err := uuid.Parse(strID)
+	strID, ok := params["id"]
+	if !ok {
+		http.Error(w, "missing id in request", http.StatusBadRequest)
+		return
+	}
+	id, err := uuid.Parse(strID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	querry := router.DB.NewQuerry()
-	conversation, err := querry.GetConversationByID(context.Background(), UUID)
+	conversation, err := querry.GetConversationByID(r.Context(), id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -70,9 +75,12 @@ func (router *RouterStruct) getConversationByIDHandler(w http.ResponseWriter, r 
 
 func (router *RouterStruct) updateConversationNameByIDHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	strID := params["id"]
-
-	UUID, err := uuid.Parse(strID)
+	strID, ok := params["id"]
+	if !ok {
+		http.Error(w, "missing id in request", http.StatusBadRequest)
+		return
+	}
+	id, err := uuid.Parse(strID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -85,14 +93,14 @@ func (router *RouterStruct) updateConversationNameByIDHandler(w http.ResponseWri
 		return
 	}
 
-	conversation.ID = UUID
+	conversation.ID = id
 	tx, rollback, commit, err := router.DB.StartTransaction()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer rollback()
-	err = tx.UpdateConversationNameByID(context.Background(), conversation)
+	err = tx.UpdateConversationNameByID(r.Context(), conversation)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -144,7 +152,7 @@ func (router *RouterStruct) createConversationHandler(w http.ResponseWriter, r *
 	}
 	defer rollback()
 
-	err = tx.CreateConversation(context.Background(), conversation)
+	err = tx.CreateConversation(r.Context(), conversation)
 	if err != nil {
 		http.Error(w, "Error writing to db: "+err.Error(), http.StatusInternalServerError)
 		return
