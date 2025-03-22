@@ -38,7 +38,7 @@ CREATE TABLE Segments (
 
 CREATE TABLE Convert (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    conversations_id UUID REFERENCES Conversations(id) NOT NULL,
+    conversations_id UUID REFERENCES Conversations(id) UNIQUE NOT NULL,
     file_url VARCHAR(255),
     audio_len FLOAT,
     task_id UUID NOT NULL,
@@ -49,7 +49,7 @@ CREATE TABLE Convert (
 
 CREATE TABLE Diarize (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    conversation_id UUID REFERENCES Conversations(id) NOT NULL,
+    conversation_id UUID REFERENCES Conversations(id) UNIQUE NOT NULL,
     task_id UUID NOT NULL, 
     status INT DEFAULT 0 NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,

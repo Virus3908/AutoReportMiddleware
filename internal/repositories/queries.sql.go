@@ -26,7 +26,10 @@ func (q *Queries) CreateConversation(ctx context.Context, arg CreateConversation
 }
 
 const CreateConvertTask = `-- name: CreateConvertTask :exec
-INSERT INTO Convert (conversations_id, task_id) VALUES ($1, $2)
+INSERT INTO Convert (conversations_id, task_id) 
+VALUES ($1, $2)
+ON CONFLICT (conversations_id) DO UPDATE
+SET task_id = $2
 `
 
 type CreateConvertTaskParams struct {
@@ -36,6 +39,23 @@ type CreateConvertTaskParams struct {
 
 func (q *Queries) CreateConvertTask(ctx context.Context, arg CreateConvertTaskParams) error {
 	_, err := q.db.Exec(ctx, CreateConvertTask, arg.ConversationsID, arg.TaskID)
+	return err
+}
+
+const CreateDiarizeTask = `-- name: CreateDiarizeTask :exec
+INSERT INTO diarize (conversation_id, task_id)
+VALUES ($1, $2)
+ON CONFLICT (conversation_id) DO UPDATE
+SET task_id = $2
+`
+
+type CreateDiarizeTaskParams struct {
+	ConversationID uuid.UUID `db:"conversation_id" json:"conversation_id"`
+	TaskID         uuid.UUID `db:"task_id" json:"task_id"`
+}
+
+func (q *Queries) CreateDiarizeTask(ctx context.Context, arg CreateDiarizeTaskParams) error {
+	_, err := q.db.Exec(ctx, CreateDiarizeTask, arg.ConversationID, arg.TaskID)
 	return err
 }
 
@@ -147,6 +167,17 @@ func (q *Queries) GetConversations(ctx context.Context) ([]Conversation, error) 
 		return nil, err
 	}
 	return items, nil
+}
+
+const GetConvertFileURL = `-- name: GetConvertFileURL :one
+SELECT file_url FROM convert WHERE conversations_id = $1
+`
+
+func (q *Queries) GetConvertFileURL(ctx context.Context, conversationsID uuid.UUID) (*string, error) {
+	row := q.db.QueryRow(ctx, GetConvertFileURL, conversationsID)
+	var file_url *string
+	err := row.Scan(&file_url)
+	return file_url, err
 }
 
 const GetParticipantByID = `-- name: GetParticipantByID :one

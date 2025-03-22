@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"io"
 	"context"
 	"main/internal/repositories"
 	"net/http"
@@ -10,7 +9,7 @@ import (
 	"encoding/json"
 )
 
-func (router *RouterStruct) createConvertFileTaskHandlerd(w http.ResponseWriter, r *http.Request) {
+func (router *RouterStruct) createConvertFileTaskHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	strID := params["id"]
 
@@ -38,6 +37,10 @@ func (router *RouterStruct) createConvertFileTaskHandlerd(w http.ResponseWriter,
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	if taskUUID == nil {
+		http.Error(w, "taskUUID is nil", http.StatusInternalServerError)
+		return
+	}
 
 	createTask := repositories.CreateConvertTaskParams{
 		ConversationsID: UUID,
@@ -50,33 +53,21 @@ func (router *RouterStruct) createConvertFileTaskHandlerd(w http.ResponseWriter,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
-		"message":  "Conversation created",
-		"file_url": taskUUID.String(),
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message":  "Convert task created",
+		"task_id":  taskUUID.String(),
+		"file_url": fileURL,
 	})
 	commit()
 }
 
-func (router *RouterStruct) acceptConvertFileHandler(w http.ResponseWriter, r *http.Request) {
+func (router *RouterStruct) createDiarizeTaskeHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	strID := params["id"]
 
 	UUID, err := uuid.Parse(strID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 1048576)) // 1MB max
-	if err != nil {
-		http.Error(w, "Error request reading: " + err.Error(), http.StatusBadRequest)
-		return
-	}
-	defer r.Body.Close()
-	
-	fileURL, audioLen, err := router.Client.GetConvertedFileURLAudioLen(body)
-	if err != nil {
-		http.Error(w, "Error reading body request: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -87,16 +78,42 @@ func (router *RouterStruct) acceptConvertFileHandler(w http.ResponseWriter, r *h
 	}
 	defer rollback()
 
-	updatedData := repositories.UpdateConvertTaskParams{
-		FileUrl: fileURL,
-		TaskID: UUID,
-		AudioLen: audioLen,
-	}
-
-	err = tx.UpdateConvertTask(context.Background(), updatedData)
+	fileURL, err := tx.GetConvertFileURL(context.Background(), UUID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	if fileURL == nil {
+		http.Error(w, "file is not converted", http.StatusInternalServerError)
+		return
+	}
+
+	taskUUID, err := router.Client.CreateTaskDiarizeFileAndGetTaskID(context.Background(), *fileURL)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if taskUUID == nil {
+		http.Error(w, "taskUUID is nil", http.StatusInternalServerError)
+		return
+	}
+
+	createTask := repositories.CreateDiarizeTaskParams{
+		ConversationID: UUID,
+		TaskID: *taskUUID,
+	}
+	err = tx.CreateDiarizeTask(context.Background(), createTask)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message":  "Diarize task created",
+		"task_id":  taskUUID.String(),
+		"file_url": fileURL,
+	})
 	commit()
 }
