@@ -44,10 +44,23 @@ UPDATE Promts SET promt = $1 WHERE id = $2;
 DELETE FROM Promts WHERE id = $1;
 
 -- name: CreateConvertTask :exec
-INSERT INTO Convert (conversations_id, task_id) VALUES ($1, $2);
+INSERT INTO Convert (conversations_id, task_id) 
+VALUES ($1, $2)
+ON CONFLICT (conversations_id) DO UPDATE
+SET task_id = $2;
+
 
 -- name: UpdateConvertTask :exec
 UPDATE Convert SET file_url = $1, audio_len = $2 WHERE task_id = $3;
 
 -- name: GetConversationFileURL :one
 SELECT file_url FROM conversations WHERE id = $1;
+
+-- name: GetConvertFileURL :one
+SELECT file_url FROM convert WHERE conversations_id = $1; 
+
+-- name: CreateDiarizeTask :exec
+INSERT INTO diarize (conversation_id, task_id)
+VALUES ($1, $2)
+ON CONFLICT (conversation_id) DO UPDATE
+SET task_id = $2;

@@ -89,5 +89,6 @@ func (r *RouterStruct) updateTaskHandlers() {
 }
 
 func (r *RouterStruct) createTaskHandlers() {
-	r.Router.HandleFunc("/api/create/convert/{id}", r.createConvertFileTaskHandlerd).Methods(http.MethodPost)
+	r.Router.HandleFunc("/api/create/convert/{id}", r.createConvertFileTaskHandler).Methods(http.MethodPost)
+	r.Router.HandleFunc("/api/create/diarize/{id}", r.createDiarizeTaskeHandler).Methods(http.MethodPost)
 }
