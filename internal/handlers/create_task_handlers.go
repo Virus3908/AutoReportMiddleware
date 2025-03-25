@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"main/internal/clients"
 	"main/internal/repositories"
 	"net/http"
@@ -120,7 +121,6 @@ func (router *RouterStruct) createDiarizeTaskeHandler(w http.ResponseWriter, r *
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"message":  "Diarize task created",
 		"task_id":  taskUUID.String(),
-		"file_url": fileURL,
 	})
 	commit()
 }
@@ -155,8 +155,7 @@ func (router *RouterStruct) createTranscribeTaskHandler(w http.ResponseWriter, r
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-
+	log.Print(segments)
 	for _, segment := range segments{
 		taskID, err := router.Client.CreateTaskTranscribeSegmentFileAndGetTaskID(r.Context(), *fileURL, clients.Segment{
 			StartTime: segment.StartTime,

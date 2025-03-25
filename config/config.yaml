@@ -13,10 +13,10 @@ s3:
   endpoint: http://localhost:9000
   access_key: virus
   secret_key: password
-  bucket: bucker
+  bucket: bucket
   region: ru-central1
   minio: true
 
 api:
-  baseurl: "http://localhost:8000"
+  baseurl: "http://localhost:8081"
   timeout: 10
