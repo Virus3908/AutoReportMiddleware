@@ -4,8 +4,8 @@ import (
 	"io"
 	"main/internal/repositories"
 	"net/http"
-	"github.com/gorilla/mux"
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 func (router *RouterStruct) acceptConvertFileHandler(w http.ResponseWriter, r *http.Request) {

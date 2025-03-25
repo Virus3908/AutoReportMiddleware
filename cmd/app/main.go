@@ -19,7 +19,7 @@ func main() {
 	}
 
 	serverSettings := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
-
+	callbackURL := fmt.Sprintf("http://%s", serverSettings)
 	db, err := database.NewDatabase(cfg.DB)
 	if err != nil {
 		log.Fatalf("DB connection error: %s", err)
@@ -31,7 +31,7 @@ func main() {
 		log.Fatalf("Storage connection error: %s", err)
 	}
 
-	client, err := clients.NewAPIClient(context.Background(), cfg.API, serverSettings)
+	client, err := clients.NewAPIClient(context.Background(), cfg.API, callbackURL)
 	if err != nil {
 		log.Fatalf("Client connection error: %s", err)
 	}

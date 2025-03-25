@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"path/filepath"
 	"fmt"
 	"main/internal/repositories"
 	"net/http"
@@ -130,7 +131,8 @@ func (router *RouterStruct) createConversationHandler(w http.ResponseWriter, r *
 	defer file.Close()
 
 	fileID := uuid.New().String()
-	fileKey := fmt.Sprintf("uploads/%s_%s", fileID, header.Filename)
+	ext := filepath.Ext(header.Filename)
+	fileKey := fmt.Sprintf("uploads/%s%s", fileID, ext)
 
 	err = router.Storage.UploadFile(file, fileKey)
 	if err != nil {

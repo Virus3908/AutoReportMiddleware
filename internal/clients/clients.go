@@ -5,10 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Client interface {
@@ -60,7 +61,6 @@ type Segment struct {
 }
 
 type responseAudioFileSegments struct {
-	Task_ID  uuid.UUID `json:"id"`
 	Segments []Segment `json:"segments"`
 }
 
