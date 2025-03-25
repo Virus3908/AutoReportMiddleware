@@ -82,6 +82,44 @@ func (q *Queries) CreatePromt(ctx context.Context, promt string) error {
 	return err
 }
 
+const CreateSegments = `-- name: CreateSegments :exec
+INSERT INTO segments (conversation_id, start_time, end_time, speaker)
+VALUES ($1, $2, $3, $4)
+`
+
+type CreateSegmentsParams struct {
+	ConversationID uuid.UUID `db:"conversation_id" json:"conversation_id"`
+	StartTime      float64   `db:"start_time" json:"start_time"`
+	EndTime        float64   `db:"end_time" json:"end_time"`
+	Speaker        int32     `db:"speaker" json:"speaker"`
+}
+
+func (q *Queries) CreateSegments(ctx context.Context, arg CreateSegmentsParams) error {
+	_, err := q.db.Exec(ctx, CreateSegments,
+		arg.ConversationID,
+		arg.StartTime,
+		arg.EndTime,
+		arg.Speaker,
+	)
+	return err
+}
+
+const CreateTranscribeTaske = `-- name: CreateTranscribeTaske :exec
+INSERT INTO transcribe (conversation_id, segment_id, task_id)
+VALUES ($1, $2, $3)
+`
+
+type CreateTranscribeTaskeParams struct {
+	ConversationID uuid.UUID `db:"conversation_id" json:"conversation_id"`
+	SegmentID      uuid.UUID `db:"segment_id" json:"segment_id"`
+	TaskID         uuid.UUID `db:"task_id" json:"task_id"`
+}
+
+func (q *Queries) CreateTranscribeTaske(ctx context.Context, arg CreateTranscribeTaskeParams) error {
+	_, err := q.db.Exec(ctx, CreateTranscribeTaske, arg.ConversationID, arg.SegmentID, arg.TaskID)
+	return err
+}
+
 const DeleteConversationByID = `-- name: DeleteConversationByID :exec
 DELETE FROM Conversations WHERE id = $1
 `
@@ -138,6 +176,17 @@ func (q *Queries) GetConversationFileURL(ctx context.Context, id uuid.UUID) (str
 	return file_url, err
 }
 
+const GetConversationIDByDiarizeTaskID = `-- name: GetConversationIDByDiarizeTaskID :one
+SELECT conversation_id FROM diarize WHERE task_id = $1
+`
+
+func (q *Queries) GetConversationIDByDiarizeTaskID(ctx context.Context, taskID uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, GetConversationIDByDiarizeTaskID, taskID)
+	var conversation_id uuid.UUID
+	err := row.Scan(&conversation_id)
+	return conversation_id, err
+}
+
 const GetConversations = `-- name: GetConversations :many
 SELECT id, conversation_name, file_url, status, created_at, updated_at FROM Conversations
 `
@@ -159,6 +208,36 @@ func (q *Queries) GetConversations(ctx context.Context) ([]Conversation, error) 
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const GetConversationsSegments = `-- name: GetConversationsSegments :many
+SELECT id, start_time, end_time FROM segments WHERE conversation_id = $1
+`
+
+type GetConversationsSegmentsRow struct {
+	ID        uuid.UUID `db:"id" json:"id"`
+	StartTime float64   `db:"start_time" json:"start_time"`
+	EndTime   float64   `db:"end_time" json:"end_time"`
+}
+
+func (q *Queries) GetConversationsSegments(ctx context.Context, conversationID uuid.UUID) ([]GetConversationsSegmentsRow, error) {
+	rows, err := q.db.Query(ctx, GetConversationsSegments, conversationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetConversationsSegmentsRow{}
+	for rows.Next() {
+		var i GetConversationsSegmentsRow
+		if err := rows.Scan(&i.ID, &i.StartTime, &i.EndTime); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -327,5 +406,19 @@ type UpdatePromtByIDParams struct {
 
 func (q *Queries) UpdatePromtByID(ctx context.Context, arg UpdatePromtByIDParams) error {
 	_, err := q.db.Exec(ctx, UpdatePromtByID, arg.Promt, arg.ID)
+	return err
+}
+
+const UpdateTranscribeByTaskID = `-- name: UpdateTranscribeByTaskID :exec
+UPDATE transcribe SET transcription = $1 WHERE task_id = $2
+`
+
+type UpdateTranscribeByTaskIDParams struct {
+	Transcription *string   `db:"transcription" json:"transcription"`
+	TaskID        uuid.UUID `db:"task_id" json:"task_id"`
+}
+
+func (q *Queries) UpdateTranscribeByTaskID(ctx context.Context, arg UpdateTranscribeByTaskIDParams) error {
+	_, err := q.db.Exec(ctx, UpdateTranscribeByTaskID, arg.Transcription, arg.TaskID)
 	return err
 }

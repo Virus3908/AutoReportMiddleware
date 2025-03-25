@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 
@@ -13,7 +12,7 @@ import (
 
 func (router *RouterStruct) getPromtsHandler(w http.ResponseWriter, r *http.Request) {
 	querry := router.DB.NewQuerry()
-	users, err := querry.GetPromts(context.Background())
+	users, err := querry.GetPromts(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -24,16 +23,19 @@ func (router *RouterStruct) getPromtsHandler(w http.ResponseWriter, r *http.Requ
 
 func (router *RouterStruct) getPromtByIDHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	strID := params["id"]
-
-	UUID, err := uuid.Parse(strID)
+	strID, ok := params["id"]
+	if !ok {
+		http.Error(w, "missing id in request", http.StatusBadRequest)
+		return
+	}
+	id, err := uuid.Parse(strID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	querry := router.DB.NewQuerry()
-	promt, err := querry.GetPromtByID(context.Background(), UUID)
+	promt, err := querry.GetPromtByID(r.Context(), id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -56,7 +58,7 @@ func (router *RouterStruct) createPromtHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 	defer rollback()
-	err = tx.CreatePromt(context.Background(), promt)
+	err = tx.CreatePromt(r.Context(), promt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -66,9 +68,12 @@ func (router *RouterStruct) createPromtHandler(w http.ResponseWriter, r *http.Re
 
 func (router *RouterStruct) updatePromtByIDHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	strID := params["id"]
-
-	UUID, err := uuid.Parse(strID)
+	strID, ok := params["id"]
+	if !ok {
+		http.Error(w, "missing id in request", http.StatusBadRequest)
+		return
+	}
+	id, err := uuid.Parse(strID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -81,7 +86,7 @@ func (router *RouterStruct) updatePromtByIDHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	promt.ID = UUID
+	promt.ID = id
 	tx, rollback, commit, err := router.DB.StartTransaction()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -89,7 +94,7 @@ func (router *RouterStruct) updatePromtByIDHandler(w http.ResponseWriter, r *htt
 	}
 
 	defer rollback()
-	err = tx.UpdatePromtByID(context.Background(), promt)
+	err = tx.UpdatePromtByID(r.Context(), promt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -99,9 +104,12 @@ func (router *RouterStruct) updatePromtByIDHandler(w http.ResponseWriter, r *htt
 
 func (router *RouterStruct) deletePromtByIDHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	strID := params["id"]
-
-	UUID, err := uuid.Parse(strID)
+	strID, ok := params["id"]
+	if !ok {
+		http.Error(w, "missing id in request", http.StatusBadRequest)
+		return
+	}
+	id, err := uuid.Parse(strID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -114,7 +122,7 @@ func (router *RouterStruct) deletePromtByIDHandler(w http.ResponseWriter, r *htt
 	}
 
 	defer rollback()
-	err = tx.DeletePromtByID(context.Background(), UUID)
+	err = tx.DeletePromtByID(r.Context(), id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"main/internal/repositories"
 	"net/http"
@@ -10,9 +9,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (router *RouterStruct) getParticipantsHandler(w http.ResponseWriter, _ *http.Request) {
+func (router *RouterStruct) getParticipantsHandler(w http.ResponseWriter, r *http.Request) {
 	querry := router.DB.NewQuerry()
-	users, err := querry.GetParticipants(context.Background())
+	users, err := querry.GetParticipants(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -35,7 +34,7 @@ func (router *RouterStruct) createParticipantHandler(w http.ResponseWriter, r *h
 		return
 	}
 	defer rollback()
-	err = tx.CreateParticipant(context.Background(), user)
+	err = tx.CreateParticipant(r.Context(), user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -45,16 +44,19 @@ func (router *RouterStruct) createParticipantHandler(w http.ResponseWriter, r *h
 
 func (router *RouterStruct) getParticipantByIDHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	strID := params["id"]
-
-	UUID, err := uuid.Parse(strID)
+	strID, ok := params["id"]
+	if !ok {
+		http.Error(w, "missing id in request", http.StatusBadRequest)
+		return
+	}
+	id, err := uuid.Parse(strID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	querry := router.DB.NewQuerry()
-	user, err := querry.GetParticipantByID(context.Background(), UUID)
+	user, err := querry.GetParticipantByID(r.Context(), id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -65,9 +67,12 @@ func (router *RouterStruct) getParticipantByIDHandler(w http.ResponseWriter, r *
 
 func (router *RouterStruct) updateParticipantByIDHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	strID := params["id"]
-
-	UUID, err := uuid.Parse(strID)
+	strID, ok := params["id"]
+	if !ok {
+		http.Error(w, "missing id in request", http.StatusBadRequest)
+		return
+	}
+	id, err := uuid.Parse(strID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -80,7 +85,7 @@ func (router *RouterStruct) updateParticipantByIDHandler(w http.ResponseWriter, 
 		return
 	}
 
-	user.ID = UUID
+	user.ID = id
 	tx, rollback, commit, err := router.DB.StartTransaction()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -88,7 +93,7 @@ func (router *RouterStruct) updateParticipantByIDHandler(w http.ResponseWriter, 
 	}
 
 	defer rollback()
-	err = tx.UpdateParticipantByID(context.Background(), user)
+	err = tx.UpdateParticipantByID(r.Context(), user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -98,9 +103,12 @@ func (router *RouterStruct) updateParticipantByIDHandler(w http.ResponseWriter, 
 
 func (router *RouterStruct) deleteParticipantByIDHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	strID := params["id"]
-
-	UUID, err := uuid.Parse(strID)
+	strID, ok := params["id"]
+	if !ok {
+		http.Error(w, "missing id in request", http.StatusBadRequest)
+		return
+	}
+	id, err := uuid.Parse(strID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -113,7 +121,7 @@ func (router *RouterStruct) deleteParticipantByIDHandler(w http.ResponseWriter, 
 	}
 
 	defer rollback()
-	err = tx.DeleteParticipantByID(context.Background(), UUID)
+	err = tx.DeleteParticipantByID(r.Context(), id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
