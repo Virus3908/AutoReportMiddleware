@@ -8,8 +8,11 @@ import (
 	"main/internal/config"
 	"main/internal/database"
 	"main/internal/handlers"
+	"main/internal/services"
 	"main/internal/storage"
 	"net/http"
+
+	CORS "github.com/gorilla/handlers"
 )
 
 func main() {
@@ -35,13 +38,20 @@ func main() {
 	if err != nil {
 		log.Fatalf("Client connection error: %s", err)
 	}
+	service := services.NewService(db, storage)
 
-	router := handlers.NewRouter(db, storage, client)
+	router := handlers.NewRouter(service, client)
 	router.CreateHandlers()
+
+	cors := CORS.CORS(
+		CORS.AllowedOrigins([]string{"127.0.0.1"}),
+		CORS.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
+		CORS.AllowedHeaders([]string{"Content-Type"}),
+	)
 
 	router.SetReady()
 	log.Printf("Server is ready: %s", serverSettings)
-	err = http.ListenAndServe(serverSettings, router.Router)
+	err = http.ListenAndServe(serverSettings, cors(router.Router))
 	if err != nil {
 		log.Fatalf("Server stating error: %s", err)
 	}
