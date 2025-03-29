@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	CORS "github.com/gorilla/handlers"
 	"log"
 	"main/internal/clients"
 	"main/internal/config"
@@ -39,9 +40,15 @@ func main() {
 	router := handlers.NewRouter(db, storage, client)
 	router.CreateHandlers()
 
+	cors := CORS.CORS(
+		CORS.AllowedOrigins([]string{"127.0.0.1"}),
+		CORS.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
+		CORS.AllowedHeaders([]string{"Content-Type"}),
+	)
+
 	router.SetReady()
 	log.Printf("Server is ready: %s", serverSettings)
-	err = http.ListenAndServe(serverSettings, router.Router)
+	err = http.ListenAndServe(serverSettings, cors(router.Router))
 	if err != nil {
 		log.Fatalf("Server stating error: %s", err)
 	}

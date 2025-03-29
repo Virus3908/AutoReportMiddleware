@@ -1,13 +1,16 @@
 package services
 
 import (
-
+	"main/internal/database"
+	"main/internal/storage"
 )
 
-type Service interface {
-
+type ServicesStruct struct {
+	Conversations *ConversationsService
 }
 
-type ASS struct {
-	Handler any
+func NewService(db database.Database, storage storage.Storage) *ServicesStruct {
+	return &ServicesStruct{
+		Conversations: NewConversationService(db, storage),
+	}
 }

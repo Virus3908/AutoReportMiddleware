@@ -17,6 +17,7 @@ func LoggingMidleware(next http.Handler) http.Handler {
 		}
 
 		log.Printf("Request: %s %s", r.Method, r.URL.Path)
+		log.Printf("From: %s", r.RemoteAddr)
 		log.Printf("Body: %s", string(bodyBytes))
 
 		r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
