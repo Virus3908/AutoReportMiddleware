@@ -1,3 +1,4 @@
+-- Active: 1742118800602@@127.0.0.1@5432@db
 CREATE EXTENSION IF NOT EXISTS "pgcrypto"; -- Включает поддержку UUID
 
 CREATE TABLE Conversations (
@@ -21,14 +22,14 @@ CREATE TABLE ConversationsParticipant (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES participants(id) NOT NULL ,
     speaker INTEGER,
-    conversation_id UUID REFERENCES Conversations(id) NOT NULL,
+    conversation_id UUID REFERENCES Conversations(id) ON DELETE CASCADE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 CREATE TABLE Segments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    conversation_id UUID REFERENCES Conversations(id) NOT NULL,
+    conversation_id UUID REFERENCES Conversations(id) ON DELETE CASCADE NOT NULL,
     start_time FLOAT NOT NULL,
     end_time FLOAT NOT NULL,
     speaker INTEGER NOT NULL,
@@ -38,7 +39,7 @@ CREATE TABLE Segments (
 
 CREATE TABLE Convert (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    conversations_id UUID REFERENCES Conversations(id) UNIQUE NOT NULL,
+    conversations_id UUID REFERENCES Conversations(id) ON DELETE CASCADE UNIQUE NOT NULL,
     file_url VARCHAR(255),
     audio_len FLOAT,
     task_id UUID NOT NULL,
@@ -49,7 +50,7 @@ CREATE TABLE Convert (
 
 CREATE TABLE Diarize (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    conversation_id UUID REFERENCES Conversations(id) UNIQUE NOT NULL,
+    conversation_id UUID REFERENCES Conversations(id) ON DELETE CASCADE UNIQUE NOT NULL,
     task_id UUID NOT NULL, 
     status INT DEFAULT 0 NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -58,7 +59,7 @@ CREATE TABLE Diarize (
 
 CREATE TABLE Transcribe (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    conversation_id UUID REFERENCES Conversations(id) NOT NULL,
+    conversation_id UUID REFERENCES Conversations(id) ON DELETE CASCADE NOT NULL,
     segment_id UUID REFERENCES Diarize(id) NOT NULL,
     transcription TEXT,
     task_id UUID NOT NULL,
@@ -76,7 +77,7 @@ CREATE TABLE Promts (
 
 CREATE TABLE Report (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    conversation_id UUID REFERENCES Conversations(id) NOT NULL,
+    conversation_id UUID REFERENCES Conversations(id) ON DELETE CASCADE NOT NULL,
     report TEXT,
     promt_id UUID REFERENCES Promts(id),
     task_id UUID NOT NULL,

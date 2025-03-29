@@ -16,8 +16,10 @@ SELECT * FROM Participants WHERE id = $1;
 -- name: GetConversations :many
 SELECT * FROM Conversations;
 
--- name: DeleteConversationByID :exec
-DELETE FROM Conversations WHERE id = $1;
+-- name: DeleteConversationByID :one
+DELETE FROM Conversations
+WHERE id = $1
+RETURNING file_url;
 
 -- name: GetConversationByID :one
 SELECT * FROM Conversations WHERE id = $1;

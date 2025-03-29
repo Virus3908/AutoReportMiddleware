@@ -120,13 +120,17 @@ func (q *Queries) CreateTranscribeTaske(ctx context.Context, arg CreateTranscrib
 	return err
 }
 
-const DeleteConversationByID = `-- name: DeleteConversationByID :exec
-DELETE FROM Conversations WHERE id = $1
+const DeleteConversationByID = `-- name: DeleteConversationByID :one
+DELETE FROM Conversations
+WHERE id = $1
+RETURNING file_url
 `
 
-func (q *Queries) DeleteConversationByID(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, DeleteConversationByID, id)
-	return err
+func (q *Queries) DeleteConversationByID(ctx context.Context, id uuid.UUID) (string, error) {
+	row := q.db.QueryRow(ctx, DeleteConversationByID, id)
+	var file_url string
+	err := row.Scan(&file_url)
+	return file_url, err
 }
 
 const DeleteParticipantByID = `-- name: DeleteParticipantByID :exec

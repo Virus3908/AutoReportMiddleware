@@ -38,7 +38,9 @@ func (r *RouterStruct) SetReady() {
 
 func (r *RouterStruct) CreateHandlers() {
 	r.logAndInfoHandlers()
-	r.participantHandlers()
+	r.participantsHandlers()
+	r.promtsHandlers()
+	r.conversationsHandlers()
 }
 
 func (r *RouterStruct) logAndInfoHandlers() {
@@ -49,7 +51,7 @@ func (r *RouterStruct) logAndInfoHandlers() {
 	r.Router.HandleFunc("/info", r.infoHandler).Methods(http.MethodGet)
 }
 
-func (r *RouterStruct) participantHandlers() {
+func (r *RouterStruct) participantsHandlers() {
 	r.Router.HandleFunc("/api/participants",
 		simpleGetHandler(r.Service.Participant.Get),
 	).Methods(http.MethodGet)
@@ -64,5 +66,41 @@ func (r *RouterStruct) participantHandlers() {
 	).Methods(http.MethodPut)
 	r.Router.HandleFunc("/api/participants/{id}",
 		simpleDeleteHandler(r.Service.Participant.Delete),
+	).Methods(http.MethodDelete)
+}
+
+func (r *RouterStruct) promtsHandlers() {
+	r.Router.HandleFunc("/api/promts",
+		simpleGetHandler(r.Service.Promt.Get),
+	).Methods(http.MethodGet)
+	r.Router.HandleFunc("/api/promts/{id}",
+		simpleGetByIDHandler(r.Service.Promt.GetByID),
+	).Methods(http.MethodGet)
+	r.Router.HandleFunc("/api/promts",
+		simpleCreateHandler(r.Service.Promt.Create),
+	).Methods(http.MethodPost)
+	r.Router.HandleFunc("/api/promts/{id}",
+		simpleUpdateHandler(r.Service.Promt.Update),
+	).Methods(http.MethodPut)
+	r.Router.HandleFunc("/api/promts/{id}",
+		simpleDeleteHandler(r.Service.Promt.Delete),
+	).Methods(http.MethodDelete)
+}
+
+func (r *RouterStruct) conversationsHandlers() {
+	r.Router.HandleFunc("/api/conversations",
+		simpleGetHandler(r.Service.Conversation.Get),
+	).Methods(http.MethodGet)
+	r.Router.HandleFunc("/api/conversations/{id}",
+		simpleGetByIDHandler(r.Service.Conversation.GetByID),
+	).Methods(http.MethodGet)
+	r.Router.HandleFunc("/api/conversations",
+		r.createConversationHandler,
+	).Methods(http.MethodPost)
+	r.Router.HandleFunc("/api/conversations/{id}",
+		simpleUpdateHandler(r.Service.Conversation.Update),
+	).Methods(http.MethodPut)
+	r.Router.HandleFunc("/api/conversations/{id}",
+		simpleDeleteHandler(r.Service.Conversation.Delete),
 	).Methods(http.MethodDelete)
 }

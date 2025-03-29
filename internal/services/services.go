@@ -6,21 +6,15 @@ import (
 
 )
 
-// type Services interface {
-
-// }
-
-
-
 type ServicesStruct struct {
-	Conversations *ConversationsService
+	Conversation *ConversationsService
 	Participant   *ParticipantService
 	Promt         *PromtService
 }
 
 func NewService(db database.Database, storage storage.Storage) *ServicesStruct {
 	return &ServicesStruct{
-		Conversations: NewConversationService(db, storage),
+		Conversation: NewConversationService(db, storage),
 		Participant:   NewParticipantService(db),
 		Promt:         NewPromtService(db),
 	}
