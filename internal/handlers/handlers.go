@@ -1,10 +1,9 @@
 package handlers
 
 import (
-	"main/internal/database"
-	"main/internal/logging"
-	"main/internal/storage"
 	"main/internal/clients"
+	"main/internal/logging"
+	"main/internal/services"
 
 	"net/http"
 	"sync/atomic"
@@ -15,26 +14,21 @@ import (
 type Router interface {
 	CreateHandlers()
 	SetReady()
-	// createLogAndInfoHandlers()
-	// conversationHandler()
-	// participantsHandler()
 }
 
 type RouterStruct struct {
-	Client 	clients.Client
+	Client  clients.Client
 	Router  *mux.Router
-	DB      database.Database
-	Storage storage.Storage
-	ready int32
+	Service *services.ServicesStruct
+	ready   int32
 }
 
-func NewRouter(db database.Database, storage storage.Storage, client clients.Client) *RouterStruct {
+func NewRouter(service *services.ServicesStruct, client clients.Client) *RouterStruct {
 	return &RouterStruct{
-		Client: client,
+		Client:  client,
 		Router:  mux.NewRouter(),
-		Storage: storage,
-		DB:      db,
-		ready: 0,
+		Service: service,
+		ready:   0,
 	}
 }
 
@@ -44,11 +38,7 @@ func (r *RouterStruct) SetReady() {
 
 func (r *RouterStruct) CreateHandlers() {
 	r.logAndInfoHandlers()
-	r.conversationHandlers()
-	r.participantsHandlers()
-	r.promtHandlers()
-	r.updateTaskHandlers()
-	r.createTaskHandlers()
+	r.participantHandlers()
 }
 
 func (r *RouterStruct) logAndInfoHandlers() {
@@ -59,38 +49,20 @@ func (r *RouterStruct) logAndInfoHandlers() {
 	r.Router.HandleFunc("/info", r.infoHandler).Methods(http.MethodGet)
 }
 
-func (r *RouterStruct) conversationHandlers() {
-	r.Router.HandleFunc("/api/conversations", r.getConversationsHandler).Methods(http.MethodGet)
-	r.Router.HandleFunc("/api/conversations", r.createConversationHandler).Methods(http.MethodPost)
-	r.Router.HandleFunc("/api/conversations/{id}", r.getConversationByIDHandler).Methods(http.MethodGet)
-	r.Router.HandleFunc("/api/conversations/{id}", r.updateConversationNameByIDHandler).Methods(http.MethodPut)
-	r.Router.HandleFunc("/api/conversations/{id}", r.deleteConversationByIDHandler).Methods(http.MethodDelete)
-}
-
-func (r *RouterStruct) participantsHandlers() {
-	r.Router.HandleFunc("/api/participant", r.getParticipantsHandler).Methods(http.MethodGet)
-	r.Router.HandleFunc("/api/participant/{id}", r.getParticipantByIDHandler).Methods(http.MethodGet)
-	r.Router.HandleFunc("/api/participant", r.createParticipantHandler).Methods(http.MethodPost)	
-	r.Router.HandleFunc("/api/participant/{id}", r.updateParticipantByIDHandler).Methods(http.MethodPut)
-	r.Router.HandleFunc("/api/participant", r.deleteParticipantByIDHandler).Methods(http.MethodDelete)
-}
-
-func (r *RouterStruct) promtHandlers() {
-	r.Router.HandleFunc("/api/promt", r.getPromtsHandler).Methods(http.MethodGet)
-	r.Router.HandleFunc("/api/promt/{id}", r.getPromtByIDHandler).Methods(http.MethodGet)
-	r.Router.HandleFunc("/api/promt", r.createPromtHandler).Methods(http.MethodPost)	
-	r.Router.HandleFunc("/api/promt/{id}", r.updatePromtByIDHandler).Methods(http.MethodPut)
-	r.Router.HandleFunc("/api/promt", r.deletePromtByIDHandler).Methods(http.MethodDelete)
-}
-
-func (r *RouterStruct) updateTaskHandlers() {
-	r.Router.HandleFunc("/api/update/convert/{id}", r.acceptConvertFileHandler).Methods(http.MethodPut)
-	r.Router.HandleFunc("/api/update/diarize/{id}", r.acceptDiarizeSegmentsHandler).Methods(http.MethodPost)
-	r.Router.HandleFunc("/api/update/transctibe/{id}", r.acceptTranscibeHandler).Methods(http.MethodPut)
-}
-
-func (r *RouterStruct) createTaskHandlers() {
-	r.Router.HandleFunc("/api/create/convert/{id}", r.createConvertFileTaskHandler).Methods(http.MethodPost)
-	r.Router.HandleFunc("/api/create/diarize/{id}", r.createDiarizeTaskeHandler).Methods(http.MethodPost)
-	r.Router.HandleFunc("/api/create/transcribe/{id}", r.createTranscribeTaskHandler).Methods(http.MethodPost)
+func (r *RouterStruct) participantHandlers() {
+	r.Router.HandleFunc("/api/participants",
+		simpleGetHandler(r.Service.Participant.Get),
+	).Methods(http.MethodGet)
+	r.Router.HandleFunc("/api/participants/{id}",
+		simpleGetByIDHandler(r.Service.Participant.GetByID),
+	).Methods(http.MethodGet)
+	r.Router.HandleFunc("/api/participants",
+		simpleCreateHandler(r.Service.Participant.Create),
+	).Methods(http.MethodPost)
+	r.Router.HandleFunc("/api/participants/{id}",
+		simpleUpdateHandler(r.Service.Participant.Update),
+	).Methods(http.MethodPut)
+	r.Router.HandleFunc("/api/participants/{id}",
+		simpleDeleteHandler(r.Service.Participant.Delete),
+	).Methods(http.MethodDelete)
 }

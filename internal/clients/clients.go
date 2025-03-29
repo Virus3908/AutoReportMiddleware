@@ -103,11 +103,11 @@ func NewAPIClient(ctx context.Context, cfg APIConfig, callbackURL string) (*APIC
 			Timeout: time.Duration(cfg.Timeout) * time.Second,
 		},
 	}
-	url := cfg.BaseURL + "/info"
-	_, err := getAPIResponse[responseInfo](ctx, client.Client, http.MethodGet, url, nil)
-	if err != nil {
-		return nil, fmt.Errorf("cannot create client connection: %s", err)
-	}
+	// url := cfg.BaseURL + "/info"
+	// _, err := getAPIResponse[responseInfo](ctx, client.Client, http.MethodGet, url, nil)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("cannot create client connection: %s", err)
+	// }
 	return &client, nil
 }
 

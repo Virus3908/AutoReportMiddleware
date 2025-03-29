@@ -3,14 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
-	CORS "github.com/gorilla/handlers"
 	"log"
 	"main/internal/clients"
 	"main/internal/config"
 	"main/internal/database"
 	"main/internal/handlers"
+	"main/internal/services"
 	"main/internal/storage"
 	"net/http"
+
+	CORS "github.com/gorilla/handlers"
 )
 
 func main() {
@@ -36,8 +38,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("Client connection error: %s", err)
 	}
+	service := services.NewService(db, storage)
 
-	router := handlers.NewRouter(db, storage, client)
+	router := handlers.NewRouter(service, client)
 	router.CreateHandlers()
 
 	cors := CORS.CORS(
