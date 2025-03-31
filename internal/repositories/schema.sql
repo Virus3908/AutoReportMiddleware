@@ -1,6 +1,7 @@
+-- Active: 1742118800602@@127.0.0.1@5432@db
 CREATE EXTENSION IF NOT EXISTS "pgcrypto"; -- Включает поддержку UUID
 
-CREATE TABLE Conversations (
+CREATE TABLE conversations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     conversation_name VARCHAR(255) NOT NULL,
     file_url VARCHAR(255) NOT NULL,
@@ -17,28 +18,18 @@ CREATE TABLE participants (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-CREATE TABLE ConversationsParticipant (
+CREATE TABLE conversations_participant (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES participants(id) NOT NULL ,
     speaker INTEGER,
-    conversation_id UUID REFERENCES Conversations(id) NOT NULL,
+    conversation_id UUID REFERENCES conversations(id) ON DELETE CASCADE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-CREATE TABLE Segments (
+CREATE TABLE convert (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    conversation_id UUID REFERENCES Conversations(id) NOT NULL,
-    start_time FLOAT NOT NULL,
-    end_time FLOAT NOT NULL,
-    speaker INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-);
-
-CREATE TABLE Convert (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    conversations_id UUID REFERENCES Conversations(id) UNIQUE NOT NULL,
+    conversations_id UUID REFERENCES conversations(id) ON DELETE CASCADE UNIQUE NOT NULL,
     file_url VARCHAR(255),
     audio_len FLOAT,
     task_id UUID NOT NULL,
@@ -47,19 +38,28 @@ CREATE TABLE Convert (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-CREATE TABLE Diarize (
+CREATE TABLE diarize (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    conversation_id UUID REFERENCES Conversations(id) UNIQUE NOT NULL,
+    conver_id UUID REFERENCES convert(id) ON DELETE CASCADE UNIQUE NOT NULL,
     task_id UUID NOT NULL, 
     status INT DEFAULT 0 NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-CREATE TABLE Transcribe (
+CREATE TABLE segments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    conversation_id UUID REFERENCES Conversations(id) NOT NULL,
-    segment_id UUID REFERENCES Diarize(id) NOT NULL,
+    diarize_id UUID REFERENCES diarize(id) ON DELETE CASCADE NOT NULL,
+    start_time FLOAT NOT NULL,
+    end_time FLOAT NOT NULL,
+    speaker INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE TABLE transcriptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    segment_id UUID REFERENCES segments(id) ON DELETE CASCADE NOT NULL,
     transcription TEXT,
     task_id UUID NOT NULL,
     status INT DEFAULT 0 NOT NULL,
@@ -67,18 +67,18 @@ CREATE TABLE Transcribe (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-CREATE TABLE Promts (
+CREATE TABLE prompts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    promt TEXT NOT NULL,
+    prompt TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-CREATE TABLE Report (
+CREATE TABLE report (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    conversation_id UUID REFERENCES Conversations(id) NOT NULL,
+    conversation_id UUID REFERENCES Conversations(id) ON DELETE CASCADE NOT NULL,
     report TEXT,
-    promt_id UUID REFERENCES Promts(id),
+    prompt_id UUID REFERENCES Prompts(id),
     task_id UUID NOT NULL,
     status INT DEFAULT 0 NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -94,7 +94,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_update_conversations
-BEFORE UPDATE ON Conversations
+BEFORE UPDATE ON conversations
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
@@ -104,36 +104,36 @@ FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trigger_update_conversations_participant
-BEFORE UPDATE ON ConversationsParticipant
+BEFORE UPDATE ON conversations_participant
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trigger_update_convert
-BEFORE UPDATE ON Convert
+BEFORE UPDATE ON convert
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trigger_update_diarize
-BEFORE UPDATE ON Diarize
+BEFORE UPDATE ON diarize
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER trigger_update_transcribe
-BEFORE UPDATE ON Transcribe
+CREATE TRIGGER trigger_update_transcriptions
+BEFORE UPDATE ON transcriptions
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trigger_update_report
-BEFORE UPDATE ON Report
+BEFORE UPDATE ON report
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trigger_update_segments
-BEFORE UPDATE ON Segments
+BEFORE UPDATE ON segments
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER trigger_update_promts
-BEFORE UPDATE ON Promts
+CREATE TRIGGER trigger_update_prompts
+BEFORE UPDATE ON prompts
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();

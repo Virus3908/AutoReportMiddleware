@@ -16,8 +16,10 @@ SELECT * FROM Participants WHERE id = $1;
 -- name: GetConversations :many
 SELECT * FROM Conversations;
 
--- name: DeleteConversationByID :exec
-DELETE FROM Conversations WHERE id = $1;
+-- name: DeleteConversationByID :one
+DELETE FROM Conversations
+WHERE id = $1
+RETURNING file_url;
 
 -- name: GetConversationByID :one
 SELECT * FROM Conversations WHERE id = $1;
@@ -28,56 +30,26 @@ UPDATE Conversations SET conversation_name = $1 WHERE id = $2;
 -- name: CreateConversation :exec
 INSERT INTO Conversations (conversation_name, file_url) VALUES ($1, $2);
 
--- name: GetPromts :many
-SELECT * FROM Promts;
+-- name: GetPrompts :many
+SELECT * FROM Prompts;
 
--- name: GetPromtByID :one
-SELECT * FROM Promts WHERE id = $1;
+-- name: GetPromptByID :one
+SELECT * FROM Prompts WHERE id = $1;
 
--- name: CreatePromt :exec
-INSERT INTO Promts (promt) VALUES ($1);
+-- name: CreatePrompt :exec
+INSERT INTO Prompts (prompt) VALUES ($1);
 
--- name: UpdatePromtByID :exec
-UPDATE Promts SET promt = $1 WHERE id = $2;
+-- name: UpdatePromptByID :exec
+UPDATE Prompts SET prompt = $1 WHERE id = $2;
 
--- name: DeletePromtByID :exec
-DELETE FROM Promts WHERE id = $1;
+-- name: DeletePromptByID :exec
+DELETE FROM Prompts WHERE id = $1;
 
--- name: CreateConvertTask :exec
-INSERT INTO Convert (conversations_id, task_id) 
-VALUES ($1, $2)
-ON CONFLICT (conversations_id) DO UPDATE
-SET task_id = $2;
+-- name: CreateConvert :exec
+INSERT INTO convert (task_id) VALUES ($1);
 
+-- name: UpdateConversationStatusByID :exec
+UPDATE conversations SET status = $1 WHERE id = $2;
 
--- name: UpdateConvertTask :exec
-UPDATE Convert SET file_url = $1, audio_len = $2 WHERE task_id = $3;
-
--- name: GetConversationFileURL :one
-SELECT file_url FROM conversations WHERE id = $1;
-
--- name: GetConvertFileURL :one
-SELECT file_url FROM convert WHERE conversations_id = $1; 
-
--- name: CreateDiarizeTask :exec
-INSERT INTO diarize (conversation_id, task_id)
-VALUES ($1, $2)
-ON CONFLICT (conversation_id) DO UPDATE
-SET task_id = $2;
-
--- name: GetConversationIDByDiarizeTaskID :one
-SELECT conversation_id FROM diarize WHERE task_id = $1;
-
--- name: CreateSegments :exec
-INSERT INTO segments (conversation_id, start_time, end_time, speaker)
-VALUES ($1, $2, $3, $4);
-
--- name: GetConversationsSegments :many
-SELECT id, start_time, end_time FROM segments WHERE conversation_id = $1;
-
--- name: CreateTranscribeTaske :exec
-INSERT INTO transcribe (conversation_id, segment_id, task_id)
-VALUES ($1, $2, $3);
-
--- name: UpdateTranscribeByTaskID :exec
-UPDATE transcribe SET transcription = $1 WHERE task_id = $2;
+-- name: UpdateConvertByTaskID :exec
+UPDATE convert SET file_url = $1, status = $2 WHERE task_id = $3;

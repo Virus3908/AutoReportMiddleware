@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"main/internal/repositories"
 )
 
@@ -19,8 +17,15 @@ type DBConfig struct {
 
 type Database interface {
 	CloseConnection()
-	StartTransaction() (*repositories.Queries, func(), func() error, error)
-	NewQuerry() *repositories.Queries 
+	// startTransaction(context.Context) (*Tx, error)
+	WithTx(ctx context.Context, fn func(q *repositories.Queries) error) error
+	NewQuery() *repositories.Queries
+}
+
+type Tx struct {
+	Queries  *repositories.Queries
+	Rollback func() error
+	Commit   func() error
 }
 
 type PGdatabase struct {
@@ -28,7 +33,7 @@ type PGdatabase struct {
 	Pool   *pgxpool.Pool
 }
 
-func NewDatabase(cfg DBConfig) (*PGdatabase, error) {
+func NewDatabase(ctx context.Context, cfg DBConfig) (*PGdatabase, error) {
 
 	connectionInfo := fmt.Sprintf(
 		"postgres://%s:%s@%s:%d/%s?sslmode=disable",
@@ -38,15 +43,15 @@ func NewDatabase(cfg DBConfig) (*PGdatabase, error) {
 		cfg.Port,
 		cfg.Database)
 
-	pool, err := pgxpool.New(context.Background(), connectionInfo)
+	pool, err := pgxpool.New(ctx, connectionInfo)
 
 	if err != nil {
-		return nil, status.Error(codes.Internal, fmt.Sprintf("Database connection error: %s", err))
+		return nil, fmt.Errorf("Database connection error: %s", err)
 
 	}
 
-	if err = pool.Ping(context.Background()); err != nil {
-		return nil, status.Error(codes.Internal, fmt.Sprintf("Database ping error: %s", err))
+	if err = pool.Ping(ctx); err != nil {
+		return nil, fmt.Errorf("Database ping error: %s", err)
 	}
 
 	return &PGdatabase{
@@ -61,20 +66,36 @@ func (d *PGdatabase) CloseConnection() {
 	}
 }
 
-func (d *PGdatabase) StartTransaction() (*repositories.Queries, func(), func() error, error) {
-	tx, err := d.Pool.Begin(context.Background())
+func (d *PGdatabase) startTransaction(ctx context.Context) (*Tx, error) {
+	tx, err := d.Pool.Begin(ctx)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, err
 	}
-	rollback := func() {
-		tx.Rollback(context.Background())
-	}
-	commit := func() error {
-		return tx.Commit(context.Background())
-	}
-	return (&repositories.Queries{}).WithTx(tx), rollback, commit, nil
+	return &Tx{
+		Queries: (&repositories.Queries{}).WithTx(tx),
+		Rollback: func() error {
+			return tx.Rollback(ctx)
+		},
+		Commit: func() error {
+			return tx.Commit(ctx)
+		},
+	}, nil
 }
 
-func (d *PGdatabase) NewQuerry() *repositories.Queries {
+func (d *PGdatabase) NewQuery() *repositories.Queries {
 	return repositories.New(d.Pool)
+}
+
+func (d *PGdatabase) WithTx(ctx context.Context, fn func(q *repositories.Queries) error) error {
+	tx, err := d.startTransaction(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := fn(tx.Queries); err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }

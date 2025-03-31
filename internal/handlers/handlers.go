@@ -38,7 +38,9 @@ func (r *RouterStruct) SetReady() {
 
 func (r *RouterStruct) CreateHandlers() {
 	r.logAndInfoHandlers()
-	r.participantHandlers()
+	r.participantsHandlers()
+	r.promptsHandlers()
+	r.conversationsHandlers()
 }
 
 func (r *RouterStruct) logAndInfoHandlers() {
@@ -49,20 +51,56 @@ func (r *RouterStruct) logAndInfoHandlers() {
 	r.Router.HandleFunc("/info", r.infoHandler).Methods(http.MethodGet)
 }
 
-func (r *RouterStruct) participantHandlers() {
+func (r *RouterStruct) participantsHandlers() {
 	r.Router.HandleFunc("/api/participants",
-		simpleGetHandler(r.Service.Participant.Get),
+		wrapperGetHandler(r.Service.Participant.GetAll),
 	).Methods(http.MethodGet)
 	r.Router.HandleFunc("/api/participants/{id}",
-		simpleGetByIDHandler(r.Service.Participant.GetByID),
+		wrapperGetByIDHandler(r.Service.Participant.GetByID),
 	).Methods(http.MethodGet)
 	r.Router.HandleFunc("/api/participants",
-		simpleCreateHandler(r.Service.Participant.Create),
+		wrapperCreateHandler(r.Service.Participant.Create),
 	).Methods(http.MethodPost)
 	r.Router.HandleFunc("/api/participants/{id}",
-		simpleUpdateHandler(r.Service.Participant.Update),
+		wrapperUpdateHandler(r.Service.Participant.Update),
 	).Methods(http.MethodPut)
 	r.Router.HandleFunc("/api/participants/{id}",
-		simpleDeleteHandler(r.Service.Participant.Delete),
+		wrapperDeleteHandler(r.Service.Participant.Delete),
+	).Methods(http.MethodDelete)
+}
+
+func (r *RouterStruct) promptsHandlers() {
+	r.Router.HandleFunc("/api/prompts",
+		wrapperGetHandler(r.Service.Prompt.GetAll),
+	).Methods(http.MethodGet)
+	r.Router.HandleFunc("/api/prompts/{id}",
+		wrapperGetByIDHandler(r.Service.Prompt.GetByID),
+	).Methods(http.MethodGet)
+	r.Router.HandleFunc("/api/prompts",
+		wrapperCreateHandler(r.Service.Prompt.Create),
+	).Methods(http.MethodPost)
+	r.Router.HandleFunc("/api/prompts/{id}",
+		wrapperUpdateHandler(r.Service.Prompt.Update),
+	).Methods(http.MethodPut)
+	r.Router.HandleFunc("/api/prompts/{id}",
+		wrapperDeleteHandler(r.Service.Prompt.Delete),
+	).Methods(http.MethodDelete)
+}
+
+func (r *RouterStruct) conversationsHandlers() {
+	r.Router.HandleFunc("/api/conversations",
+		wrapperGetHandler(r.Service.Conversation.GetAll),
+	).Methods(http.MethodGet)
+	r.Router.HandleFunc("/api/conversations/{id}",
+		wrapperGetByIDHandler(r.Service.Conversation.GetByID),
+	).Methods(http.MethodGet)
+	r.Router.HandleFunc("/api/conversations",
+		r.createConversationHandler,
+	).Methods(http.MethodPost)
+	r.Router.HandleFunc("/api/conversations/{id}",
+		wrapperUpdateHandler(r.Service.Conversation.Update),
+	).Methods(http.MethodPut)
+	r.Router.HandleFunc("/api/conversations/{id}",
+		wrapperDeleteHandler(r.Service.Conversation.Delete),
 	).Methods(http.MethodDelete)
 }

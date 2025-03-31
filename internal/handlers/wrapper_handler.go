@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func simpleGetHandler[T any](getFn func(ctx context.Context) ([]T, error)) http.HandlerFunc {
+func wrapperGetHandler[T any](getFn func(ctx context.Context) ([]T, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := getFn(r.Context())
 		if err != nil {
@@ -21,7 +21,7 @@ func simpleGetHandler[T any](getFn func(ctx context.Context) ([]T, error)) http.
 	}
 }
 
-func simpleGetByIDHandler[T any](getByIDFn func(ctx context.Context, id uuid.UUID) (T, error)) http.HandlerFunc {
+func wrapperGetByIDHandler[T any](getByIDFn func(ctx context.Context, id uuid.UUID) (T, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		strID := params["id"]
@@ -41,7 +41,7 @@ func simpleGetByIDHandler[T any](getByIDFn func(ctx context.Context, id uuid.UUI
 	}
 }
 
-func simpleCreateHandler[T any](createFn func(ctx context.Context, payload T) error) http.HandlerFunc {
+func wrapperCreateHandler[T any](createFn func(ctx context.Context, payload T) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var payload T
 
@@ -59,7 +59,7 @@ func simpleCreateHandler[T any](createFn func(ctx context.Context, payload T) er
 	}
 }
 
-func simpleUpdateHandler[T any](updateFn func(ctx context.Context, id uuid.UUID, payload T) error) http.HandlerFunc {
+func wrapperUpdateHandler[T any](updateFn func(ctx context.Context, id uuid.UUID, payload T) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		strID := params["id"]
@@ -84,7 +84,7 @@ func simpleUpdateHandler[T any](updateFn func(ctx context.Context, id uuid.UUID,
 	}
 }
 
-func simpleDeleteHandler(deleteFn func(ctx context.Context, id uuid.UUID) error) http.HandlerFunc {
+func wrapperDeleteHandler(deleteFn func(ctx context.Context, id uuid.UUID) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		strID := params["id"]

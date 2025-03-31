@@ -16,7 +16,7 @@ type Client interface {
 	CreateTaskConvertFileAndGetTaskID(ctx context.Context, fileURL string) (*uuid.UUID, error)
 	CreateTaskDiarizeFileAndGetTaskID(ctx context.Context, fileURL string) (*uuid.UUID, error)
 	CreateTaskTranscribeSegmentFileAndGetTaskID(ctx context.Context, fileURL string, segment Segment) (*uuid.UUID, error)
-	CreateTaskReportAndGetTaskID(ctx context.Context, message, promt string, audioLen float64) (*uuid.UUID, error)
+	CreateTaskReportAndGetTaskID(ctx context.Context, message, prompt string, audioLen float64) (*uuid.UUID, error)
 	GetTaskStatusByID(ctx context.Context, ID uuid.UUID) (Status, error)
 	GetDiarizationSegments(responseBody []byte) ([]Segment, error)
 	GetConvertedFileURLAudioLen(responseBody []byte) (*string, *float64, error)
@@ -29,9 +29,9 @@ type APIConfig struct {
 }
 
 type APIClient struct {
-	Config APIConfig
+	Config      APIConfig
 	CallbackURL string
-	Client *http.Client
+	Client      *http.Client
 }
 
 type Status int
@@ -65,15 +65,13 @@ type responseAudioFileSegments struct {
 }
 
 type responseConvertedAudioFile struct {
-	FileURL string `json:"file_url"`
+	FileURL  string  `json:"file_url"`
 	AudioLen float64 `json:"audio_len"`
 }
 
 type responseMessage struct {
 	Message string `json:"message"`
 }
-
-
 
 type requestFile struct {
 	FileURL     string `json:"file_url"`
@@ -88,7 +86,7 @@ type requestFileWithSegment struct {
 
 type requestMessageWithAudioLen struct {
 	Message  string  `json:"message"`
-	Promt    string  `json:"promt"`
+	Prompt   string  `json:"prompt"`
 	AudioLen float64 `json:"audio_len"`
 }
 
@@ -98,7 +96,7 @@ func NewAPIClient(ctx context.Context, cfg APIConfig, callbackURL string) (*APIC
 	}
 	client := APIClient{
 		CallbackURL: callbackURL,
-		Config: cfg,
+		Config:      cfg,
 		Client: &http.Client{
 			Timeout: time.Duration(cfg.Timeout) * time.Second,
 		},
@@ -193,10 +191,10 @@ func (a *APIClient) CreateTaskTranscribeSegmentFileAndGetTaskID(ctx context.Cont
 	return &response.ID, nil
 }
 
-func (a *APIClient) CreateTaskReportAndGetTaskID(ctx context.Context, message, promt string, audioLen float64) (*uuid.UUID, error) {
+func (a *APIClient) CreateTaskReportAndGetTaskID(ctx context.Context, message, prompt string, audioLen float64) (*uuid.UUID, error) {
 	data := requestMessageWithAudioLen{
 		Message:  message,
-		Promt:    promt,
+		Prompt:   prompt,
 		AudioLen: audioLen,
 	}
 	jsonData, err := json.Marshal(data)
@@ -232,7 +230,7 @@ func (a *APIClient) GetDiarizationSegments(responseBody []byte) ([]Segment, erro
 	return response.Segments, nil
 }
 
-func (a *APIClient) GetConvertedFileURLAudioLen(responseBody []byte) (*string, *float64, error){
+func (a *APIClient) GetConvertedFileURLAudioLen(responseBody []byte) (*string, *float64, error) {
 	var response responseConvertedAudioFile
 	if err := json.Unmarshal(responseBody, &response); err != nil {
 		return nil, nil, fmt.Errorf("parsing backend response error %s", err)
