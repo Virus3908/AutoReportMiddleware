@@ -16,15 +16,15 @@ func NewPromtService(db database.Database) *PromtService {
 	return &PromtService{DB: db}
 }
 
-func (s *PromtService) GetByID(ctx context.Context, id uuid.UUID) (repositories.Promt, error) {
+func (s *PromtService) GetPromtByID(ctx context.Context, id uuid.UUID) (repositories.Promt, error) {
 	return s.DB.NewQuerry().GetPromtByID(ctx, id)
 }
 
-func (s *PromtService) Get(ctx context.Context) ([]repositories.Promt, error) {
+func (s *PromtService) GetPromts(ctx context.Context) ([]repositories.Promt, error) {
 	return s.DB.NewQuerry().GetPromts(ctx)
 }
 
-func (s *PromtService) Create(ctx context.Context, payload string) error {
+func (s *PromtService) CreatePromt(ctx context.Context, payload string) error {
 	tx, rollback, commit, err := s.DB.StartTransaction()
 	if err != nil {
 		return err
@@ -38,7 +38,7 @@ func (s *PromtService) Create(ctx context.Context, payload string) error {
 	return nil
 }
 
-func (s *PromtService) Update(ctx context.Context, id uuid.UUID, payload repositories.UpdatePromtByIDParams) error {
+func (s *PromtService) UpdatePromt(ctx context.Context, id uuid.UUID, payload repositories.UpdatePromtByIDParams) error {
 	payload.ID = id
 	tx, rollback, commit, err := s.DB.StartTransaction()
 	if err != nil {
@@ -53,7 +53,7 @@ func (s *PromtService) Update(ctx context.Context, id uuid.UUID, payload reposit
 	return nil
 }
 
-func (s *PromtService) Delete(ctx context.Context, id uuid.UUID) error {
+func (s *PromtService) DeletePromt(ctx context.Context, id uuid.UUID) error {
 	tx, rollback, commit, err := s.DB.StartTransaction()
 	if err != nil {
 		return err

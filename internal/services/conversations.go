@@ -21,15 +21,15 @@ func NewConversationService(db database.Database, storage storage.Storage) *Conv
 	}
 }
 
-func (s *ConversationsService) GetByID(ctx context.Context, id uuid.UUID) (repositories.Conversation, error) {
+func (s *ConversationsService) GetConversationByID(ctx context.Context, id uuid.UUID) (repositories.Conversation, error) {
 	return s.DB.NewQuerry().GetConversationByID(ctx, id)
 }
 
-func (s *ConversationsService) Get(ctx context.Context)([]repositories.Conversation, error) {
+func (s *ConversationsService) GetConversations(ctx context.Context)([]repositories.Conversation, error) {
 	return s.DB.NewQuerry().GetConversations(ctx)
 }
 
-func (s *ConversationsService) Create(ctx context.Context, file multipart.File, conversationName, originalFilename string) error {
+func (s *ConversationsService) CreateConversation(ctx context.Context, file multipart.File, conversationName, originalFilename string) error {
 	defer file.Close()
 
 	fileURL, err := s.Storage.UploadFile(file, originalFilename)
@@ -55,7 +55,7 @@ func (s *ConversationsService) Create(ctx context.Context, file multipart.File, 
 	return nil
 }
 
-func (s *ConversationsService) Update(ctx context.Context, id uuid.UUID, payload repositories.UpdateConversationNameByIDParams) error {
+func (s *ConversationsService) UpdateConversation(ctx context.Context, id uuid.UUID, payload repositories.UpdateConversationNameByIDParams) error {
 	payload.ID = id
 	tx, rollback, commit, err := s.DB.StartTransaction()
 	if err != nil {
@@ -70,7 +70,7 @@ func (s *ConversationsService) Update(ctx context.Context, id uuid.UUID, payload
 	return nil
 }
 
-func (s *ConversationsService) Delete(ctx context.Context, id uuid.UUID) error {
+func (s *ConversationsService) DeleteConversation(ctx context.Context, id uuid.UUID) error {
 	tx, rollback, commit, err := s.DB.StartTransaction()
 	if err != nil {
 		return err

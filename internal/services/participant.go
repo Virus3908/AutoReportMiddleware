@@ -15,15 +15,15 @@ func NewParticipantService(db database.Database) *ParticipantService {
 	return &ParticipantService{DB: db}
 }
 
-func (s *ParticipantService) GetByID(ctx context.Context, id uuid.UUID) (repositories.Participant, error) {
+func (s *ParticipantService) GetParticipantByID(ctx context.Context, id uuid.UUID) (repositories.Participant, error) {
 	return s.DB.NewQuerry().GetParticipantByID(ctx, id)
 }
 
-func (s *ParticipantService) Get(ctx context.Context) ([]repositories.Participant, error) {
+func (s *ParticipantService) GetParticipants(ctx context.Context) ([]repositories.Participant, error) {
 	return s.DB.NewQuerry().GetParticipants(ctx)
 }
 
-func (s *ParticipantService) Create(ctx context.Context, payload repositories.CreateParticipantParams) error {
+func (s *ParticipantService) CreateParticipant(ctx context.Context, payload repositories.CreateParticipantParams) error {
 	tx, rollback, commit, err := s.DB.StartTransaction()
 	if err != nil {
 		return err
@@ -37,7 +37,7 @@ func (s *ParticipantService) Create(ctx context.Context, payload repositories.Cr
 	return nil
 }
 
-func (s *ParticipantService) Update(ctx context.Context, id uuid.UUID, payload repositories.UpdateParticipantByIDParams) error {
+func (s *ParticipantService) UpdateParticipant(ctx context.Context, id uuid.UUID, payload repositories.UpdateParticipantByIDParams) error {
 	payload.ID = id
 	tx, rollback, commit, err := s.DB.StartTransaction()
 	if err != nil {
@@ -52,7 +52,7 @@ func (s *ParticipantService) Update(ctx context.Context, id uuid.UUID, payload r
 	return nil
 }
 
-func (s *ParticipantService) Delete(ctx context.Context, id uuid.UUID) error {
+func (s *ParticipantService) DeleteParticipant(ctx context.Context, id uuid.UUID) error {
 	tx, rollback, commit, err := s.DB.StartTransaction()
 	if err != nil {
 		return err
