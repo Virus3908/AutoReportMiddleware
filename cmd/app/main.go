@@ -23,7 +23,7 @@ func main() {
 
 	serverSettings := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	callbackURL := fmt.Sprintf("http://%s", serverSettings)
-	db, err := database.NewDatabase(cfg.DB)
+	db, err := database.NewDatabase(context.Background(), cfg.DB)
 	if err != nil {
 		log.Fatalf("DB connection error: %s", err)
 	}

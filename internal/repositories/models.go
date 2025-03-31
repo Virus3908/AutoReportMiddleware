@@ -19,7 +19,7 @@ type Conversation struct {
 	UpdatedAt        time.Time `db:"updated_at" json:"updated_at"`
 }
 
-type Conversationsparticipant struct {
+type ConversationsParticipant struct {
 	ID             uuid.UUID `db:"id" json:"id"`
 	UserID         uuid.UUID `db:"user_id" json:"user_id"`
 	Speaker        *int32    `db:"speaker" json:"speaker"`
@@ -40,12 +40,12 @@ type Convert struct {
 }
 
 type Diarize struct {
-	ID             uuid.UUID `db:"id" json:"id"`
-	ConversationID uuid.UUID `db:"conversation_id" json:"conversation_id"`
-	TaskID         uuid.UUID `db:"task_id" json:"task_id"`
-	Status         int32     `db:"status" json:"status"`
-	CreatedAt      time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt      time.Time `db:"updated_at" json:"updated_at"`
+	ID        uuid.UUID `db:"id" json:"id"`
+	ConverID  uuid.UUID `db:"conver_id" json:"conver_id"`
+	TaskID    uuid.UUID `db:"task_id" json:"task_id"`
+	Status    int32     `db:"status" json:"status"`
+	CreatedAt time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
 }
 
 type Participant struct {
@@ -56,9 +56,9 @@ type Participant struct {
 	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
 }
 
-type Promt struct {
+type Prompt struct {
 	ID        uuid.UUID `db:"id" json:"id"`
-	Promt     string    `db:"promt" json:"promt"`
+	Prompt    string    `db:"prompt" json:"prompt"`
 	CreatedAt time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
 }
@@ -67,7 +67,7 @@ type Report struct {
 	ID             uuid.UUID  `db:"id" json:"id"`
 	ConversationID uuid.UUID  `db:"conversation_id" json:"conversation_id"`
 	Report         *string    `db:"report" json:"report"`
-	PromtID        *uuid.UUID `db:"promt_id" json:"promt_id"`
+	PromptID       *uuid.UUID `db:"prompt_id" json:"prompt_id"`
 	TaskID         uuid.UUID  `db:"task_id" json:"task_id"`
 	Status         int32      `db:"status" json:"status"`
 	CreatedAt      time.Time  `db:"created_at" json:"created_at"`
@@ -75,22 +75,21 @@ type Report struct {
 }
 
 type Segment struct {
-	ID             uuid.UUID `db:"id" json:"id"`
-	ConversationID uuid.UUID `db:"conversation_id" json:"conversation_id"`
-	StartTime      float64   `db:"start_time" json:"start_time"`
-	EndTime        float64   `db:"end_time" json:"end_time"`
-	Speaker        int32     `db:"speaker" json:"speaker"`
-	CreatedAt      time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt      time.Time `db:"updated_at" json:"updated_at"`
+	ID        uuid.UUID `db:"id" json:"id"`
+	DiarizeID uuid.UUID `db:"diarize_id" json:"diarize_id"`
+	StartTime float64   `db:"start_time" json:"start_time"`
+	EndTime   float64   `db:"end_time" json:"end_time"`
+	Speaker   int32     `db:"speaker" json:"speaker"`
+	CreatedAt time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
 }
 
-type Transcribe struct {
-	ID             uuid.UUID `db:"id" json:"id"`
-	ConversationID uuid.UUID `db:"conversation_id" json:"conversation_id"`
-	SegmentID      uuid.UUID `db:"segment_id" json:"segment_id"`
-	Transcription  *string   `db:"transcription" json:"transcription"`
-	TaskID         uuid.UUID `db:"task_id" json:"task_id"`
-	Status         int32     `db:"status" json:"status"`
-	CreatedAt      time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt      time.Time `db:"updated_at" json:"updated_at"`
+type Transcription struct {
+	ID            uuid.UUID `db:"id" json:"id"`
+	SegmentID     uuid.UUID `db:"segment_id" json:"segment_id"`
+	Transcription *string   `db:"transcription" json:"transcription"`
+	TaskID        uuid.UUID `db:"task_id" json:"task_id"`
+	Status        int32     `db:"status" json:"status"`
+	CreatedAt     time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt     time.Time `db:"updated_at" json:"updated_at"`
 }
