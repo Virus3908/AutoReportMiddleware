@@ -10,6 +10,7 @@ import (
 	"main/internal/handlers"
 	"main/internal/services"
 	"main/internal/storage"
+	"main/internal/kafka"
 	"net/http"
 
 	CORS "github.com/gorilla/handlers"
@@ -33,6 +34,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("Storage connection error: %s", err)
 	}
+
+	kafkaProducer, err := kafka.NewProducer(cfg.Kafka)
+	if err != nil {
+		log.Fatalf("Kafka connection error: %s", err)
+	}
+	defer kafkaProducer.Close()
 
 	client, err := clients.NewAPIClient(context.Background(), cfg.API, callbackURL)
 	if err != nil {

@@ -1,8 +1,9 @@
 package config
 
 import (
-	"main/internal/database"
 	"main/internal/clients"
+	"main/internal/database"
+	"main/internal/kafka"
 	"main/internal/storage"
 )
 
@@ -13,7 +14,8 @@ type ServerConfig struct {
 
 type ConfigStuct struct {
 	DB     database.DBConfig `yaml:"pg"`
-	Server ServerConfig          `yaml:"server"`
-	S3     storage.S3Config      `yaml:"s3"`
-	API    clients.APIConfig     `yaml:"api"`
+	Server ServerConfig      `yaml:"server"`
+	S3     storage.S3Config  `yaml:"s3"`
+	API    clients.APIConfig `yaml:"api"`
+	Kafka  kafka.KafkaConfig `yaml:"kafka"`
 }

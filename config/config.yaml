@@ -20,3 +20,8 @@ s3:
 api:
   baseurl: "http://localhost:8081"
   timeout: 10
+
+kafka:
+  brokers:
+    - "localhost:9092"
+  topic: "tasks"

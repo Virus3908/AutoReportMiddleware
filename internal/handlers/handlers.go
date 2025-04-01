@@ -4,7 +4,7 @@ import (
 	"main/internal/clients"
 	"main/internal/logging"
 	"main/internal/services"
-
+	"log"
 	"net/http"
 	"sync/atomic"
 
@@ -103,4 +103,9 @@ func (r *RouterStruct) conversationsHandlers() {
 	r.Router.HandleFunc("/api/conversations/{id}",
 		wrapperDeleteHandler(r.Service.Conversation.Delete),
 	).Methods(http.MethodDelete)
+}
+
+func respondWithError(w http.ResponseWriter, msg string, err error, status int) {
+    log.Printf("[ERROR] %s: %v", msg, err)
+    http.Error(w, msg, status)
 }
