@@ -45,13 +45,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("Client connection error: %s", err)
 	}
-	service := services.NewService(db, storage)
+	service := services.NewServices(db, storage, kafkaProducer)
 
 	router := handlers.NewRouter(service, client)
 	router.CreateHandlers()
 
 	cors := CORS.CORS(
-		CORS.AllowedOrigins([]string{"127.0.0.1"}),
+		CORS.AllowedOrigins([]string{"*"}),
 		CORS.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
 		CORS.AllowedHeaders([]string{"Content-Type"}),
 	)
