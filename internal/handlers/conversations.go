@@ -21,8 +21,8 @@ func (router *RouterStruct) createConversationHandler(w http.ResponseWriter, r *
 		return
 	}
 
-	if err := router.Service.Conversation.Create(r.Context(), file,
-		conversationName, header.Filename); err != nil {
+	if err := router.Service.ConversationsService.CreateFromMultipart(r.Context(), file,
+		header.Filename, conversationName); err != nil {
 		respondWithError(w, "create failed: "+err.Error(), err, http.StatusInternalServerError)
 		return
 	}

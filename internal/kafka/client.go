@@ -16,13 +16,16 @@ type Producer struct {
 }
 
 func NewProducer(cfg KafkaConfig) (*Producer, error) {
+	if err := checkKafkaConnection(cfg.Brokers); err != nil {
+		return nil, fmt.Errorf("error connect to kafka: %s", err)
+	}
 	writer := &kafka.Writer{
 		Addr:     kafka.TCP(cfg.Brokers...),
 		Topic:    cfg.Topic,
 		Balancer: &kafka.LeastBytes{},
 	}
 
-	return &Producer{writer: writer}, checkKafkaConnection(cfg.Brokers)
+	return &Producer{writer: writer}, nil
 }
 
 func (p *Producer) SendMessage(ctx context.Context, key string, value []byte) error {
