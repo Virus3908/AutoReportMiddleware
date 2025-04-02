@@ -101,7 +101,7 @@ func (r *RouterStruct) conversationsHandlers() {
 		wrapperUpdateHandler(r.Service.CrudService.Conversation.Update),
 	).Methods(http.MethodPut)
 	r.Router.HandleFunc("/api/conversations/{id}",
-		wrapperDeleteHandler(r.Service.CrudService.Conversation.Delete),
+		wrapperDeleteHandler(r.Service.ConversationsService.DeleteConversations),
 	).Methods(http.MethodDelete)
 }
 
