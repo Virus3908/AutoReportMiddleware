@@ -1,6 +1,9 @@
 -- name: GetConversations :many
 SELECT * FROM Conversations;
 
+-- name: GetConversationFileURL :one
+SELECT file_url FROM conversations WHERE id = $1;
+
 -- name: DeleteConversationByID :one
 DELETE FROM Conversations
 WHERE id = $1

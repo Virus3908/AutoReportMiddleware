@@ -24,6 +24,10 @@ func (s *ConversationsCRUDStruct) GetByID(ctx context.Context, id uuid.UUID) (re
 	return s.DB.NewQuery().GetConversationByID(ctx, id)
 }
 
+func (s *ConversationsCRUDStruct) GetFileURLByID(ctx context.Context, id uuid.UUID) (string, error) {
+	return s.DB.NewQuery().GetConversationFileURL(ctx, id)
+}
+
 func (s *ConversationsCRUDStruct) GetAll(ctx context.Context) ([]repositories.Conversation, error) {
 	return s.DB.NewQuery().GetConversations(ctx)
 }

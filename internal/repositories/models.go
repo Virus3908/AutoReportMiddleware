@@ -34,7 +34,6 @@ type Convert struct {
 	FileUrl         *string   `db:"file_url" json:"file_url"`
 	AudioLen        *float64  `db:"audio_len" json:"audio_len"`
 	TaskID          uuid.UUID `db:"task_id" json:"task_id"`
-	Status          int32     `db:"status" json:"status"`
 	CreatedAt       time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt       time.Time `db:"updated_at" json:"updated_at"`
 }
@@ -43,7 +42,6 @@ type Diarize struct {
 	ID        uuid.UUID `db:"id" json:"id"`
 	ConverID  uuid.UUID `db:"conver_id" json:"conver_id"`
 	TaskID    uuid.UUID `db:"task_id" json:"task_id"`
-	Status    int32     `db:"status" json:"status"`
 	CreatedAt time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
 }
@@ -69,7 +67,6 @@ type Report struct {
 	Report         *string    `db:"report" json:"report"`
 	PromptID       *uuid.UUID `db:"prompt_id" json:"prompt_id"`
 	TaskID         uuid.UUID  `db:"task_id" json:"task_id"`
-	Status         int32      `db:"status" json:"status"`
 	CreatedAt      time.Time  `db:"created_at" json:"created_at"`
 	UpdatedAt      time.Time  `db:"updated_at" json:"updated_at"`
 }
@@ -84,12 +81,19 @@ type Segment struct {
 	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
 }
 
+type Task struct {
+	ID        uuid.UUID `db:"id" json:"id"`
+	Status    int32     `db:"status" json:"status"`
+	TaskType  int32     `db:"task_type" json:"task_type"`
+	CreatedAt time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
+}
+
 type Transcription struct {
 	ID            uuid.UUID `db:"id" json:"id"`
 	SegmentID     uuid.UUID `db:"segment_id" json:"segment_id"`
 	Transcription *string   `db:"transcription" json:"transcription"`
 	TaskID        uuid.UUID `db:"task_id" json:"task_id"`
-	Status        int32     `db:"status" json:"status"`
 	CreatedAt     time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt     time.Time `db:"updated_at" json:"updated_at"`
 }

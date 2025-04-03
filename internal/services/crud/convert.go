@@ -25,26 +25,20 @@ func (s *ConvertCRUD) GetByID(ctx context.Context, id uuid.UUID) (repositories.C
 	return s.DB.NewQuery().GetConvertByID(ctx, id)
 }
 
-func (s *ConvertCRUD) Create(ctx context.Context, payload uuid.UUID) error {
-	return s.DB.WithTx(ctx, func(q *repositories.Queries) error {
-		return q.CreateConvert(ctx, payload)
+func (s *ConvertCRUD) Create(ctx context.Context, payload repositories.CreateConvertParams) (error) {
+	return s.DB.WithTx(ctx, func(tx *repositories.Queries) error {
+		return tx.CreateConvert(ctx, payload)
 	})
 }
 
-func (s *ConvertCRUD) UpdateByTaskID(ctx context.Context, task_id uuid.UUID, payload repositories.UpdateConvertByTaskIDParams) error {
-	payload.TaskID = task_id
+func (s *ConvertCRUD) Update(ctx context.Context, id uuid.UUID, payload repositories.UpdateConvertByTaskIDParams) error {
+	payload.ID = id
 	return s.DB.WithTx(ctx, func(q *repositories.Queries) error {
 		return q.UpdateConvertByTaskID(ctx, payload)
 	})
 }
 
 func (s *ConvertCRUD) Delete(ctx context.Context, id uuid.UUID) error {
-	return s.DB.WithTx(ctx, func(q *repositories.Queries) error {
-		return q.DeleteConvertByID(ctx, id)
-	})
-}
-
-func (s *ConvertCRUD) DeleteByConversationID(ctx context.Context, id uuid.UUID) error {
 	return s.DB.WithTx(ctx, func(q *repositories.Queries) error {
 		return q.DeleteConvertByID(ctx, id)
 	})

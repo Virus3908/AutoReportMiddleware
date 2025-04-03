@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"main/internal/clients"
 	"main/internal/config"
 	"main/internal/database"
 	"main/internal/handlers"
@@ -35,19 +34,15 @@ func main() {
 		log.Fatalf("Storage connection error: %s", err)
 	}
 
-	kafkaProducer, err := kafka.NewProducer(cfg.Kafka)
+	kafkaProducer, err := kafka.NewProducer(cfg.Kafka, callbackURL)
 	if err != nil {
 		log.Fatalf("Kafka connection error: %s", err)
 	}
 	defer kafkaProducer.Close()
 
-	client, err := clients.NewAPIClient(context.Background(), cfg.API, callbackURL)
-	if err != nil {
-		log.Fatalf("Client connection error: %s", err)
-	}
 	service := services.NewServices(db, storage, kafkaProducer)
 
-	router := handlers.NewRouter(service, client)
+	router := handlers.NewRouter(service)
 	router.CreateHandlers()
 
 	cors := CORS.CORS(

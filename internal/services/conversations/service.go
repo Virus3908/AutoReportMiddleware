@@ -2,10 +2,13 @@ package conversations
 
 import (
 	"context"
+	"fmt"
 	"main/internal/repositories"
 	"main/internal/services/crud"
 	"main/internal/storage"
 	"mime/multipart"
+
+	"github.com/google/uuid"
 )
 
 type ConversationsService struct {
@@ -23,8 +26,6 @@ func (service *ConversationsService) CreateFromMultipart(
 	filename string,
 	conversationName string,
 ) error {
-	defer file.Close()
-
 	fileURL, err := service.Storage.UploadFile(file, filename)
 	if err != nil {
 		return err
@@ -36,4 +37,12 @@ func (service *ConversationsService) CreateFromMultipart(
 	}
 
 	return service.CRUD.Create(ctx, payload)
+}
+
+func (service *ConversationsService) DeleteConversations(ctx context.Context, id uuid.UUID) error {
+	fileURL, err := service.CRUD.Delete(ctx, id)
+	if err != nil {
+		return fmt.Errorf("delete error: %s", err)
+	}
+	return service.Storage.DeleteFileByURL(*fileURL)
 }

@@ -56,6 +56,17 @@ func (q *Queries) GetConversationByID(ctx context.Context, id uuid.UUID) (Conver
 	return i, err
 }
 
+const GetConversationFileURL = `-- name: GetConversationFileURL :one
+SELECT file_url FROM conversations WHERE id = $1
+`
+
+func (q *Queries) GetConversationFileURL(ctx context.Context, id uuid.UUID) (string, error) {
+	row := q.db.QueryRow(ctx, GetConversationFileURL, id)
+	var file_url string
+	err := row.Scan(&file_url)
+	return file_url, err
+}
+
 const GetConversations = `-- name: GetConversations :many
 SELECT id, conversation_name, file_url, status, created_at, updated_at FROM Conversations
 `
