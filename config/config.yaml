@@ -17,10 +17,6 @@ s3:
   region: ru-central1
   minio: true
 
-api:
-  baseurl: "http://localhost:8081"
-  timeout: 10
-
 kafka:
   brokers:
     - "localhost:9092"

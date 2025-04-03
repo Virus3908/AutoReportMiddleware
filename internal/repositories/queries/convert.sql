@@ -4,11 +4,12 @@ SELECT * FROM convert;
 -- name: GetConvertByID :one
 SELECT * FROM convert WHERE id = $1;
 
--- name: CreateConvert :exec
-INSERT INTO convert (task_id) VALUES ($1);
+-- name: CreateConvert :one
+INSERT INTO convert (conversations_id) VALUES ($1)
+RETURNING id;
 
 -- name: UpdateConvertByTaskID :exec
-UPDATE convert SET file_url = $1, status = $2 WHERE task_id = $3;
+UPDATE convert SET file_url = $1, status = $2 WHERE id = $3;
 
 -- name: DeleteConvertByID :exec
 DELETE FROM convert WHERE id = $1;

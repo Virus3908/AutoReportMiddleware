@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"main/internal/clients"
 	"main/internal/logging"
 	"main/internal/services"
 	"log"
@@ -17,15 +16,13 @@ type Router interface {
 }
 
 type RouterStruct struct {
-	Client  clients.Client
 	Router  *mux.Router
 	Service *services.ServicesStruct
 	ready   int32
 }
 
-func NewRouter(service *services.ServicesStruct, client clients.Client) *RouterStruct {
+func NewRouter(service *services.ServicesStruct) *RouterStruct {
 	return &RouterStruct{
-		Client:  client,
 		Router:  mux.NewRouter(),
 		Service: service,
 		ready:   0,

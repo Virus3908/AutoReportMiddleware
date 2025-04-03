@@ -32,7 +32,6 @@ CREATE TABLE convert (
     conversations_id UUID REFERENCES conversations(id) ON DELETE CASCADE UNIQUE NOT NULL,
     file_url VARCHAR(255),
     audio_len FLOAT,
-    task_id UUID NOT NULL,
     status INT DEFAULT 0 NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
@@ -40,8 +39,7 @@ CREATE TABLE convert (
 
 CREATE TABLE diarize (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    conver_id UUID REFERENCES convert(id) ON DELETE CASCADE UNIQUE NOT NULL,
-    task_id UUID NOT NULL, 
+    conver_id UUID REFERENCES convert(id) ON DELETE CASCADE UNIQUE NOT NULL, 
     status INT DEFAULT 0 NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
@@ -61,7 +59,6 @@ CREATE TABLE transcriptions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     segment_id UUID REFERENCES segments(id) ON DELETE CASCADE NOT NULL,
     transcription TEXT,
-    task_id UUID NOT NULL,
     status INT DEFAULT 0 NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
@@ -79,7 +76,6 @@ CREATE TABLE report (
     conversation_id UUID REFERENCES Conversations(id) ON DELETE CASCADE NOT NULL,
     report TEXT,
     prompt_id UUID REFERENCES Prompts(id),
-    task_id UUID NOT NULL,
     status INT DEFAULT 0 NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL

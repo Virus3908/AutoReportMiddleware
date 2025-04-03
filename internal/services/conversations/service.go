@@ -42,7 +42,7 @@ func (service *ConversationsService) CreateFromMultipart(
 func (service *ConversationsService) DeleteConversations(ctx context.Context, id uuid.UUID) error {
 	fileURL, err := service.CRUD.Delete(ctx, id)
 	if err != nil {
-		return fmt.Errorf("delet error: %s", err)
+		return fmt.Errorf("delete error: %s", err)
 	}
 	return service.Storage.DeleteFileByURL(*fileURL)
 }

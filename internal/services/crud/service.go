@@ -20,6 +20,7 @@ type CrudService[T any, CreateDTO any, UpdateDTO any] interface {
 type CrudConversations interface {
 	GetByID(ctx context.Context, id uuid.UUID) (repositories.Conversation, error)
 	GetAll(ctx context.Context) ([]repositories.Conversation, error)
+	GetFileURLByID(ctx context.Context, id uuid.UUID) (string, error) 
 	Create(ctx context.Context, payload repositories.CreateConversationParams) error
 	Update(ctx context.Context, id uuid.UUID, payload repositories.UpdateConversationNameByIDParams) error
 	UpdateStatus(ctx context.Context, id uuid.UUID, payload repositories.UpdateConversationStatusByIDParams) error
