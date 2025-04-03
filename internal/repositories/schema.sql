@@ -27,12 +27,20 @@ CREATE TABLE conversations_participant (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
+CREATE TABLE tasks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    status INTEGER DEFAULT 0 NOT NULL,
+    task_type INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
 CREATE TABLE convert (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     conversations_id UUID REFERENCES conversations(id) ON DELETE CASCADE UNIQUE NOT NULL,
     file_url VARCHAR(255),
     audio_len FLOAT,
-    status INT DEFAULT 0 NOT NULL,
+    task_id UUID REFERENCES tasks(id) ON DELETE CASCADE UNIQUE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
@@ -40,7 +48,7 @@ CREATE TABLE convert (
 CREATE TABLE diarize (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     conver_id UUID REFERENCES convert(id) ON DELETE CASCADE UNIQUE NOT NULL, 
-    status INT DEFAULT 0 NOT NULL,
+    tasks_id UUID REFERENCES tasks(id) ON DELETE CASCADE UNIQUE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
@@ -59,7 +67,7 @@ CREATE TABLE transcriptions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     segment_id UUID REFERENCES segments(id) ON DELETE CASCADE NOT NULL,
     transcription TEXT,
-    status INT DEFAULT 0 NOT NULL,
+    tasks_id UUID REFERENCES tasks(id) ON DELETE CASCADE UNIQUE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
@@ -76,7 +84,7 @@ CREATE TABLE report (
     conversation_id UUID REFERENCES Conversations(id) ON DELETE CASCADE NOT NULL,
     report TEXT,
     prompt_id UUID REFERENCES Prompts(id),
-    status INT DEFAULT 0 NOT NULL,
+    tasks_id UUID REFERENCES tasks(id) ON DELETE CASCADE UNIQUE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
@@ -131,5 +139,10 @@ EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trigger_update_prompts
 BEFORE UPDATE ON prompts
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER trigger_update_tasks
+BEFORE UPDATE ON tasks
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();

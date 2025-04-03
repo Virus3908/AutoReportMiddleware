@@ -25,30 +25,9 @@ func (s *ConvertCRUD) GetByID(ctx context.Context, id uuid.UUID) (repositories.C
 	return s.DB.NewQuery().GetConvertByID(ctx, id)
 }
 
-func (s *ConvertCRUD) Create(ctx context.Context, payload uuid.UUID) (*uuid.UUID, error) {
-	var id uuid.UUID
-	err := s.DB.WithTx(ctx, func(tx *repositories.Queries) error {
-		var err error
-		id, err = tx.CreateConvert(ctx, payload)
-		return err
-	})
-	if err != nil {
-		return nil, err
-	}
-	return &id, nil
-}
-
-func (s *ConvertCRUD) CreateWithFN(
-	ctx context.Context,
-	conversationID uuid.UUID,
-	fn func(convertID uuid.UUID) error,
-) error {
+func (s *ConvertCRUD) Create(ctx context.Context, payload repositories.CreateConvertParams) (error) {
 	return s.DB.WithTx(ctx, func(tx *repositories.Queries) error {
-		convertID, err := tx.CreateConvert(ctx, conversationID)
-		if err != nil {
-			return err
-		}
-		return fn(convertID)
+		return tx.CreateConvert(ctx, payload)
 	})
 }
 

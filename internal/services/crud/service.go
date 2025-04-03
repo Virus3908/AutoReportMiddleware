@@ -4,10 +4,9 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"main/internal/database"
-	"main/internal/storage"
 	"main/internal/repositories"
+	"main/internal/storage"
 )
-
 
 type CrudService[T any, CreateDTO any, UpdateDTO any] interface {
 	GetAll(ctx context.Context) ([]T, error)
@@ -20,7 +19,7 @@ type CrudService[T any, CreateDTO any, UpdateDTO any] interface {
 type CrudConversations interface {
 	GetByID(ctx context.Context, id uuid.UUID) (repositories.Conversation, error)
 	GetAll(ctx context.Context) ([]repositories.Conversation, error)
-	GetFileURLByID(ctx context.Context, id uuid.UUID) (string, error) 
+	GetFileURLByID(ctx context.Context, id uuid.UUID) (string, error)
 	Create(ctx context.Context, payload repositories.CreateConversationParams) error
 	Update(ctx context.Context, id uuid.UUID, payload repositories.UpdateConversationNameByIDParams) error
 	UpdateStatus(ctx context.Context, id uuid.UUID, payload repositories.UpdateConversationStatusByIDParams) error
@@ -32,6 +31,7 @@ type CrudServicesStruct struct {
 	Participant  CrudService[repositories.Participant, repositories.CreateParticipantParams, repositories.UpdateParticipantByIDParams]
 	Prompt       CrudService[repositories.Prompt, string, repositories.UpdatePromptByIDParams]
 	Convert      *ConvertCRUD
+	Task         *TaskCRUD
 }
 
 func NewService(db database.Database, storage storage.Storage) *CrudServicesStruct {
@@ -40,5 +40,6 @@ func NewService(db database.Database, storage storage.Storage) *CrudServicesStru
 		Participant:  NewParticipantCRUD(db),
 		Prompt:       NewPromptCRUD(db),
 		Convert:      NewConvertCRUD(db),
+		Task:         NewTaskCRUD(db),
 	}
 }

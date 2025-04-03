@@ -14,14 +14,8 @@ type TaskDispatcher struct {
 	Kafka *kafka.Producer
 }
 
-const (
-	TaskTypeConvert    int32 = 1
-	TaskTypeDiarize    int32 = 2
-	TaskTypeTranscribe int32 = 3
-)
-
 type ConvertTask struct {
-	ConvertID       uuid.UUID `json:"convert_id"`
+	TaskID          uuid.UUID `json:"task_id"`
 	FileURL         string    `json:"file_url"`
 	TaskType        int32     `json:"task_type"`
 	CallbackPostfix string    `json:"callback_postfix"`
@@ -40,11 +34,11 @@ func (s *TaskDispatcher) CreateConvertTask(ctx context.Context, conversationID u
 		return fmt.Errorf("error retrieving file URL: %w", err)
 	}
 
-	return s.CRUD.Convert.CreateWithFN(ctx, conversationID, func(convertID uuid.UUID) error {
+	return s.CRUD.Task.CreateConvertTask(ctx, conversationID, func(taskID uuid.UUID, taskType int32) error {
 		convertTask := ConvertTask{
 			FileURL:         fileURL,
-			ConvertID:       convertID,
-			TaskType:        TaskTypeConvert,
+			TaskID:          taskID,
+			TaskType:        taskType,
 			CallbackPostfix: "/api/task/update/convert/",
 		}
 		payload, err := json.Marshal(convertTask)

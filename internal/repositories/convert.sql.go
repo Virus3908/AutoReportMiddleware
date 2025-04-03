@@ -11,16 +11,18 @@ import (
 	"github.com/google/uuid"
 )
 
-const CreateConvert = `-- name: CreateConvert :one
-INSERT INTO convert (conversations_id) VALUES ($1)
-RETURNING id
+const CreateConvert = `-- name: CreateConvert :exec
+INSERT INTO convert (conversations_id, task_id) VALUES ($1, $2)
 `
 
-func (q *Queries) CreateConvert(ctx context.Context, conversationsID uuid.UUID) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, CreateConvert, conversationsID)
-	var id uuid.UUID
-	err := row.Scan(&id)
-	return id, err
+type CreateConvertParams struct {
+	ConversationsID uuid.UUID `db:"conversations_id" json:"conversations_id"`
+	TaskID          uuid.UUID `db:"task_id" json:"task_id"`
+}
+
+func (q *Queries) CreateConvert(ctx context.Context, arg CreateConvertParams) error {
+	_, err := q.db.Exec(ctx, CreateConvert, arg.ConversationsID, arg.TaskID)
+	return err
 }
 
 const DeleteConvertByForgeinID = `-- name: DeleteConvertByForgeinID :one
@@ -46,7 +48,7 @@ func (q *Queries) DeleteConvertByID(ctx context.Context, id uuid.UUID) error {
 }
 
 const GetConvert = `-- name: GetConvert :many
-SELECT id, conversations_id, file_url, audio_len, status, created_at, updated_at FROM convert
+SELECT id, conversations_id, file_url, audio_len, task_id, created_at, updated_at FROM convert
 `
 
 func (q *Queries) GetConvert(ctx context.Context) ([]Convert, error) {
@@ -63,7 +65,7 @@ func (q *Queries) GetConvert(ctx context.Context) ([]Convert, error) {
 			&i.ConversationsID,
 			&i.FileUrl,
 			&i.AudioLen,
-			&i.Status,
+			&i.TaskID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -77,27 +79,8 @@ func (q *Queries) GetConvert(ctx context.Context) ([]Convert, error) {
 	return items, nil
 }
 
-const GetConvertByConversationID = `-- name: GetConvertByConversationID :one
-SELECT id, conversations_id, file_url, audio_len, status, created_at, updated_at FROM convert WHERE conversations_id = $1
-`
-
-func (q *Queries) GetConvertByConversationID(ctx context.Context, conversationsID uuid.UUID) (Convert, error) {
-	row := q.db.QueryRow(ctx, GetConvertByConversationID, conversationsID)
-	var i Convert
-	err := row.Scan(
-		&i.ID,
-		&i.ConversationsID,
-		&i.FileUrl,
-		&i.AudioLen,
-		&i.Status,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
 const GetConvertByID = `-- name: GetConvertByID :one
-SELECT id, conversations_id, file_url, audio_len, status, created_at, updated_at FROM convert WHERE id = $1
+SELECT id, conversations_id, file_url, audio_len, task_id, created_at, updated_at FROM convert WHERE id = $1
 `
 
 func (q *Queries) GetConvertByID(ctx context.Context, id uuid.UUID) (Convert, error) {
@@ -108,7 +91,7 @@ func (q *Queries) GetConvertByID(ctx context.Context, id uuid.UUID) (Convert, er
 		&i.ConversationsID,
 		&i.FileUrl,
 		&i.AudioLen,
-		&i.Status,
+		&i.TaskID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -116,16 +99,15 @@ func (q *Queries) GetConvertByID(ctx context.Context, id uuid.UUID) (Convert, er
 }
 
 const UpdateConvertByTaskID = `-- name: UpdateConvertByTaskID :exec
-UPDATE convert SET file_url = $1, status = $2 WHERE id = $3
+UPDATE convert SET file_url = $1 WHERE id = $2
 `
 
 type UpdateConvertByTaskIDParams struct {
 	FileUrl *string   `db:"file_url" json:"file_url"`
-	Status  int32     `db:"status" json:"status"`
 	ID      uuid.UUID `db:"id" json:"id"`
 }
 
 func (q *Queries) UpdateConvertByTaskID(ctx context.Context, arg UpdateConvertByTaskIDParams) error {
-	_, err := q.db.Exec(ctx, UpdateConvertByTaskID, arg.FileUrl, arg.Status, arg.ID)
+	_, err := q.db.Exec(ctx, UpdateConvertByTaskID, arg.FileUrl, arg.ID)
 	return err
 }
