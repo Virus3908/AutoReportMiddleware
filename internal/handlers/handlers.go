@@ -1,9 +1,9 @@
 package handlers
 
 import (
+	"log"
 	"main/internal/logging"
 	"main/internal/services"
-	"log"
 	"net/http"
 	"sync/atomic"
 
@@ -38,6 +38,7 @@ func (r *RouterStruct) CreateHandlers() {
 	r.participantsHandlers()
 	r.promptsHandlers()
 	r.conversationsHandlers()
+	r.taskHandlers()
 }
 
 func (r *RouterStruct) logAndInfoHandlers() {
@@ -102,7 +103,13 @@ func (r *RouterStruct) conversationsHandlers() {
 	).Methods(http.MethodDelete)
 }
 
+func (r *RouterStruct) taskHandlers() {
+	r.Router.HandleFunc("api/task/create/convert/{id}",
+		wrapperDeleteHandler(r.Service.TaskService.CreateConvertTask),
+	).Methods(http.MethodPost)
+}
+
 func respondWithError(w http.ResponseWriter, msg string, err error, status int) {
-    log.Printf("[ERROR] %s: %v", msg, err)
-    http.Error(w, msg, status)
+	log.Printf("[ERROR] %s: %v", msg, err)
+	http.Error(w, msg, status)
 }
