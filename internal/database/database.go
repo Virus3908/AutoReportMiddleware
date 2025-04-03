@@ -26,6 +26,81 @@ type Tx struct {
 	Queries  *repositories.Queries
 	Rollback func() error
 	Commit   func() error
+} // тут могу ошибаться, но у пгх уже есть все эти методы, вообще транзакция сделана тут плохо прямо, 
+
+type Transactioned interface { // эту хрень по умолчанию в хендлеры можно инклудить например
+	StartTransaction(context.Context) (pgx.Tx, error)
+	StartNestedTransaction(ctx context.Context, tx pgx.Tx) (pgx.Tx, error)
+	CommitTransaction(context.Context, pgx.Tx) error
+	RollbackTransactionIfExist(context.Context, pgx.Tx) error
+}
+
+import (
+	db "generated from sqlc"
+)
+
+func New(meter *metric.Meter, connPool *pgxpool.Pool, jwtGenerator JWTGenerator, storageServiceBaseURL string) *Repository {
+	return &Repository{
+		// meter:                 meter, ну вдруг тебе надо как-то
+		queries:               db.New(connPool), // 
+		connPool:              connPool,
+		storageServiceBaseURL: storageServiceBaseURL,
+	}
+}
+
+func (r *Repository) StartTransaction(ctx context.Context) (pgx.Tx, error) {
+	tx, err := r.connPool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return tx, nil
+}
+
+func (r *Repository) StartNestedTransaction(ctx context.Context, tx pgx.Tx) (pgx.Tx, error) {
+	return tx.Begin(ctx)
+}
+
+func (r *Repository) CommitTransaction(ctx context.Context, tx pgx.Tx) error {
+	return tx.Commit(ctx)
+}
+
+func (r *Repository) RollbackTransactionIfExist(ctx context.Context, tx pgx.Tx) error {
+	return tx.Rollback(ctx)
+}
+
+func (r *Repository) SomeRequestWithTx( // это в репе уже
+	ctx context.Context, tx pgx.Tx, ...,
+) error {
+	queries := r.queries.WithTx(tx)
+
+	_, err := queries.SomeRequest(ctx, params)
+	return err
+}
+
+func (r *Repository) SomeRequestWhereYouNeedTransaction( // это в репе уже
+	ctx context.Context, ...,
+) error {
+	tx, err := r.StartTransaction(ctx)
+	if err != nil {
+		return err
+	}
+
+	queries := r.queries.WithTx(tx)
+
+	_, err := queries.SomeRequest(ctx, params)
+	return err
+}
+
+func (r *Repository) SomeRequestWhichCanBeWithOrWithoutTransaction( // это в репе уже
+	ctx context.Context, tx pgx.Tx, ...,
+) error {
+	queries := r.queries
+	if tx != nil {
+		queries = r.queries.WithTx(tx)
+	}
+
+	_, err := queries.SomeRequest(ctx, params)
+	return err
 }
 
 type PGdatabase struct {

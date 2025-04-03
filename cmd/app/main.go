@@ -22,7 +22,7 @@ func main() {
 		log.Fatalf("Config file error: %s", err)
 	}
 
-	serverSettings := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
+	serverSettings := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port) // не понимаю почему это все не в конфиге или на худой конец в объекте
 	callbackURL := fmt.Sprintf("http://%s", serverSettings)
 	db, err := database.NewDatabase(context.Background(), cfg.DB)
 	if err != nil {
@@ -56,7 +56,7 @@ func main() {
 		CORS.AllowedHeaders([]string{"Content-Type"}),
 	)
 
-	router.SetReady()
+	router.SetReady() // вообще объект по хорошему сам должен понимать что он готов, а не ему говорить.
 	log.Printf("Server is ready: %s", serverSettings)
 	err = http.ListenAndServe(serverSettings, cors(router.Router))
 	if err != nil {

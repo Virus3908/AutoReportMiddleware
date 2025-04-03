@@ -92,7 +92,7 @@ func (s *S3Client) DeleteFileByURL(fileURL string) error {
 	}
 	fileKey := strings.TrimPrefix(fileURL, baseURL)
 
-	_, err := s.Client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
+	_, err := s.Client.DeleteObject(context.Background(), &s3.DeleteObjectInput{ // не понимаю откуда этот ваш TODO взялся и почему вы его так любите
 		Bucket: aws.String(s.Config.Bucket),
 		Key:    aws.String(fileKey),
 	})

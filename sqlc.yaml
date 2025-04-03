@@ -1,3 +1,4 @@
+# это явно должно быть не в этой папке
 version: "2"          
 sql:
   - engine: "postgresql"

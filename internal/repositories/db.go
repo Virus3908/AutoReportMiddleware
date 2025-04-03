@@ -17,7 +17,7 @@ type DBTX interface {
 	QueryRow(context.Context, string, ...interface{}) pgx.Row
 }
 
-func New(db DBTX) *Queries {
+func New(db DBTX) *Queries { // вот эту штуку я писал тебе в database
 	return &Queries{db: db}
 }
 

@@ -9,7 +9,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func wrapperGetHandler[T any](getFn func(ctx context.Context) ([]T, error)) http.HandlerFunc {
+// идея интересная, не знаю даже что я про неё думаю
+
+func wrapperGetHandler[T any](getFn func(ctx context.Context) ([]T, error)) http.HandlerFunc { // идею понял, но нейминги странные
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := getFn(r.Context())
 		if err != nil {

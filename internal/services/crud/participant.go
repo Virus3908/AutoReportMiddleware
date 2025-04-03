@@ -7,6 +7,8 @@ import (
 	"github.com/google/uuid"
 )
 
+// вот эти все файлы у тебя по сути репозитория, причем однотипнейшная
+
 type ParticipantCRUD struct {
 	DB database.Database
 }

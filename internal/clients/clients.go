@@ -110,7 +110,7 @@ func NewAPIClient(ctx context.Context, cfg APIConfig, callbackURL string) (*APIC
 }
 
 // responseMessage | responseConvertedAudioFile | responseAudioFileSegments
-func getAPIResponse[T responseStatus | responseInfo](ctx context.Context, a *http.Client, method, url string, body io.Reader) (*T, error) {
+func getAPIResponse[T responseStatus | responseInfo](ctx context.Context, a *http.Client, method, url string, body io.Reader) (*T, error) { // странно тут видеть статусы хотя это по сути дженерик, дай ему быть дженериком
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
 		return nil, fmt.Errorf("error creating API request: %s", err)
@@ -133,7 +133,7 @@ func getAPIResponse[T responseStatus | responseInfo](ctx context.Context, a *htt
 	return &response, nil
 }
 
-func (a *APIClient) CreateTaskConvertFileAndGetTaskID(ctx context.Context, fileURL string) (*uuid.UUID, error) {
+func (a *APIClient) CreateTaskConvertFileAndGetTaskID(ctx context.Context, fileURL string) (*uuid.UUID, error) { // я бы поменял имя на кароче
 	data := requestFile{
 		FileURL:     fileURL,
 		CallbackURL: a.CallbackURL,
@@ -152,12 +152,11 @@ func (a *APIClient) CreateTaskConvertFileAndGetTaskID(ctx context.Context, fileU
 	return &response.ID, nil
 }
 
-func (a *APIClient) CreateTaskDiarizeFileAndGetTaskID(ctx context.Context, fileURL string) (*uuid.UUID, error) {
-	data := requestFile{
+func (a *APIClient) CreateTaskDiarizeFileAndGetTaskID(ctx context.Context, fileURL string) (*uuid.UUID, error) { // тоже самое, очень длинное имя и возвращается айди, не прям нужно писать об этом
+	jsonData, err := json.Marshal(requestFile{
 		FileURL:     fileURL,
 		CallbackURL: a.CallbackURL,
-	}
-	jsonData, err := json.Marshal(data)
+	})
 	if err != nil {
 		return nil, fmt.Errorf("marshal error API: %v", err)
 	}
@@ -171,13 +170,13 @@ func (a *APIClient) CreateTaskDiarizeFileAndGetTaskID(ctx context.Context, fileU
 	return &response.ID, nil
 }
 
-func (a *APIClient) CreateTaskTranscribeSegmentFileAndGetTaskID(ctx context.Context, fileURL string, segment Segment) (*uuid.UUID, error) {
-	data := requestFileWithSegment{
+func (a *APIClient) CreateTaskTranscribeSegmentFileAndGetTaskID(ctx context.Context, fileURL string, segment Segment) (*uuid.UUID, error) { // опять file и тд
+	// data не говорящее название и она тут бесполезна
+	jsonData, err := json.Marshal(requestFileWithSegment{
 		FileURL:     fileURL,
 		CallbackURL: a.CallbackURL,
 		Segment:     segment,
-	}
-	jsonData, err := json.Marshal(data)
+	})
 	if err != nil {
 		return nil, fmt.Errorf("marshal error API: %v", err)
 	}
@@ -191,7 +190,7 @@ func (a *APIClient) CreateTaskTranscribeSegmentFileAndGetTaskID(ctx context.Cont
 	return &response.ID, nil
 }
 
-func (a *APIClient) CreateTaskReportAndGetTaskID(ctx context.Context, message, prompt string, audioLen float64) (*uuid.UUID, error) {
+func (a *APIClient) CreateTaskReportAndGetTaskID(ctx context.Context, message, prompt string, audioLen float64) (*uuid.UUID, error) { //Len во float64, сильно, сделай либо int её либо напиши что это durationInSomething
 	data := requestMessageWithAudioLen{
 		Message:  message,
 		Prompt:   prompt,
@@ -263,3 +262,6 @@ func (a *APIClient) GetMessage(responseBody []byte) (*string, error) {
 // 	}
 // 	return &response.FileURL, &response.AudioLen, nil
 // }
+
+
+// у тебя уже много сущностей здесь появляется DiarizationSegments, ConvertedFile они все сгруппированы по операциям, подумай мб стоит выделить их в отдельные объекты?

@@ -20,7 +20,7 @@ type RouterStruct struct {
 	Client  clients.Client
 	Router  *mux.Router
 	Service *services.ServicesStruct
-	ready   int32
+	ready   int32 // вот костыль костылем
 }
 
 func NewRouter(service *services.ServicesStruct, client clients.Client) *RouterStruct {
@@ -33,7 +33,7 @@ func NewRouter(service *services.ServicesStruct, client clients.Client) *RouterS
 }
 
 func (r *RouterStruct) SetReady() {
-	atomic.StoreInt32(&r.ready, 1)
+	atomic.StoreInt32(&r.ready, 1) // Боже какой треш, изменение состояние объекта роутера чтобы отправлять реди и лайвлинесс, отписал еще там где ты вызываешь это
 }
 
 func (r *RouterStruct) CreateHandlers() {
@@ -43,8 +43,14 @@ func (r *RouterStruct) CreateHandlers() {
 	r.conversationsHandlers()
 }
 
+// все что ниже странно, но окей, может быть я привык к автогенерации слишком сильно, хз
+
 func (r *RouterStruct) logAndInfoHandlers() {
 	r.Router.Use(logging.LoggingMidleware)
+	// вот задумка классная с милдварями, 
+	// прикинь как было бы круто если где нибудь поймаешь панику? Умрет все приложение? 
+	// Можно было бы подать список милдвар которые были бы созданы в мейне где нибудь
+	// а в конструкторе handler их заюзать, причем хендлер вообще бы не знал какой именно список там милдварь придет
 
 	r.Router.HandleFunc("/liveness", r.livenessHandler).Methods(http.MethodGet)
 	r.Router.HandleFunc("/readiness", r.readinessHandler).Methods(http.MethodGet)
@@ -53,7 +59,8 @@ func (r *RouterStruct) logAndInfoHandlers() {
 
 func (r *RouterStruct) participantsHandlers() {
 	r.Router.HandleFunc("/api/participants",
-		wrapperGetHandler(r.Service.CrudService.Participant.GetAll),
+		wrapperGetHandler(r.Service.CrudService.Participant.GetAll), // наверное для милдвари такой вариант и нормальный, 
+		// но что будет когда тебе нужно будет допустим по ручке пользователя особенной сделать допустим 2-3 составных запроса, на их основе потом сходить куда-то, куда положишь?
 	).Methods(http.MethodGet)
 	r.Router.HandleFunc("/api/participants/{id}",
 		wrapperGetByIDHandler(r.Service.CrudService.Participant.GetByID),
