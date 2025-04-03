@@ -9,9 +9,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func wrapperGetHandler[T any](getFn func(ctx context.Context) ([]T, error)) http.HandlerFunc {
+func wrapperReturningData[T any](fn func(ctx context.Context) ([]T, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data, err := getFn(r.Context())
+		data, err := fn(r.Context())
 		if err != nil {
 			respondWithError(w, err.Error(), err, http.StatusInternalServerError)
 			return
@@ -21,7 +21,7 @@ func wrapperGetHandler[T any](getFn func(ctx context.Context) ([]T, error)) http
 	}
 }
 
-func wrapperGetByIDHandler[T any](getByIDFn func(ctx context.Context, id uuid.UUID) (T, error)) http.HandlerFunc {
+func wrapperWithIDReturningData[T any](fn func(ctx context.Context, id uuid.UUID) (T, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		strID := params["id"]
@@ -31,7 +31,7 @@ func wrapperGetByIDHandler[T any](getByIDFn func(ctx context.Context, id uuid.UU
 			return
 		}
 
-		data, err := getByIDFn(r.Context(), id)
+		data, err := fn(r.Context(), id)
 		if err != nil {
 			respondWithError(w, err.Error(), err, http.StatusInternalServerError)
 			return
@@ -41,7 +41,7 @@ func wrapperGetByIDHandler[T any](getByIDFn func(ctx context.Context, id uuid.UU
 	}
 }
 
-func wrapperCreateHandler[T any](createFn func(ctx context.Context, payload T) error) http.HandlerFunc {
+func wrapperWithPayload[T any](fn func(ctx context.Context, payload T) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var payload T
 
@@ -50,8 +50,8 @@ func wrapperCreateHandler[T any](createFn func(ctx context.Context, payload T) e
 			return
 		}
 
-		if err := createFn(r.Context(), payload); err != nil {
-			respondWithError(w, "Failed to create: "+err.Error(), err, http.StatusInternalServerError)
+		if err := fn(r.Context(), payload); err != nil {
+			respondWithError(w, "handle error: "+err.Error(), err, http.StatusInternalServerError)
 			return
 		}
 
@@ -59,7 +59,26 @@ func wrapperCreateHandler[T any](createFn func(ctx context.Context, payload T) e
 	}
 }
 
-func wrapperUpdateHandler[T any](updateFn func(ctx context.Context, id uuid.UUID, payload T) error) http.HandlerFunc {
+func wrapperWithID(fn func(ctx context.Context, id uuid.UUID) error) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		strID := params["id"]
+		id, err := uuid.Parse(strID)
+		if err != nil {
+			respondWithError(w, err.Error(), err, http.StatusBadRequest)
+			return
+		}
+
+		if err := fn(r.Context(), id); err != nil {
+			respondWithError(w, "handle error: "+err.Error(), err, http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func wrapperWithIDAndPayload[T any](fn func(ctx context.Context, id uuid.UUID, payload T) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		strID := params["id"]
@@ -76,29 +95,11 @@ func wrapperUpdateHandler[T any](updateFn func(ctx context.Context, id uuid.UUID
 			return
 		}
 
-		if err := updateFn(r.Context(), id, payload); err != nil {
-			respondWithError(w, "Failed to update: "+err.Error(), err, http.StatusInternalServerError)
+		if err := fn(r.Context(), id, payload); err != nil {
+			respondWithError(w, "Handle error: "+err.Error(), err, http.StatusInternalServerError)
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
-func wrapperDeleteHandler(deleteFn func(ctx context.Context, id uuid.UUID) error) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		params := mux.Vars(r)
-		strID := params["id"]
-		id, err := uuid.Parse(strID)
-		if err != nil {
-			respondWithError(w, err.Error(), err, http.StatusBadRequest)
-			return
-		}
-
-		if err := deleteFn(r.Context(), id); err != nil {
-			respondWithError(w, "delete error: "+err.Error(), err, http.StatusInternalServerError)
-			return
-		}
-
-		w.WriteHeader(http.StatusNoContent)
-	}
-}

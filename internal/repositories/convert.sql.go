@@ -77,6 +77,25 @@ func (q *Queries) GetConvert(ctx context.Context) ([]Convert, error) {
 	return items, nil
 }
 
+const GetConvertByConversationID = `-- name: GetConvertByConversationID :one
+SELECT id, conversations_id, file_url, audio_len, status, created_at, updated_at FROM convert WHERE conversations_id = $1
+`
+
+func (q *Queries) GetConvertByConversationID(ctx context.Context, conversationsID uuid.UUID) (Convert, error) {
+	row := q.db.QueryRow(ctx, GetConvertByConversationID, conversationsID)
+	var i Convert
+	err := row.Scan(
+		&i.ID,
+		&i.ConversationsID,
+		&i.FileUrl,
+		&i.AudioLen,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const GetConvertByID = `-- name: GetConvertByID :one
 SELECT id, conversations_id, file_url, audio_len, status, created_at, updated_at FROM convert WHERE id = $1
 `

@@ -51,61 +51,61 @@ func (r *RouterStruct) logAndInfoHandlers() {
 
 func (r *RouterStruct) participantsHandlers() {
 	r.Router.HandleFunc("/api/participants",
-		wrapperGetHandler(r.Service.CrudService.Participant.GetAll),
+		wrapperReturningData(r.Service.CrudService.Participant.GetAll),
 	).Methods(http.MethodGet)
 	r.Router.HandleFunc("/api/participants/{id}",
-		wrapperGetByIDHandler(r.Service.CrudService.Participant.GetByID),
+		wrapperWithIDReturningData(r.Service.CrudService.Participant.GetByID),
 	).Methods(http.MethodGet)
 	r.Router.HandleFunc("/api/participants",
-		wrapperCreateHandler(r.Service.CrudService.Participant.Create),
+		wrapperWithPayload(r.Service.CrudService.Participant.Create),
 	).Methods(http.MethodPost)
 	r.Router.HandleFunc("/api/participants/{id}",
-		wrapperUpdateHandler(r.Service.CrudService.Participant.Update),
+		wrapperWithIDAndPayload(r.Service.CrudService.Participant.Update),
 	).Methods(http.MethodPut)
 	r.Router.HandleFunc("/api/participants/{id}",
-		wrapperDeleteHandler(r.Service.CrudService.Participant.Delete),
+		wrapperWithID(r.Service.CrudService.Participant.Delete),
 	).Methods(http.MethodDelete)
 }
 
 func (r *RouterStruct) promptsHandlers() {
 	r.Router.HandleFunc("/api/prompts",
-		wrapperGetHandler(r.Service.CrudService.Prompt.GetAll),
+		wrapperReturningData(r.Service.CrudService.Prompt.GetAll),
 	).Methods(http.MethodGet)
 	r.Router.HandleFunc("/api/prompts/{id}",
-		wrapperGetByIDHandler(r.Service.CrudService.Prompt.GetByID),
+		wrapperWithIDReturningData(r.Service.CrudService.Prompt.GetByID),
 	).Methods(http.MethodGet)
 	r.Router.HandleFunc("/api/prompts",
-		wrapperCreateHandler(r.Service.CrudService.Prompt.Create),
+		wrapperWithPayload(r.Service.CrudService.Prompt.Create),
 	).Methods(http.MethodPost)
 	r.Router.HandleFunc("/api/prompts/{id}",
-		wrapperUpdateHandler(r.Service.CrudService.Prompt.Update),
+		wrapperWithIDAndPayload(r.Service.CrudService.Prompt.Update),
 	).Methods(http.MethodPut)
 	r.Router.HandleFunc("/api/prompts/{id}",
-		wrapperDeleteHandler(r.Service.CrudService.Prompt.Delete),
+		wrapperWithID(r.Service.CrudService.Prompt.Delete),
 	).Methods(http.MethodDelete)
 }
 
 func (r *RouterStruct) conversationsHandlers() {
 	r.Router.HandleFunc("/api/conversations",
-		wrapperGetHandler(r.Service.CrudService.Conversation.GetAll),
+		wrapperReturningData(r.Service.CrudService.Conversation.GetAll),
 	).Methods(http.MethodGet)
 	r.Router.HandleFunc("/api/conversations/{id}",
-		wrapperGetByIDHandler(r.Service.CrudService.Conversation.GetByID),
+		wrapperWithIDReturningData(r.Service.CrudService.Conversation.GetByID),
 	).Methods(http.MethodGet)
 	r.Router.HandleFunc("/api/conversations",
 		r.createConversationHandler,
 	).Methods(http.MethodPost)
 	r.Router.HandleFunc("/api/conversations/{id}",
-		wrapperUpdateHandler(r.Service.CrudService.Conversation.Update),
+		wrapperWithIDAndPayload(r.Service.CrudService.Conversation.Update),
 	).Methods(http.MethodPut)
 	r.Router.HandleFunc("/api/conversations/{id}",
-		wrapperDeleteHandler(r.Service.ConversationsService.DeleteConversations),
+		wrapperWithID(r.Service.ConversationsService.DeleteConversations),
 	).Methods(http.MethodDelete)
 }
 
 func (r *RouterStruct) taskHandlers() {
-	r.Router.HandleFunc("api/task/create/convert/{id}",
-		wrapperDeleteHandler(r.Service.TaskService.CreateConvertTask),
+	r.Router.HandleFunc("/api/task/create/convert/{id}",
+		wrapperWithID(r.Service.TaskService.CreateConvertTask),
 	).Methods(http.MethodPost)
 }
 
