@@ -15,7 +15,7 @@ type RouterStruct struct {
 
 func New(service *services.ServiceStruct, mwf []mux.MiddlewareFunc) *RouterStruct {
 	router := RouterStruct{
-		Router: mux.NewRouter(),
+		Router:  mux.NewRouter(),
 		Service: service,
 	}
 	router.Router.Use(mwf...)
@@ -44,26 +44,15 @@ func (r *RouterStruct) promptsHandlers() {
 
 func (r *RouterStruct) conversationsHandlers() {
 	r.Router.HandleFunc("/api/conversations",
-		wrapperReturningData(r.Service.Repo.GetConversations),
+		wrapperReturningData(r.Service.Conversations.GetConversations),
 	).Methods(http.MethodGet)
-// 	r.Router.HandleFunc("/api/conversations/{id}",
-// 		wrapperWithIDReturningData(r.Service.CrudService.Conversation.GetByID),
-// 	).Methods(http.MethodGet)
-// 	r.Router.HandleFunc("/api/conversations",
-// 		r.createConversationHandler,
-// 	).Methods(http.MethodPost)
-// 	r.Router.HandleFunc("/api/conversations/{id}",
-// 		wrapperWithIDAndPayload(r.Service.CrudService.Conversation.Update),
-// 	).Methods(http.MethodPut)
-// 	r.Router.HandleFunc("/api/conversations/{id}",
-// 		wrapperWithID(r.Service.ConversationsService.DeleteConversations),
-// 	).Methods(http.MethodDelete)
+	r.Router.HandleFunc("/api/conversations",
+		r.CreateConversation,
+	).Methods(http.MethodPost)
+
 }
 
 func (r *RouterStruct) taskHandlers() {
-	// r.Router.HandleFunc("/api/task/create/convert/{id}",
-	// 	wrapperWithID(r.Service.TaskService.CreateConvertTask),
-	// ).Methods(http.MethodPost)
 }
 
 func respondWithError(w http.ResponseWriter, msg string, err error, status int) {

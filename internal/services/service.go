@@ -2,12 +2,13 @@ package services
 
 import (
 	"context"
+	"main/internal/repositories"
 	"mime/multipart"
 )
 
-type Repositories interface {
-	
-}
+// type Repositories interface {
+
+// }
 
 type StorageClient interface {
 	UploadFileAndGetURL(ctx context.Context, file multipart.File, originalFilename string) (string, error)
@@ -19,19 +20,18 @@ type MessageClient interface {
 }
 
 type ServiceStruct struct {
-	Repo      Repositories
+	Repo      *repositories.RepositoryStruct
 	Storage   StorageClient
 	Messenger MessageClient
+	Conversations *ConversationsService
 }
 
-func New(repo Repositories, storage StorageClient, messenger MessageClient) *ServiceStruct {
+func New(repo *repositories.RepositoryStruct, storage StorageClient, messenger MessageClient) *ServiceStruct {
 	return &ServiceStruct{
-		Repo:      repo,
-		Storage:   storage,
 		Messenger: messenger,
+		Conversations: NewConversationsService(repo, storage),
 	}
 }
 
-// func (s *ServiceStruct) GetConversations(ctx context.Context) ([]gen.Conversation, error) {
-// 	return s.DB.GetQuery().GetConversations(ctx)
-// }
+
+
