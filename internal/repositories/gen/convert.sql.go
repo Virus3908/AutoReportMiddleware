@@ -3,7 +3,7 @@
 //   sqlc v1.28.0
 // source: convert.sql
 
-package repositories
+package db
 
 import (
 	"context"
@@ -11,53 +11,53 @@ import (
 	"github.com/google/uuid"
 )
 
-const CreateConvert = `-- name: CreateConvert :exec
+const createConvert = `-- name: CreateConvert :exec
 INSERT INTO convert (conversations_id, task_id) VALUES ($1, $2)
 `
 
 type CreateConvertParams struct {
-	ConversationsID uuid.UUID `db:"conversations_id" json:"conversations_id"`
-	TaskID          uuid.UUID `db:"task_id" json:"task_id"`
+	ConversationsID uuid.UUID
+	TaskID          uuid.UUID
 }
 
 func (q *Queries) CreateConvert(ctx context.Context, arg CreateConvertParams) error {
-	_, err := q.db.Exec(ctx, CreateConvert, arg.ConversationsID, arg.TaskID)
+	_, err := q.db.Exec(ctx, createConvert, arg.ConversationsID, arg.TaskID)
 	return err
 }
 
-const DeleteConvertByForgeinID = `-- name: DeleteConvertByForgeinID :one
+const deleteConvertByForgeinID = `-- name: DeleteConvertByForgeinID :one
 DELETE FROM convert 
 WHERE conversations_id = $1
 RETURNING id
 `
 
 func (q *Queries) DeleteConvertByForgeinID(ctx context.Context, conversationsID uuid.UUID) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, DeleteConvertByForgeinID, conversationsID)
+	row := q.db.QueryRow(ctx, deleteConvertByForgeinID, conversationsID)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
 
-const DeleteConvertByID = `-- name: DeleteConvertByID :exec
+const deleteConvertByID = `-- name: DeleteConvertByID :exec
 DELETE FROM convert WHERE id = $1
 `
 
 func (q *Queries) DeleteConvertByID(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, DeleteConvertByID, id)
+	_, err := q.db.Exec(ctx, deleteConvertByID, id)
 	return err
 }
 
-const GetConvert = `-- name: GetConvert :many
+const getConvert = `-- name: GetConvert :many
 SELECT id, conversations_id, file_url, audio_len, task_id, created_at, updated_at FROM convert
 `
 
 func (q *Queries) GetConvert(ctx context.Context) ([]Convert, error) {
-	rows, err := q.db.Query(ctx, GetConvert)
+	rows, err := q.db.Query(ctx, getConvert)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Convert{}
+	var items []Convert
 	for rows.Next() {
 		var i Convert
 		if err := rows.Scan(
@@ -79,12 +79,12 @@ func (q *Queries) GetConvert(ctx context.Context) ([]Convert, error) {
 	return items, nil
 }
 
-const GetConvertByID = `-- name: GetConvertByID :one
+const getConvertByID = `-- name: GetConvertByID :one
 SELECT id, conversations_id, file_url, audio_len, task_id, created_at, updated_at FROM convert WHERE id = $1
 `
 
 func (q *Queries) GetConvertByID(ctx context.Context, id uuid.UUID) (Convert, error) {
-	row := q.db.QueryRow(ctx, GetConvertByID, id)
+	row := q.db.QueryRow(ctx, getConvertByID, id)
 	var i Convert
 	err := row.Scan(
 		&i.ID,
@@ -98,16 +98,16 @@ func (q *Queries) GetConvertByID(ctx context.Context, id uuid.UUID) (Convert, er
 	return i, err
 }
 
-const UpdateConvertByTaskID = `-- name: UpdateConvertByTaskID :exec
+const updateConvertByTaskID = `-- name: UpdateConvertByTaskID :exec
 UPDATE convert SET file_url = $1 WHERE id = $2
 `
 
 type UpdateConvertByTaskIDParams struct {
-	FileUrl *string   `db:"file_url" json:"file_url"`
-	ID      uuid.UUID `db:"id" json:"id"`
+	FileUrl *string
+	ID      uuid.UUID
 }
 
 func (q *Queries) UpdateConvertByTaskID(ctx context.Context, arg UpdateConvertByTaskIDParams) error {
-	_, err := q.db.Exec(ctx, UpdateConvertByTaskID, arg.FileUrl, arg.ID)
+	_, err := q.db.Exec(ctx, updateConvertByTaskID, arg.FileUrl, arg.ID)
 	return err
 }

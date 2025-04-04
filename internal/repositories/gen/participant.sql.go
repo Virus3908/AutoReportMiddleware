@@ -3,7 +3,7 @@
 //   sqlc v1.28.0
 // source: participant.sql
 
-package repositories
+package db
 
 import (
 	"context"
@@ -11,35 +11,35 @@ import (
 	"github.com/google/uuid"
 )
 
-const CreateParticipant = `-- name: CreateParticipant :exec
+const createParticipant = `-- name: CreateParticipant :exec
 INSERT INTO Participants (name, email) VALUES ($1, $2)
 `
 
 type CreateParticipantParams struct {
-	Name  *string `db:"name" json:"name"`
-	Email string  `db:"email" json:"email"`
+	Name  *string
+	Email string
 }
 
 func (q *Queries) CreateParticipant(ctx context.Context, arg CreateParticipantParams) error {
-	_, err := q.db.Exec(ctx, CreateParticipant, arg.Name, arg.Email)
+	_, err := q.db.Exec(ctx, createParticipant, arg.Name, arg.Email)
 	return err
 }
 
-const DeleteParticipantByID = `-- name: DeleteParticipantByID :exec
+const deleteParticipantByID = `-- name: DeleteParticipantByID :exec
 DELETE FROM Participants WHERE id = $1
 `
 
 func (q *Queries) DeleteParticipantByID(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, DeleteParticipantByID, id)
+	_, err := q.db.Exec(ctx, deleteParticipantByID, id)
 	return err
 }
 
-const GetParticipantByID = `-- name: GetParticipantByID :one
+const getParticipantByID = `-- name: GetParticipantByID :one
 SELECT id, name, email, created_at, updated_at FROM Participants WHERE id = $1
 `
 
 func (q *Queries) GetParticipantByID(ctx context.Context, id uuid.UUID) (Participant, error) {
-	row := q.db.QueryRow(ctx, GetParticipantByID, id)
+	row := q.db.QueryRow(ctx, getParticipantByID, id)
 	var i Participant
 	err := row.Scan(
 		&i.ID,
@@ -51,17 +51,17 @@ func (q *Queries) GetParticipantByID(ctx context.Context, id uuid.UUID) (Partici
 	return i, err
 }
 
-const GetParticipants = `-- name: GetParticipants :many
+const getParticipants = `-- name: GetParticipants :many
 SELECT id, name, email, created_at, updated_at FROM Participants
 `
 
 func (q *Queries) GetParticipants(ctx context.Context) ([]Participant, error) {
-	rows, err := q.db.Query(ctx, GetParticipants)
+	rows, err := q.db.Query(ctx, getParticipants)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Participant{}
+	var items []Participant
 	for rows.Next() {
 		var i Participant
 		if err := rows.Scan(
@@ -81,17 +81,17 @@ func (q *Queries) GetParticipants(ctx context.Context) ([]Participant, error) {
 	return items, nil
 }
 
-const UpdateParticipantByID = `-- name: UpdateParticipantByID :exec
+const updateParticipantByID = `-- name: UpdateParticipantByID :exec
 UPDATE Participants SET name = $1, email = $2 WHERE id = $3
 `
 
 type UpdateParticipantByIDParams struct {
-	Name  *string   `db:"name" json:"name"`
-	Email string    `db:"email" json:"email"`
-	ID    uuid.UUID `db:"id" json:"id"`
+	Name  *string
+	Email string
+	ID    uuid.UUID
 }
 
 func (q *Queries) UpdateParticipantByID(ctx context.Context, arg UpdateParticipantByIDParams) error {
-	_, err := q.db.Exec(ctx, UpdateParticipantByID, arg.Name, arg.Email, arg.ID)
+	_, err := q.db.Exec(ctx, updateParticipantByID, arg.Name, arg.Email, arg.ID)
 	return err
 }

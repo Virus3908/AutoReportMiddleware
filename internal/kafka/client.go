@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-
 	"github.com/segmentio/kafka-go"
 )
 
@@ -14,7 +13,7 @@ type KafkaConfig struct {
 }
 
 type KafkaMessage struct {
-	Data        string `json:"data"`
+	Msg        string `json:"data"`
 	CallbackURL string `json:"callback_url"`
 }
 
@@ -23,10 +22,11 @@ type Producer struct {
 	callbackURL string
 }
 
-func NewProducer(cfg KafkaConfig, callbackURL string) (*Producer, error) {
+func NewProducer(cfg KafkaConfig, host string, port int) (*Producer, error) {
 	if err := checkKafkaConnection(cfg.Brokers); err != nil {
 		return nil, fmt.Errorf("error connect to kafka: %s", err)
 	}
+	callbackURL := fmt.Sprintf("http://%s:%d", host, port)
 	writer := &kafka.Writer{
 		Addr:     kafka.TCP(cfg.Brokers...),
 		Topic:    cfg.Topic,
@@ -39,9 +39,9 @@ func NewProducer(cfg KafkaConfig, callbackURL string) (*Producer, error) {
 	}, nil
 }
 
-func (p *Producer) SendMessage(ctx context.Context, key string, data string) error {
+func (p *Producer) SendMessage(ctx context.Context, key string, msg string) error {
 	message := KafkaMessage{
-		Data:        data,
+		Msg:        msg,
 		CallbackURL: p.callbackURL,
 	}
 

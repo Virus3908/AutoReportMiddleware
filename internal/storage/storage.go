@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"path/filepath"
-	"github.com/google/uuid"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/google/uuid"
 	"mime/multipart"
+	"path/filepath"
 	"strings"
 )
 
@@ -24,19 +24,12 @@ type S3Config struct {
 }
 
 type S3Client struct {
-	Client   *s3.Client
-	Config   S3Config
+	Client *s3.Client
+	Config S3Config
 }
 
-type Storage interface{
-	UploadFile(file multipart.File, originalFilename string) (string, error)
-	DeleteFileByURL(fileURL string) error
-	// GetStorageBucket() string
-	// GetStorageEndpoint() string
-}
-
-func NewStorage(cfg S3Config) (*S3Client, error) {
-	awsCfg, err := config.LoadDefaultConfig(context.TODO(),
+func New(ctx context.Context, cfg S3Config) (*S3Client, error) {
+	awsCfg, err := config.LoadDefaultConfig(ctx,
 		config.WithRegion(cfg.Region),
 		config.WithCredentialsProvider(credentials.StaticCredentialsProvider{
 			Value: aws.Credentials{
@@ -54,12 +47,12 @@ func NewStorage(cfg S3Config) (*S3Client, error) {
 	})
 
 	return &S3Client{
-		Client:   client,
-		Config:   cfg,
+		Client: client,
+		Config: cfg,
 	}, nil
 }
 
-func (s *S3Client) UploadFile(file multipart.File, originalFilename string) (string, error) {
+func (s *S3Client) UploadFileAndGetURL(ctx context.Context, file multipart.File, originalFilename string) (string, error) {
 	defer file.Close()
 
 	buf := new(bytes.Buffer)
@@ -72,7 +65,7 @@ func (s *S3Client) UploadFile(file multipart.File, originalFilename string) (str
 	ext := filepath.Ext(originalFilename)
 	fileKey := fmt.Sprintf("uploads/%s%s", fileID, ext)
 
-	_, err = s.Client.PutObject(context.TODO(), &s3.PutObjectInput{
+	_, err = s.Client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(s.Config.Bucket),
 		Key:    aws.String(fileKey),
 		Body:   bytes.NewReader(buf.Bytes()),
@@ -85,14 +78,14 @@ func (s *S3Client) UploadFile(file multipart.File, originalFilename string) (str
 	return fileURL, nil
 }
 
-func (s *S3Client) DeleteFileByURL(fileURL string) error {
+func (s *S3Client) DeleteFileByURL(ctx context.Context, fileURL string) error {
 	baseURL := fmt.Sprintf("%s/%s/", s.Config.Endpoint, s.Config.Bucket)
 	if !strings.HasPrefix(fileURL, baseURL) {
 		return fmt.Errorf("wrong URL: %s", fileURL)
 	}
 	fileKey := strings.TrimPrefix(fileURL, baseURL)
 
-	_, err := s.Client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
+	_, err := s.Client.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: aws.String(s.Config.Bucket),
 		Key:    aws.String(fileKey),
 	})
