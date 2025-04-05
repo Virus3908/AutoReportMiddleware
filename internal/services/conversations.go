@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"main/internal/models"
 	"main/internal/repositories"
 	"mime/multipart"
 	// "mime/multipart"
@@ -20,10 +19,6 @@ func NewConversationsService(repo *repositories.RepositoryStruct, storage Storag
 	}
 }
 
-func (s *ConversationsService) GetConversations(ctx context.Context) ([]models.Conversation, error) {
-	return s.Repo.GetConversations(ctx)
-}
-
 func (s *ConversationsService) CreateConversation(ctx context.Context, conversation_name, fileName string, file multipart.File) (error) {
 	fileURL, err := s.Storage.UploadFileAndGetURL(ctx, file, fileName)
 	if err != nil {
@@ -35,3 +30,4 @@ func (s *ConversationsService) CreateConversation(ctx context.Context, conversat
 	}
 	return nil
 }
+

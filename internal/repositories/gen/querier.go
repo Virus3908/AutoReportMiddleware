@@ -11,6 +11,7 @@ import (
 )
 
 type Querier interface {
+	ASD(ctx context.Context) (ASDRow, error)
 	CreateConversation(ctx context.Context, arg CreateConversationParams) error
 	CreateConvert(ctx context.Context, arg CreateConvertParams) error
 	CreateParticipant(ctx context.Context, arg CreateParticipantParams) error

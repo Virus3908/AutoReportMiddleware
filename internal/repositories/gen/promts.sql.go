@@ -79,8 +79,8 @@ UPDATE Prompts SET prompt = $1 WHERE id = $2
 `
 
 type UpdatePromptByIDParams struct {
-	Prompt string
-	ID     uuid.UUID
+	Prompt string    `json:"prompt"`
+	ID     uuid.UUID `json:"id"`
 }
 
 func (q *Queries) UpdatePromptByID(ctx context.Context, arg UpdatePromptByIDParams) error {

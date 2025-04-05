@@ -11,13 +11,44 @@ import (
 	"github.com/google/uuid"
 )
 
+const aSD = `-- name: ASD :one
+SELECT convert.id, convert.conversations_id, convert.file_url, convert.audio_len, convert.task_id, convert.created_at, convert.updated_at, conversations.id, conversations.conversation_name, conversations.file_url, conversations.status, conversations.created_at, conversations.updated_at FROM convert
+JOIN conversations ON conversations.id = convert.conversations_id
+`
+
+type ASDRow struct {
+	Convert      Convert      `json:"convert"`
+	Conversation Conversation `json:"conversation"`
+}
+
+func (q *Queries) ASD(ctx context.Context) (ASDRow, error) {
+	row := q.db.QueryRow(ctx, aSD)
+	var i ASDRow
+	err := row.Scan(
+		&i.Convert.ID,
+		&i.Convert.ConversationsID,
+		&i.Convert.FileUrl,
+		&i.Convert.AudioLen,
+		&i.Convert.TaskID,
+		&i.Convert.CreatedAt,
+		&i.Convert.UpdatedAt,
+		&i.Conversation.ID,
+		&i.Conversation.ConversationName,
+		&i.Conversation.FileUrl,
+		&i.Conversation.Status,
+		&i.Conversation.CreatedAt,
+		&i.Conversation.UpdatedAt,
+	)
+	return i, err
+}
+
 const createConvert = `-- name: CreateConvert :exec
 INSERT INTO convert (conversations_id, task_id) VALUES ($1, $2)
 `
 
 type CreateConvertParams struct {
-	ConversationsID uuid.UUID
-	TaskID          uuid.UUID
+	ConversationsID uuid.UUID `json:"conversations_id"`
+	TaskID          uuid.UUID `json:"task_id"`
 }
 
 func (q *Queries) CreateConvert(ctx context.Context, arg CreateConvertParams) error {
@@ -103,8 +134,8 @@ UPDATE convert SET file_url = $1 WHERE id = $2
 `
 
 type UpdateConvertByTaskIDParams struct {
-	FileUrl *string
-	ID      uuid.UUID
+	FileUrl *string   `json:"file_url"`
+	ID      uuid.UUID `json:"id"`
 }
 
 func (q *Queries) UpdateConvertByTaskID(ctx context.Context, arg UpdateConvertByTaskIDParams) error {

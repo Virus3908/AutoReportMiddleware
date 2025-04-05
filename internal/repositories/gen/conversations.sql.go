@@ -16,8 +16,8 @@ INSERT INTO Conversations (conversation_name, file_url) VALUES ($1, $2)
 `
 
 type CreateConversationParams struct {
-	ConversationName string
-	FileUrl          string
+	ConversationName string `json:"conversation_name"`
+	FileUrl          string `json:"file_url"`
 }
 
 func (q *Queries) CreateConversation(ctx context.Context, arg CreateConversationParams) error {
@@ -103,8 +103,8 @@ UPDATE Conversations SET conversation_name = $1 WHERE id = $2
 `
 
 type UpdateConversationNameByIDParams struct {
-	ConversationName string
-	ID               uuid.UUID
+	ConversationName string    `json:"conversation_name"`
+	ID               uuid.UUID `json:"id"`
 }
 
 func (q *Queries) UpdateConversationNameByID(ctx context.Context, arg UpdateConversationNameByIDParams) error {
@@ -117,8 +117,8 @@ UPDATE conversations SET status = $1 WHERE id = $2
 `
 
 type UpdateConversationStatusByIDParams struct {
-	Status int32
-	ID     uuid.UUID
+	Status int32     `json:"status"`
+	ID     uuid.UUID `json:"id"`
 }
 
 func (q *Queries) UpdateConversationStatusByID(ctx context.Context, arg UpdateConversationStatusByIDParams) error {

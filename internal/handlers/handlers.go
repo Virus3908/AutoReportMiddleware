@@ -44,15 +44,20 @@ func (r *RouterStruct) promptsHandlers() {
 
 func (r *RouterStruct) conversationsHandlers() {
 	r.Router.HandleFunc("/api/conversations",
-		wrapperReturningData(r.Service.Conversations.GetConversations),
+		wrapperReturningData(r.Service.Conversations.Repo.GetConversations),
 	).Methods(http.MethodGet)
 	r.Router.HandleFunc("/api/conversations",
 		r.CreateConversation,
 	).Methods(http.MethodPost)
-
+	r.Router.HandleFunc("/api/conversations/{id}",
+		wrapperWithIDReturningData(r.Service.Conversations.Repo.GetConversationDetails),
+	).Methods(http.MethodGet)
 }
 
 func (r *RouterStruct) taskHandlers() {
+	r.Router.HandleFunc("/api/task/convert/{id}",
+		wrapperWithID(r.Service.Tasks.CreateConvertTask),
+	).Methods(http.MethodPost)
 }
 
 func respondWithError(w http.ResponseWriter, msg string, err error, status int) {

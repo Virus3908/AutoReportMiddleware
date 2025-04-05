@@ -20,16 +20,15 @@ type MessageClient interface {
 }
 
 type ServiceStruct struct {
-	Repo      *repositories.RepositoryStruct
-	Storage   StorageClient
 	Messenger MessageClient
 	Conversations *ConversationsService
+	Tasks *TaskDispatcher
 }
 
 func New(repo *repositories.RepositoryStruct, storage StorageClient, messenger MessageClient) *ServiceStruct {
 	return &ServiceStruct{
-		Messenger: messenger,
 		Conversations: NewConversationsService(repo, storage),
+		Tasks: NewTaskDispatcher(repo, messenger),
 	}
 }
 

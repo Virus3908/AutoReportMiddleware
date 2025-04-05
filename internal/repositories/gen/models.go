@@ -11,89 +11,89 @@ import (
 )
 
 type Conversation struct {
-	ID               uuid.UUID
-	ConversationName string
-	FileUrl          string
-	Status           int32
-	CreatedAt        time.Time
-	UpdatedAt        time.Time
+	ID               uuid.UUID `json:"id"`
+	ConversationName string    `json:"conversation_name"`
+	FileUrl          string    `json:"file_url"`
+	Status           int32     `json:"status"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
 }
 
 type ConversationsParticipant struct {
-	ID             uuid.UUID
-	UserID         uuid.UUID
-	Speaker        *int32
-	ConversationID uuid.UUID
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	ID             uuid.UUID `json:"id"`
+	UserID         uuid.UUID `json:"user_id"`
+	Speaker        *int32    `json:"speaker"`
+	ConversationID uuid.UUID `json:"conversation_id"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }
 
 type Convert struct {
-	ID              uuid.UUID
-	ConversationsID uuid.UUID
-	FileUrl         *string
-	AudioLen        *float64
-	TaskID          uuid.UUID
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
+	ID              uuid.UUID `json:"id"`
+	ConversationsID uuid.UUID `json:"conversations_id"`
+	FileUrl         *string   `json:"file_url"`
+	AudioLen        *float64  `json:"audio_len"`
+	TaskID          uuid.UUID `json:"task_id"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
 }
 
 type Diarize struct {
-	ID        uuid.UUID
-	ConverID  uuid.UUID
-	TasksID   uuid.UUID
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        uuid.UUID `json:"id"`
+	ConverID  uuid.UUID `json:"conver_id"`
+	TasksID   uuid.UUID `json:"tasks_id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type Participant struct {
-	ID        uuid.UUID
-	Name      *string
-	Email     string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        uuid.UUID `json:"id"`
+	Name      *string   `json:"name"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type Prompt struct {
-	ID        uuid.UUID
-	Prompt    string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        uuid.UUID `json:"id"`
+	Prompt    string    `json:"prompt"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type Report struct {
-	ID             uuid.UUID
-	ConversationID uuid.UUID
-	Report         *string
-	PromptID       *uuid.UUID
-	TasksID        uuid.UUID
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	ID             uuid.UUID  `json:"id"`
+	ConversationID uuid.UUID  `json:"conversation_id"`
+	Report         *string    `json:"report"`
+	PromptID       *uuid.UUID `json:"prompt_id"`
+	TasksID        uuid.UUID  `json:"tasks_id"`
+	CreatedAt      time.Time  `json:"created_at"`
+	UpdatedAt      time.Time  `json:"updated_at"`
 }
 
 type Segment struct {
-	ID        uuid.UUID
-	DiarizeID uuid.UUID
-	StartTime float64
-	EndTime   float64
-	Speaker   int32
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        uuid.UUID `json:"id"`
+	DiarizeID uuid.UUID `json:"diarize_id"`
+	StartTime float64   `json:"start_time"`
+	EndTime   float64   `json:"end_time"`
+	Speaker   int32     `json:"speaker"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type Task struct {
-	ID        uuid.UUID
-	Status    int32
-	TaskType  int32
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        uuid.UUID `json:"id"`
+	Status    int32     `json:"status"`
+	TaskType  int32     `json:"task_type"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type Transcription struct {
-	ID            uuid.UUID
-	SegmentID     uuid.UUID
-	Transcription *string
-	TasksID       uuid.UUID
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	ID            uuid.UUID `json:"id"`
+	SegmentID     uuid.UUID `json:"segment_id"`
+	Transcription *string   `json:"transcription"`
+	TasksID       uuid.UUID `json:"tasks_id"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }

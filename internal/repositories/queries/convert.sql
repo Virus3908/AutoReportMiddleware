@@ -17,3 +17,7 @@ DELETE FROM convert WHERE id = $1;
 DELETE FROM convert 
 WHERE conversations_id = $1
 RETURNING id;
+
+-- name: ASD :one
+SELECT sqlc.embed(convert), sqlc.embed(conversations) FROM convert
+JOIN conversations ON conversations.id = convert.conversations_id;
