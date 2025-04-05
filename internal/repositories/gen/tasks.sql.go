@@ -3,7 +3,7 @@
 //   sqlc v1.28.0
 // source: tasks.sql
 
-package repositories
+package db
 
 import (
 	"context"
@@ -11,33 +11,33 @@ import (
 	"github.com/google/uuid"
 )
 
-const CreateTask = `-- name: CreateTask :one
+const createTask = `-- name: CreateTask :one
 INSERT INTO tasks (task_type) VALUES ($1)
 RETURNING id
 `
 
 func (q *Queries) CreateTask(ctx context.Context, taskType int32) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, CreateTask, taskType)
+	row := q.db.QueryRow(ctx, createTask, taskType)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
 
-const DeleteTaskByID = `-- name: DeleteTaskByID :exec
+const deleteTaskByID = `-- name: DeleteTaskByID :exec
 DELETE FROM tasks WHERE id = $1
 `
 
 func (q *Queries) DeleteTaskByID(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, DeleteTaskByID, id)
+	_, err := q.db.Exec(ctx, deleteTaskByID, id)
 	return err
 }
 
-const GetTaskByID = `-- name: GetTaskByID :one
+const getTaskByID = `-- name: GetTaskByID :one
 SELECT id, status, task_type, created_at, updated_at FROM tasks WHERE id = $1
 `
 
 func (q *Queries) GetTaskByID(ctx context.Context, id uuid.UUID) (Task, error) {
-	row := q.db.QueryRow(ctx, GetTaskByID, id)
+	row := q.db.QueryRow(ctx, getTaskByID, id)
 	var i Task
 	err := row.Scan(
 		&i.ID,
@@ -49,17 +49,17 @@ func (q *Queries) GetTaskByID(ctx context.Context, id uuid.UUID) (Task, error) {
 	return i, err
 }
 
-const GetTasks = `-- name: GetTasks :many
+const getTasks = `-- name: GetTasks :many
 SELECT id, status, task_type, created_at, updated_at FROM tasks
 `
 
 func (q *Queries) GetTasks(ctx context.Context) ([]Task, error) {
-	rows, err := q.db.Query(ctx, GetTasks)
+	rows, err := q.db.Query(ctx, getTasks)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Task{}
+	var items []Task
 	for rows.Next() {
 		var i Task
 		if err := rows.Scan(
@@ -79,16 +79,16 @@ func (q *Queries) GetTasks(ctx context.Context) ([]Task, error) {
 	return items, nil
 }
 
-const UpdateTaskStatus = `-- name: UpdateTaskStatus :exec
+const updateTaskStatus = `-- name: UpdateTaskStatus :exec
 UPDATE tasks SET status = $1 WHERE id = $2
 `
 
 type UpdateTaskStatusParams struct {
-	Status int32     `db:"status" json:"status"`
-	ID     uuid.UUID `db:"id" json:"id"`
+	Status int32     `json:"status"`
+	ID     uuid.UUID `json:"id"`
 }
 
 func (q *Queries) UpdateTaskStatus(ctx context.Context, arg UpdateTaskStatusParams) error {
-	_, err := q.db.Exec(ctx, UpdateTaskStatus, arg.Status, arg.ID)
+	_, err := q.db.Exec(ctx, updateTaskStatus, arg.Status, arg.ID)
 	return err
 }

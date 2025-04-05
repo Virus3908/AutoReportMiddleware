@@ -1,32 +1,33 @@
 package handlers
 
-import "net/http"
+import (
 
-func (router *RouterStruct) createConversationHandler(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseMultipartForm(10 << 20)
+	"net/http"
+)
+
+
+
+func (h *RouterStruct) CreateConversation(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseMultipartForm(200 << 20)
 	if err != nil {
-		respondWithError(w, "form parse error: "+err.Error(), err, http.StatusBadRequest)
+		http.Error(w, "can't parse form", http.StatusBadRequest)
 		return
 	}
 
-	conversationName := r.FormValue("conversation_name")
-	if conversationName == "" {
-		respondWithError(w, "conversation_name required", err, http.StatusBadRequest)
-		return
-	}
+	conversationsName := r.FormValue("conversation_name")
 
 	file, header, err := r.FormFile("file")
 	if err != nil {
-		respondWithError(w, "file receive error: "+err.Error(), err, http.StatusBadRequest)
+		http.Error(w, "file not found", http.StatusBadRequest)
 		return
 	}
 	defer file.Close()
-	if err := router.Service.ConversationsService.CreateFromMultipart(r.Context(), file,
-		header.Filename, conversationName); err != nil {
-		respondWithError(w, "create failed: "+err.Error(), err, http.StatusInternalServerError)
+
+	err = h.Service.Conversations.CreateConversation(r.Context(), conversationsName, header.Filename, file)
+	if err != nil {
+		http.Error(w, "failed to create", http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	w.WriteHeader(http.StatusCreated)
 }
-

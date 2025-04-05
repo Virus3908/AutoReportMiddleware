@@ -3,7 +3,7 @@
 //   sqlc v1.28.0
 // source: conversations.sql
 
-package repositories
+package db
 
 import (
 	"context"
@@ -11,39 +11,39 @@ import (
 	"github.com/google/uuid"
 )
 
-const CreateConversation = `-- name: CreateConversation :exec
+const createConversation = `-- name: CreateConversation :exec
 INSERT INTO Conversations (conversation_name, file_url) VALUES ($1, $2)
 `
 
 type CreateConversationParams struct {
-	ConversationName string `db:"conversation_name" json:"conversation_name"`
-	FileUrl          string `db:"file_url" json:"file_url"`
+	ConversationName string `json:"conversation_name"`
+	FileUrl          string `json:"file_url"`
 }
 
 func (q *Queries) CreateConversation(ctx context.Context, arg CreateConversationParams) error {
-	_, err := q.db.Exec(ctx, CreateConversation, arg.ConversationName, arg.FileUrl)
+	_, err := q.db.Exec(ctx, createConversation, arg.ConversationName, arg.FileUrl)
 	return err
 }
 
-const DeleteConversationByID = `-- name: DeleteConversationByID :one
+const deleteConversationByID = `-- name: DeleteConversationByID :one
 DELETE FROM Conversations
 WHERE id = $1
 RETURNING file_url
 `
 
 func (q *Queries) DeleteConversationByID(ctx context.Context, id uuid.UUID) (string, error) {
-	row := q.db.QueryRow(ctx, DeleteConversationByID, id)
+	row := q.db.QueryRow(ctx, deleteConversationByID, id)
 	var file_url string
 	err := row.Scan(&file_url)
 	return file_url, err
 }
 
-const GetConversationByID = `-- name: GetConversationByID :one
+const getConversationByID = `-- name: GetConversationByID :one
 SELECT id, conversation_name, file_url, status, created_at, updated_at FROM Conversations WHERE id = $1
 `
 
 func (q *Queries) GetConversationByID(ctx context.Context, id uuid.UUID) (Conversation, error) {
-	row := q.db.QueryRow(ctx, GetConversationByID, id)
+	row := q.db.QueryRow(ctx, getConversationByID, id)
 	var i Conversation
 	err := row.Scan(
 		&i.ID,
@@ -56,28 +56,28 @@ func (q *Queries) GetConversationByID(ctx context.Context, id uuid.UUID) (Conver
 	return i, err
 }
 
-const GetConversationFileURL = `-- name: GetConversationFileURL :one
+const getConversationFileURL = `-- name: GetConversationFileURL :one
 SELECT file_url FROM conversations WHERE id = $1
 `
 
 func (q *Queries) GetConversationFileURL(ctx context.Context, id uuid.UUID) (string, error) {
-	row := q.db.QueryRow(ctx, GetConversationFileURL, id)
+	row := q.db.QueryRow(ctx, getConversationFileURL, id)
 	var file_url string
 	err := row.Scan(&file_url)
 	return file_url, err
 }
 
-const GetConversations = `-- name: GetConversations :many
+const getConversations = `-- name: GetConversations :many
 SELECT id, conversation_name, file_url, status, created_at, updated_at FROM Conversations
 `
 
 func (q *Queries) GetConversations(ctx context.Context) ([]Conversation, error) {
-	rows, err := q.db.Query(ctx, GetConversations)
+	rows, err := q.db.Query(ctx, getConversations)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Conversation{}
+	var items []Conversation
 	for rows.Next() {
 		var i Conversation
 		if err := rows.Scan(
@@ -98,30 +98,30 @@ func (q *Queries) GetConversations(ctx context.Context) ([]Conversation, error) 
 	return items, nil
 }
 
-const UpdateConversationNameByID = `-- name: UpdateConversationNameByID :exec
+const updateConversationNameByID = `-- name: UpdateConversationNameByID :exec
 UPDATE Conversations SET conversation_name = $1 WHERE id = $2
 `
 
 type UpdateConversationNameByIDParams struct {
-	ConversationName string    `db:"conversation_name" json:"conversation_name"`
-	ID               uuid.UUID `db:"id" json:"id"`
+	ConversationName string    `json:"conversation_name"`
+	ID               uuid.UUID `json:"id"`
 }
 
 func (q *Queries) UpdateConversationNameByID(ctx context.Context, arg UpdateConversationNameByIDParams) error {
-	_, err := q.db.Exec(ctx, UpdateConversationNameByID, arg.ConversationName, arg.ID)
+	_, err := q.db.Exec(ctx, updateConversationNameByID, arg.ConversationName, arg.ID)
 	return err
 }
 
-const UpdateConversationStatusByID = `-- name: UpdateConversationStatusByID :exec
+const updateConversationStatusByID = `-- name: UpdateConversationStatusByID :exec
 UPDATE conversations SET status = $1 WHERE id = $2
 `
 
 type UpdateConversationStatusByIDParams struct {
-	Status int32     `db:"status" json:"status"`
-	ID     uuid.UUID `db:"id" json:"id"`
+	Status int32     `json:"status"`
+	ID     uuid.UUID `json:"id"`
 }
 
 func (q *Queries) UpdateConversationStatusByID(ctx context.Context, arg UpdateConversationStatusByIDParams) error {
-	_, err := q.db.Exec(ctx, UpdateConversationStatusByID, arg.Status, arg.ID)
+	_, err := q.db.Exec(ctx, updateConversationStatusByID, arg.Status, arg.ID)
 	return err
 }

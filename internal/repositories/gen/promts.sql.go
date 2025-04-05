@@ -3,7 +3,7 @@
 //   sqlc v1.28.0
 // source: promts.sql
 
-package repositories
+package db
 
 import (
 	"context"
@@ -11,30 +11,30 @@ import (
 	"github.com/google/uuid"
 )
 
-const CreatePrompt = `-- name: CreatePrompt :exec
+const createPrompt = `-- name: CreatePrompt :exec
 INSERT INTO Prompts (prompt) VALUES ($1)
 `
 
 func (q *Queries) CreatePrompt(ctx context.Context, prompt string) error {
-	_, err := q.db.Exec(ctx, CreatePrompt, prompt)
+	_, err := q.db.Exec(ctx, createPrompt, prompt)
 	return err
 }
 
-const DeletePromptByID = `-- name: DeletePromptByID :exec
+const deletePromptByID = `-- name: DeletePromptByID :exec
 DELETE FROM Prompts WHERE id = $1
 `
 
 func (q *Queries) DeletePromptByID(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, DeletePromptByID, id)
+	_, err := q.db.Exec(ctx, deletePromptByID, id)
 	return err
 }
 
-const GetPromptByID = `-- name: GetPromptByID :one
+const getPromptByID = `-- name: GetPromptByID :one
 SELECT id, prompt, created_at, updated_at FROM Prompts WHERE id = $1
 `
 
 func (q *Queries) GetPromptByID(ctx context.Context, id uuid.UUID) (Prompt, error) {
-	row := q.db.QueryRow(ctx, GetPromptByID, id)
+	row := q.db.QueryRow(ctx, getPromptByID, id)
 	var i Prompt
 	err := row.Scan(
 		&i.ID,
@@ -45,17 +45,17 @@ func (q *Queries) GetPromptByID(ctx context.Context, id uuid.UUID) (Prompt, erro
 	return i, err
 }
 
-const GetPrompts = `-- name: GetPrompts :many
+const getPrompts = `-- name: GetPrompts :many
 SELECT id, prompt, created_at, updated_at FROM Prompts
 `
 
 func (q *Queries) GetPrompts(ctx context.Context) ([]Prompt, error) {
-	rows, err := q.db.Query(ctx, GetPrompts)
+	rows, err := q.db.Query(ctx, getPrompts)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Prompt{}
+	var items []Prompt
 	for rows.Next() {
 		var i Prompt
 		if err := rows.Scan(
@@ -74,16 +74,16 @@ func (q *Queries) GetPrompts(ctx context.Context) ([]Prompt, error) {
 	return items, nil
 }
 
-const UpdatePromptByID = `-- name: UpdatePromptByID :exec
+const updatePromptByID = `-- name: UpdatePromptByID :exec
 UPDATE Prompts SET prompt = $1 WHERE id = $2
 `
 
 type UpdatePromptByIDParams struct {
-	Prompt string    `db:"prompt" json:"prompt"`
-	ID     uuid.UUID `db:"id" json:"id"`
+	Prompt string    `json:"prompt"`
+	ID     uuid.UUID `json:"id"`
 }
 
 func (q *Queries) UpdatePromptByID(ctx context.Context, arg UpdatePromptByIDParams) error {
-	_, err := q.db.Exec(ctx, UpdatePromptByID, arg.Prompt, arg.ID)
+	_, err := q.db.Exec(ctx, updatePromptByID, arg.Prompt, arg.ID)
 	return err
 }

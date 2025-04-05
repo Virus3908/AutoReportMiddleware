@@ -5,14 +5,16 @@ import (
 	"fmt"
 	"log"
 	"main/internal/config"
-	"main/internal/database"
 	"main/internal/handlers"
+	"main/internal/kafka"
+	"main/internal/logging"
+	"main/internal/repositories"
+	"main/internal/postgres"
 	"main/internal/services"
 	"main/internal/storage"
-	"main/internal/kafka"
 	"net/http"
 
-	CORS "github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -22,38 +24,37 @@ func main() {
 	}
 
 	serverSettings := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
-	callbackURL := fmt.Sprintf("http://%s", serverSettings)
-	db, err := database.NewDatabase(context.Background(), cfg.DB)
+
+
+	db, err := postgres.New(context.Background(), cfg.DB)
 	if err != nil {
 		log.Fatalf("DB connection error: %s", err)
 	}
-	defer db.CloseConnection()
+	defer db.Close()
 
-	storage, err := storage.NewStorage(cfg.S3)
+	repo := repositories.New(db)
+
+	storage, err := storage.New(context.Background(), cfg.S3)
 	if err != nil {
 		log.Fatalf("Storage connection error: %s", err)
 	}
 
-	kafkaProducer, err := kafka.NewProducer(cfg.Kafka, callbackURL)
+	kafkaProducer, err := kafka.NewProducer(cfg.Kafka, cfg.Server.Host, cfg.Server.Port)
 	if err != nil {
 		log.Fatalf("Kafka connection error: %s", err)
 	}
 	defer kafkaProducer.Close()
 
-	service := services.NewServices(db, storage, kafkaProducer)
+	service := services.New(repo, storage, kafkaProducer)
 
-	router := handlers.NewRouter(service)
-	router.CreateHandlers()
+	middlewares := []mux.MiddlewareFunc{
+		logging.LoggingMidleware,
+	}
 
-	cors := CORS.CORS(
-		CORS.AllowedOrigins([]string{"*"}),
-		CORS.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
-		CORS.AllowedHeaders([]string{"Content-Type"}),
-	)
+	router := handlers.New(service, middlewares)
 
-	router.SetReady()
 	log.Printf("Server is ready: %s", serverSettings)
-	err = http.ListenAndServe(serverSettings, cors(router.Router))
+	err = http.ListenAndServe(serverSettings, router.GetRouter())
 	if err != nil {
 		log.Fatalf("Server stating error: %s", err)
 	}
