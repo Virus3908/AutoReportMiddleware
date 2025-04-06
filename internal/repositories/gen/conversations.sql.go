@@ -12,7 +12,9 @@ import (
 )
 
 const createConversation = `-- name: CreateConversation :exec
-INSERT INTO Conversations (conversation_name, file_url) VALUES ($1, $2)
+INSERT INTO
+    Conversations (conversation_name, file_url)
+VALUES ($1, $2)
 `
 
 type CreateConversationParams struct {
@@ -26,9 +28,7 @@ func (q *Queries) CreateConversation(ctx context.Context, arg CreateConversation
 }
 
 const deleteConversationByID = `-- name: DeleteConversationByID :one
-DELETE FROM Conversations
-WHERE id = $1
-RETURNING file_url
+DELETE FROM Conversations WHERE id = $1 RETURNING file_url
 `
 
 func (q *Queries) DeleteConversationByID(ctx context.Context, id uuid.UUID) (string, error) {
@@ -98,17 +98,23 @@ func (q *Queries) GetConversations(ctx context.Context) ([]Conversation, error) 
 	return items, nil
 }
 
-const updateConversationNameByID = `-- name: UpdateConversationNameByID :exec
-UPDATE Conversations SET conversation_name = $1 WHERE id = $2
+const updateConversationStatusByConvertID = `-- name: UpdateConversationStatusByConvertID :exec
+UPDATE conversations
+SET
+    status = $1
+FROM convert
+WHERE
+    convert.id = $2
+    AND convert.conversations_id = conversations.id
 `
 
-type UpdateConversationNameByIDParams struct {
-	ConversationName string    `json:"conversation_name"`
-	ID               uuid.UUID `json:"id"`
+type UpdateConversationStatusByConvertIDParams struct {
+	Status int32     `json:"status"`
+	ID     uuid.UUID `json:"id"`
 }
 
-func (q *Queries) UpdateConversationNameByID(ctx context.Context, arg UpdateConversationNameByIDParams) error {
-	_, err := q.db.Exec(ctx, updateConversationNameByID, arg.ConversationName, arg.ID)
+func (q *Queries) UpdateConversationStatusByConvertID(ctx context.Context, arg UpdateConversationStatusByConvertIDParams) error {
+	_, err := q.db.Exec(ctx, updateConversationStatusByConvertID, arg.Status, arg.ID)
 	return err
 }
 

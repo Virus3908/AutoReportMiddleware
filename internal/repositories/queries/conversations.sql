@@ -5,18 +5,24 @@ SELECT * FROM Conversations;
 SELECT file_url FROM conversations WHERE id = $1;
 
 -- name: DeleteConversationByID :one
-DELETE FROM Conversations
-WHERE id = $1
-RETURNING file_url;
+DELETE FROM Conversations WHERE id = $1 RETURNING file_url;
 
 -- name: GetConversationByID :one
 SELECT * FROM Conversations WHERE id = $1;
 
--- name: UpdateConversationNameByID :exec
-UPDATE Conversations SET conversation_name = $1 WHERE id = $2;
-
 -- name: CreateConversation :exec
-INSERT INTO Conversations (conversation_name, file_url) VALUES ($1, $2);
+INSERT INTO
+    Conversations (conversation_name, file_url)
+VALUES ($1, $2);
+
+-- name: UpdateConversationStatusByConvertID :exec
+UPDATE conversations
+SET
+    status = $1
+FROM convert
+WHERE
+    convert.id = $2
+    AND convert.conversations_id = conversations.id;
 
 -- name: UpdateConversationStatusByID :exec
 UPDATE conversations SET status = $1 WHERE id = $2;

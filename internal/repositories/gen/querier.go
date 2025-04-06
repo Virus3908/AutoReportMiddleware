@@ -34,7 +34,7 @@ type Querier interface {
 	GetPrompts(ctx context.Context) ([]Prompt, error)
 	GetTaskByID(ctx context.Context, id uuid.UUID) (Task, error)
 	GetTasks(ctx context.Context) ([]Task, error)
-	UpdateConversationNameByID(ctx context.Context, arg UpdateConversationNameByIDParams) error
+	UpdateConversationStatusByConvertID(ctx context.Context, arg UpdateConversationStatusByConvertIDParams) error
 	UpdateConversationStatusByID(ctx context.Context, arg UpdateConversationStatusByIDParams) error
 	UpdateConvertByTaskID(ctx context.Context, arg UpdateConvertByTaskIDParams) error
 	UpdateParticipantByID(ctx context.Context, arg UpdateParticipantByIDParams) error

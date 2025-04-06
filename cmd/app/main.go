@@ -32,7 +32,7 @@ func main() {
 	}
 	defer db.Close()
 
-	repo := repositories.New(db)
+	repo := repositories.New(db.GetPool())
 
 	storage, err := storage.New(context.Background(), cfg.S3)
 	if err != nil {
@@ -45,7 +45,7 @@ func main() {
 	}
 	defer kafkaProducer.Close()
 
-	service := services.New(repo, storage, kafkaProducer)
+	service := services.New(repo, storage, kafkaProducer, db)
 
 	middlewares := []mux.MiddlewareFunc{
 		logging.LoggingMidleware,

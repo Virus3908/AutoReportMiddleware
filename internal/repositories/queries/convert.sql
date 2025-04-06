@@ -8,7 +8,7 @@ SELECT * FROM convert WHERE id = $1;
 INSERT INTO convert (conversations_id, task_id) VALUES ($1, $2);
 
 -- name: UpdateConvertByTaskID :exec
-UPDATE convert SET file_url = $1 WHERE id = $2;
+UPDATE convert SET file_url = $1 WHERE task_id = $2;
 
 -- name: DeleteConvertByID :exec
 DELETE FROM convert WHERE id = $1;

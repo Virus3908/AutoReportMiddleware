@@ -130,15 +130,15 @@ func (q *Queries) GetConvertByID(ctx context.Context, id uuid.UUID) (Convert, er
 }
 
 const updateConvertByTaskID = `-- name: UpdateConvertByTaskID :exec
-UPDATE convert SET file_url = $1 WHERE id = $2
+UPDATE convert SET file_url = $1 WHERE task_id = $2
 `
 
 type UpdateConvertByTaskIDParams struct {
 	FileUrl *string   `json:"file_url"`
-	ID      uuid.UUID `json:"id"`
+	TaskID  uuid.UUID `json:"task_id"`
 }
 
 func (q *Queries) UpdateConvertByTaskID(ctx context.Context, arg UpdateConvertByTaskIDParams) error {
-	_, err := q.db.Exec(ctx, updateConvertByTaskID, arg.FileUrl, arg.ID)
+	_, err := q.db.Exec(ctx, updateConvertByTaskID, arg.FileUrl, arg.TaskID)
 	return err
 }

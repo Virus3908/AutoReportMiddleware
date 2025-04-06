@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"main/internal/repositories"
-
 	"github.com/google/uuid"
 )
 
 type TaskDispatcher struct {
 	Repo *repositories.RepositoryStruct
 	Messenger MessageClient
+	TxManager TxManager
 }
 
 const (
@@ -27,10 +27,11 @@ type ConvertMessage struct {
 	CallbackPostfix string    `json:"callback_postfix"`
 }
 
-func NewTaskDispatcher(repo *repositories.RepositoryStruct, messenger MessageClient) *TaskDispatcher {
+func NewTaskDispatcher(repo *repositories.RepositoryStruct, messenger MessageClient, txManager TxManager) *TaskDispatcher {
 	return &TaskDispatcher{
 		Repo: repo,
 		Messenger: messenger,
+		TxManager: txManager,
 	}
 }
 
@@ -39,23 +40,33 @@ func (s *TaskDispatcher) CreateConvertTask(ctx context.Context, conversationID u
 	if err != nil {
 		return err
 	}
-	return s.Repo.CreateTask(
-		ctx,
-		conversationID,
-		fileURL,
-		ConvertTask,
-		func(taskID uuid.UUID) error {
-			taskMSG := ConvertMessage{
-				TaskID: taskID,
-				FileURL: fileURL,
-				TaskType: ConvertTask,
-				CallbackPostfix: "/api/task/update/convert/",
-			}
-			payload, err := json.Marshal(taskMSG)
-			if err != nil {
-				return fmt.Errorf("error marshaling payload: %w", err)
-			}
-			return s.Messenger.SendMessage(ctx, conversationID.String(), string(payload))
-		},
-	)
+	tx, err := s.TxManager.StartTransaction(ctx)
+	if err != nil {
+		return err
+	}
+	defer s.TxManager.RollbackTransactionIfExist(ctx, tx)
+
+	taskID, err := s.Repo.CreateTask(ctx, tx, ConvertTask)
+	if err != nil {
+		return err
+	}
+	err = s.Repo.CreateConvert(ctx, tx, taskID, conversationID)
+	if err != nil {
+		return err
+	}
+	convertMessage := ConvertMessage{
+		TaskID:          taskID,
+		FileURL:         fileURL,
+		TaskType:        ConvertTask,
+		CallbackPostfix: "/api/task/update/convert/",
+	}
+	convertMessageJSON, err := json.Marshal(convertMessage)
+	if err != nil {
+		return fmt.Errorf("failed to marshal convert message: %w", err)
+	}
+	err = s.Messenger.SendMessage(ctx, conversationID.String(), string(convertMessageJSON))
+	if err != nil {
+		return fmt.Errorf("failed to send message: %w", err)
+	}
+	return s.TxManager.CommitTransaction(ctx, tx)
 }
