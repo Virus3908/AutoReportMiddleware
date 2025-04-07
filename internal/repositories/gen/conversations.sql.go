@@ -67,6 +67,38 @@ func (q *Queries) GetConversationFileURL(ctx context.Context, id uuid.UUID) (str
 	return file_url, err
 }
 
+const getConversationIDByConvertTaskID = `-- name: GetConversationIDByConvertTaskID :one
+SELECT c.id
+FROM conversations AS c
+    JOIN convert AS conv ON c.id = conv.conversations_id
+    JOIN tasks AS t ON t.id = conv.task_id
+WHERE
+    t.id = $1
+`
+
+func (q *Queries) GetConversationIDByConvertTaskID(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, getConversationIDByConvertTaskID, id)
+	err := row.Scan(&id)
+	return id, err
+}
+
+const getConversationIDByDiarizeTaskID = `-- name: GetConversationIDByDiarizeTaskID :one
+SELECT c.id
+FROM
+    conversations AS c
+    JOIN convert AS conv ON c.id = conv.conversations_id
+    JOIN diarize AS d ON conv.id = d.convert_id
+    JOIN tasks AS t ON d.task_id = t.id
+WHERE
+    t.id = $1
+`
+
+func (q *Queries) GetConversationIDByDiarizeTaskID(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, getConversationIDByDiarizeTaskID, id)
+	err := row.Scan(&id)
+	return id, err
+}
+
 const getConversationIDByTranscriptionTaskID = `-- name: GetConversationIDByTranscriptionTaskID :one
 SELECT c.id
 FROM
@@ -76,7 +108,8 @@ FROM
     JOIN segments AS s ON d.id = s.diarize_id
     JOIN transcriptions AS t ON s.id = t.segment_id
     JOIN tasks AS tasks ON tasks.id = t.task_id
-WHERE tasks.id = $1
+WHERE
+    tasks.id = $1
 `
 
 func (q *Queries) GetConversationIDByTranscriptionTaskID(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
@@ -105,6 +138,59 @@ func (q *Queries) GetConversations(ctx context.Context) ([]Conversation, error) 
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getSegmentsWithTranscriptionByConversationID = `-- name: GetSegmentsWithTranscriptionByConversationID :many
+SELECT
+  s.id AS segment_id,
+  s.start_time,
+  s.end_time,
+  s.speaker,
+  t.id AS transcription_id,
+  t.transcription
+FROM segments AS s
+JOIN diarize AS d ON s.diarize_id = d.id
+JOIN convert AS c ON d.convert_id = c.id
+JOIN conversations AS conv ON c.conversations_id = conv.id
+LEFT JOIN transcriptions AS t ON s.id = t.segment_id
+WHERE conv.id = $1
+ORDER BY s.start_time
+`
+
+type GetSegmentsWithTranscriptionByConversationIDRow struct {
+	SegmentID       uuid.UUID  `json:"segment_id"`
+	StartTime       float64    `json:"start_time"`
+	EndTime         float64    `json:"end_time"`
+	Speaker         int32      `json:"speaker"`
+	TranscriptionID *uuid.UUID `json:"transcription_id"`
+	Transcription   *string    `json:"transcription"`
+}
+
+func (q *Queries) GetSegmentsWithTranscriptionByConversationID(ctx context.Context, id uuid.UUID) ([]GetSegmentsWithTranscriptionByConversationIDRow, error) {
+	rows, err := q.db.Query(ctx, getSegmentsWithTranscriptionByConversationID, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetSegmentsWithTranscriptionByConversationIDRow
+	for rows.Next() {
+		var i GetSegmentsWithTranscriptionByConversationIDRow
+		if err := rows.Scan(
+			&i.SegmentID,
+			&i.StartTime,
+			&i.EndTime,
+			&i.Speaker,
+			&i.TranscriptionID,
+			&i.Transcription,
 		); err != nil {
 			return nil, err
 		}

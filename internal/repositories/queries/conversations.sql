@@ -37,6 +37,24 @@ WHERE
 -- name: UpdateConversationStatusByID :exec
 UPDATE conversations SET status = $1 WHERE id = $2;
 
+-- name: GetConversationIDByConvertTaskID :one
+SELECT c.id
+FROM conversations AS c
+    JOIN convert AS conv ON c.id = conv.conversations_id
+    JOIN tasks AS t ON t.id = conv.task_id
+WHERE
+    t.id = $1;
+
+-- name: GetConversationIDByDiarizeTaskID :one
+SELECT c.id
+FROM
+    conversations AS c
+    JOIN convert AS conv ON c.id = conv.conversations_id
+    JOIN diarize AS d ON conv.id = d.convert_id
+    JOIN tasks AS t ON d.task_id = t.id
+WHERE
+    t.id = $1;
+
 -- name: GetConversationIDByTranscriptionTaskID :one
 SELECT c.id
 FROM
@@ -46,4 +64,21 @@ FROM
     JOIN segments AS s ON d.id = s.diarize_id
     JOIN transcriptions AS t ON s.id = t.segment_id
     JOIN tasks AS tasks ON tasks.id = t.task_id
-WHERE tasks.id = $1;
+WHERE
+    tasks.id = $1;
+
+-- name: GetSegmentsWithTranscriptionByConversationID :many
+SELECT
+  s.id AS segment_id,
+  s.start_time,
+  s.end_time,
+  s.speaker,
+  t.id AS transcription_id,
+  t.transcription
+FROM segments AS s
+JOIN diarize AS d ON s.diarize_id = d.id
+JOIN convert AS c ON d.convert_id = c.id
+JOIN conversations AS conv ON c.conversations_id = conv.id
+LEFT JOIN transcriptions AS t ON s.id = t.segment_id
+WHERE conv.id = $1
+ORDER BY s.start_time;

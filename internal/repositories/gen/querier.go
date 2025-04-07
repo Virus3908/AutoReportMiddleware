@@ -27,6 +27,8 @@ type Querier interface {
 	DeleteTaskByID(ctx context.Context, id uuid.UUID) error
 	GetConversationByID(ctx context.Context, id uuid.UUID) (Conversation, error)
 	GetConversationFileURL(ctx context.Context, id uuid.UUID) (string, error)
+	GetConversationIDByConvertTaskID(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
+	GetConversationIDByDiarizeTaskID(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 	GetConversationIDByTranscriptionTaskID(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 	GetConversations(ctx context.Context) ([]Conversation, error)
 	GetConvert(ctx context.Context) ([]Convert, error)
@@ -39,12 +41,13 @@ type Querier interface {
 	GetPromptByID(ctx context.Context, id uuid.UUID) (Prompt, error)
 	GetPrompts(ctx context.Context) ([]Prompt, error)
 	GetSegmentsByConversationsID(ctx context.Context, id uuid.UUID) ([]GetSegmentsByConversationsIDRow, error)
+	GetSegmentsWithTranscriptionByConversationID(ctx context.Context, id uuid.UUID) ([]GetSegmentsWithTranscriptionByConversationIDRow, error)
 	GetTaskByID(ctx context.Context, id uuid.UUID) (Task, error)
 	GetTasks(ctx context.Context) ([]Task, error)
 	UpdateConversationStatusByConvertID(ctx context.Context, arg UpdateConversationStatusByConvertIDParams) error
 	UpdateConversationStatusByDiarizeID(ctx context.Context, arg UpdateConversationStatusByDiarizeIDParams) error
 	UpdateConversationStatusByID(ctx context.Context, arg UpdateConversationStatusByIDParams) error
-	UpdateConvertByTaskID(ctx context.Context, arg UpdateConvertByTaskIDParams) (uuid.UUID, error)
+	UpdateConvertByTaskID(ctx context.Context, arg UpdateConvertByTaskIDParams) error
 	UpdateParticipantByID(ctx context.Context, arg UpdateParticipantByIDParams) error
 	UpdatePromptByID(ctx context.Context, arg UpdatePromptByIDParams) error
 	UpdateTaskStatus(ctx context.Context, arg UpdateTaskStatusParams) error

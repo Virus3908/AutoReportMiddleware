@@ -30,17 +30,17 @@ type TranscriptionPayload struct {
 }
 
 const (
-	StatusProcessing = 1
-	StatusOK         = 2
-	StatusError      = 3
+	StatusTaskProcessing = 1
+	StatusTaskOK         = 2
+	StatusTaskError      = 3
 )
 
 const (
-	StatusConverted       = 1
-	StatusDiarized        = 2
-	StatusTranscribed     = 3
-	StatusReported        = 4
-	StatusSmthngWentWrong = 5
+	StatusConverted   = 1
+	StatusDiarized    = 2
+	StatusTranscribed = 3
+	StatusReported    = 4
+	StatusError       = 5
 )
 
 func NewTaskCallbackReceiver(storage StorageClient, repo *repositories.RepositoryStruct, txManager TxManager) *TaskCallbackReceiver {
@@ -62,16 +62,20 @@ func (s *TaskCallbackReceiver) HandleConvertCallback(
 	if err != nil {
 		return err
 	}
+	conversationID, err := s.Repo.GetConversationIDByConvertTaskID(ctx, taskID)
+	if err != nil {
+		return err
+	}
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
-		convertID, err := s.Repo.UpdateConvertByTaskID(ctx, tx, taskID, fileURL, audioLen)
+		err := s.Repo.UpdateConvertByTaskID(ctx, tx, taskID, fileURL, audioLen)
 		if err != nil {
 			return err
 		}
-		err = s.Repo.UpdateTaskStatus(ctx, tx, taskID, StatusOK)
+		err = s.Repo.UpdateTaskStatus(ctx, tx, taskID, StatusTaskOK)
 		if err != nil {
 			return err
 		}
-		return s.Repo.UpdateConversationStatusByConvertID(ctx, tx, convertID, StatusConverted)
+		return s.Repo.UpdateConversationStatusByID(ctx, tx, conversationID, StatusConverted)
 	})
 }
 
@@ -84,8 +88,12 @@ func (s *TaskCallbackReceiver) HandleDiarizeCallback(
 	if err != nil {
 		return err
 	}
+	conversationID, err := s.Repo.GetConversationIDByDiarizeTaskID(ctx, taskID)
+	if err != nil {
+		return err
+	}
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
-		err = s.Repo.UpdateTaskStatus(ctx, tx, taskID, StatusOK)
+		err = s.Repo.UpdateTaskStatus(ctx, tx, taskID, StatusTaskOK)
 		if err != nil {
 			return err
 		}
@@ -95,7 +103,7 @@ func (s *TaskCallbackReceiver) HandleDiarizeCallback(
 				return err
 			}
 		}
-		return s.Repo.UpdateConversationStatusByDiarizeID(ctx, tx, diarizeID, StatusDiarized)
+		return s.Repo.UpdateConversationStatusByID(ctx, tx, conversationID, StatusDiarized)
 	})
 }
 
@@ -109,7 +117,7 @@ func (s *TaskCallbackReceiver) HandleTransctiprionCallback(
 		return err
 	}
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
-		err := s.Repo.UpdateTaskStatus(ctx, tx, taskID, StatusOK)
+		err := s.Repo.UpdateTaskStatus(ctx, tx, taskID, StatusTaskOK)
 		if err != nil {
 			return err
 		}
