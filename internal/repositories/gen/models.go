@@ -40,8 +40,8 @@ type Convert struct {
 
 type Diarize struct {
 	ID        uuid.UUID `json:"id"`
-	ConverID  uuid.UUID `json:"conver_id"`
-	TasksID   uuid.UUID `json:"tasks_id"`
+	ConvertID uuid.UUID `json:"convert_id"`
+	TaskID    uuid.UUID `json:"task_id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -93,7 +93,7 @@ type Transcription struct {
 	ID            uuid.UUID `json:"id"`
 	SegmentID     uuid.UUID `json:"segment_id"`
 	Transcription *string   `json:"transcription"`
-	TasksID       uuid.UUID `json:"tasks_id"`
+	TaskID        uuid.UUID `json:"task_id"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }

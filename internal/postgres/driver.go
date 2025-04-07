@@ -82,3 +82,14 @@ func (d *PGDatabase) CommitTransaction(ctx context.Context, tx pgx.Tx) error {
 func (d *PGDatabase) RollbackTransactionIfExist(ctx context.Context, tx pgx.Tx) error {
 	return tx.Rollback(ctx)
 }
+
+func (d *PGDatabase) WithTx(ctx context.Context, fn func(tx pgx.Tx) error) error {
+	tx, err := d.StartTransaction(ctx)
+	if err != nil {
+		return err
+	}
+	if err := fn(tx); err != nil {
+		d.RollbackTransactionIfExist(ctx, tx)
+	}
+	return d.CommitTransaction(ctx, tx)
+}

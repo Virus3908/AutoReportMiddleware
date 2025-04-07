@@ -11,39 +11,8 @@ import (
 	"github.com/google/uuid"
 )
 
-const aSD = `-- name: ASD :one
-SELECT convert.id, convert.conversations_id, convert.file_url, convert.audio_len, convert.task_id, convert.created_at, convert.updated_at, conversations.id, conversations.conversation_name, conversations.file_url, conversations.status, conversations.created_at, conversations.updated_at FROM convert
-JOIN conversations ON conversations.id = convert.conversations_id
-`
-
-type ASDRow struct {
-	Convert      Convert      `json:"convert"`
-	Conversation Conversation `json:"conversation"`
-}
-
-func (q *Queries) ASD(ctx context.Context) (ASDRow, error) {
-	row := q.db.QueryRow(ctx, aSD)
-	var i ASDRow
-	err := row.Scan(
-		&i.Convert.ID,
-		&i.Convert.ConversationsID,
-		&i.Convert.FileUrl,
-		&i.Convert.AudioLen,
-		&i.Convert.TaskID,
-		&i.Convert.CreatedAt,
-		&i.Convert.UpdatedAt,
-		&i.Conversation.ID,
-		&i.Conversation.ConversationName,
-		&i.Conversation.FileUrl,
-		&i.Conversation.Status,
-		&i.Conversation.CreatedAt,
-		&i.Conversation.UpdatedAt,
-	)
-	return i, err
-}
-
 const createConvert = `-- name: CreateConvert :exec
-INSERT INTO convert (conversations_id, task_id) VALUES ($1, $2)
+INSERT INTO convert(conversations_id, task_id) VALUES ($1, $2)
 `
 
 type CreateConvertParams struct {
@@ -57,9 +26,7 @@ func (q *Queries) CreateConvert(ctx context.Context, arg CreateConvertParams) er
 }
 
 const deleteConvertByForgeinID = `-- name: DeleteConvertByForgeinID :one
-DELETE FROM convert 
-WHERE conversations_id = $1
-RETURNING id
+DELETE FROM convert WHERE conversations_id = $1 RETURNING id
 `
 
 func (q *Queries) DeleteConvertByForgeinID(ctx context.Context, conversationsID uuid.UUID) (uuid.UUID, error) {
@@ -129,16 +96,45 @@ func (q *Queries) GetConvertByID(ctx context.Context, id uuid.UUID) (Convert, er
 	return i, err
 }
 
-const updateConvertByTaskID = `-- name: UpdateConvertByTaskID :exec
-UPDATE convert SET file_url = $1 WHERE id = $2
+const getConvertFileURLByConversationID = `-- name: GetConvertFileURLByConversationID :one
+SELECT convert.file_url, convert.ID
+FROM convert
+WHERE
+    conversations_id = $1
 `
 
-type UpdateConvertByTaskIDParams struct {
+type GetConvertFileURLByConversationIDRow struct {
 	FileUrl *string   `json:"file_url"`
 	ID      uuid.UUID `json:"id"`
 }
 
-func (q *Queries) UpdateConvertByTaskID(ctx context.Context, arg UpdateConvertByTaskIDParams) error {
-	_, err := q.db.Exec(ctx, updateConvertByTaskID, arg.FileUrl, arg.ID)
-	return err
+func (q *Queries) GetConvertFileURLByConversationID(ctx context.Context, conversationsID uuid.UUID) (GetConvertFileURLByConversationIDRow, error) {
+	row := q.db.QueryRow(ctx, getConvertFileURLByConversationID, conversationsID)
+	var i GetConvertFileURLByConversationIDRow
+	err := row.Scan(&i.FileUrl, &i.ID)
+	return i, err
+}
+
+const updateConvertByTaskID = `-- name: UpdateConvertByTaskID :one
+UPDATE convert
+SET
+    file_url = $1,
+    audio_len = $2
+WHERE
+    task_id = $3
+RETURNING
+    id
+`
+
+type UpdateConvertByTaskIDParams struct {
+	FileUrl  *string   `json:"file_url"`
+	AudioLen *float64  `json:"audio_len"`
+	TaskID   uuid.UUID `json:"task_id"`
+}
+
+func (q *Queries) UpdateConvertByTaskID(ctx context.Context, arg UpdateConvertByTaskIDParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, updateConvertByTaskID, arg.FileUrl, arg.AudioLen, arg.TaskID)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
 }

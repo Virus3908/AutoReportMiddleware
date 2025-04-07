@@ -12,7 +12,9 @@ import (
 )
 
 const createConversation = `-- name: CreateConversation :exec
-INSERT INTO Conversations (conversation_name, file_url) VALUES ($1, $2)
+INSERT INTO
+    Conversations (conversation_name, file_url)
+VALUES ($1, $2)
 `
 
 type CreateConversationParams struct {
@@ -26,9 +28,7 @@ func (q *Queries) CreateConversation(ctx context.Context, arg CreateConversation
 }
 
 const deleteConversationByID = `-- name: DeleteConversationByID :one
-DELETE FROM Conversations
-WHERE id = $1
-RETURNING file_url
+DELETE FROM Conversations WHERE id = $1 RETURNING file_url
 `
 
 func (q *Queries) DeleteConversationByID(ctx context.Context, id uuid.UUID) (string, error) {
@@ -67,6 +67,24 @@ func (q *Queries) GetConversationFileURL(ctx context.Context, id uuid.UUID) (str
 	return file_url, err
 }
 
+const getConversationIDByTranscriptionTaskID = `-- name: GetConversationIDByTranscriptionTaskID :one
+SELECT c.id
+FROM
+    conversations AS c
+    JOIN convert AS conv ON c.id = conv.conversations_id
+    JOIN diarize AS d ON conv.id = d.convert_id
+    JOIN segments AS s ON d.id = s.diarize_id
+    JOIN transcriptions AS t ON s.id = t.segment_id
+    JOIN tasks AS tasks ON tasks.id = t.task_id
+WHERE tasks.id = $1
+`
+
+func (q *Queries) GetConversationIDByTranscriptionTaskID(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, getConversationIDByTranscriptionTaskID, id)
+	err := row.Scan(&id)
+	return id, err
+}
+
 const getConversations = `-- name: GetConversations :many
 SELECT id, conversation_name, file_url, status, created_at, updated_at FROM Conversations
 `
@@ -98,17 +116,44 @@ func (q *Queries) GetConversations(ctx context.Context) ([]Conversation, error) 
 	return items, nil
 }
 
-const updateConversationNameByID = `-- name: UpdateConversationNameByID :exec
-UPDATE Conversations SET conversation_name = $1 WHERE id = $2
+const updateConversationStatusByConvertID = `-- name: UpdateConversationStatusByConvertID :exec
+UPDATE conversations
+SET
+    status = $1
+FROM convert
+WHERE
+    convert.id = $2
+    AND convert.conversations_id = conversations.id
 `
 
-type UpdateConversationNameByIDParams struct {
-	ConversationName string    `json:"conversation_name"`
-	ID               uuid.UUID `json:"id"`
+type UpdateConversationStatusByConvertIDParams struct {
+	Status int32     `json:"status"`
+	ID     uuid.UUID `json:"id"`
 }
 
-func (q *Queries) UpdateConversationNameByID(ctx context.Context, arg UpdateConversationNameByIDParams) error {
-	_, err := q.db.Exec(ctx, updateConversationNameByID, arg.ConversationName, arg.ID)
+func (q *Queries) UpdateConversationStatusByConvertID(ctx context.Context, arg UpdateConversationStatusByConvertIDParams) error {
+	_, err := q.db.Exec(ctx, updateConversationStatusByConvertID, arg.Status, arg.ID)
+	return err
+}
+
+const updateConversationStatusByDiarizeID = `-- name: UpdateConversationStatusByDiarizeID :exec
+UPDATE conversations
+SET
+    status = $1
+FROM convert, diarize
+WHERE
+    diarize.id = $2
+    AND diarize.convert_id = convert.id
+    AND convert.conversations_id = conversations.id
+`
+
+type UpdateConversationStatusByDiarizeIDParams struct {
+	Status int32     `json:"status"`
+	ID     uuid.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateConversationStatusByDiarizeID(ctx context.Context, arg UpdateConversationStatusByDiarizeIDParams) error {
+	_, err := q.db.Exec(ctx, updateConversationStatusByDiarizeID, arg.Status, arg.ID)
 	return err
 }
 
