@@ -23,7 +23,7 @@ type StorageClient interface {
 }
 
 type MessageClient interface {
-	SendMessage(ctx context.Context, key string, message string) error
+	SendMessage(ctx context.Context, taskType int32, key string, msg string) error
 }
 
 type ServiceStruct struct {

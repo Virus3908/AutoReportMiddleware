@@ -118,6 +118,26 @@ func (q *Queries) UpdateConversationStatusByConvertID(ctx context.Context, arg U
 	return err
 }
 
+const updateConversationStatusByDiarizeID = `-- name: UpdateConversationStatusByDiarizeID :exec
+UPDATE conversations
+SET status = $1
+FROM convert, diarize
+WHERE
+    diarize.id = $2
+    AND diarize.convert_id = convert.id
+    AND convert.conversations_id = conversations.id
+`
+
+type UpdateConversationStatusByDiarizeIDParams struct {
+	Status int32     `json:"status"`
+	ID     uuid.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateConversationStatusByDiarizeID(ctx context.Context, arg UpdateConversationStatusByDiarizeIDParams) error {
+	_, err := q.db.Exec(ctx, updateConversationStatusByDiarizeID, arg.Status, arg.ID)
+	return err
+}
+
 const updateConversationStatusByID = `-- name: UpdateConversationStatusByID :exec
 UPDATE conversations SET status = $1 WHERE id = $2
 `

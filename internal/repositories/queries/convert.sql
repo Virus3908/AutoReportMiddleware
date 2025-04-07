@@ -5,19 +5,26 @@ SELECT * FROM convert;
 SELECT * FROM convert WHERE id = $1;
 
 -- name: CreateConvert :exec
-INSERT INTO convert (conversations_id, task_id) VALUES ($1, $2);
+INSERT INTO convert(conversations_id, task_id) VALUES ($1, $2);
 
--- name: UpdateConvertByTaskID :exec
-UPDATE convert SET file_url = $1 WHERE task_id = $2;
+-- name: UpdateConvertByTaskID :one
+UPDATE convert
+SET
+    file_url = $1,
+    audio_len = $2
+WHERE
+    task_id = $3
+RETURNING
+    id;
 
 -- name: DeleteConvertByID :exec
 DELETE FROM convert WHERE id = $1;
 
 -- name: DeleteConvertByForgeinID :one
-DELETE FROM convert 
-WHERE conversations_id = $1
-RETURNING id;
+DELETE FROM convert WHERE conversations_id = $1 RETURNING id;
 
--- name: ASD :one
-SELECT sqlc.embed(convert), sqlc.embed(conversations) FROM convert
-JOIN conversations ON conversations.id = convert.conversations_id;
+-- name: GetConvertFileURLByConversationID :one
+SELECT convert.file_url, convert.ID
+FROM convert
+WHERE
+    conversations_id = $1;

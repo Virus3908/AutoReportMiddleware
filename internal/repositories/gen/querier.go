@@ -11,11 +11,12 @@ import (
 )
 
 type Querier interface {
-	ASD(ctx context.Context) (ASDRow, error)
 	CreateConversation(ctx context.Context, arg CreateConversationParams) error
 	CreateConvert(ctx context.Context, arg CreateConvertParams) error
+	CreateDiarize(ctx context.Context, arg CreateDiarizeParams) error
 	CreateParticipant(ctx context.Context, arg CreateParticipantParams) error
 	CreatePrompt(ctx context.Context, prompt string) error
+	CreateSegment(ctx context.Context, arg CreateSegmentParams) error
 	CreateTask(ctx context.Context, taskType int32) (uuid.UUID, error)
 	DeleteConversationByID(ctx context.Context, id uuid.UUID) (string, error)
 	DeleteConvertByForgeinID(ctx context.Context, conversationsID uuid.UUID) (uuid.UUID, error)
@@ -28,6 +29,8 @@ type Querier interface {
 	GetConversations(ctx context.Context) ([]Conversation, error)
 	GetConvert(ctx context.Context) ([]Convert, error)
 	GetConvertByID(ctx context.Context, id uuid.UUID) (Convert, error)
+	GetConvertFileURLByConversationID(ctx context.Context, conversationsID uuid.UUID) (GetConvertFileURLByConversationIDRow, error)
+	GetDiarizeIDByTaskID(ctx context.Context, taskID uuid.UUID) (uuid.UUID, error)
 	GetParticipantByID(ctx context.Context, id uuid.UUID) (Participant, error)
 	GetParticipants(ctx context.Context) ([]Participant, error)
 	GetPromptByID(ctx context.Context, id uuid.UUID) (Prompt, error)
@@ -35,8 +38,9 @@ type Querier interface {
 	GetTaskByID(ctx context.Context, id uuid.UUID) (Task, error)
 	GetTasks(ctx context.Context) ([]Task, error)
 	UpdateConversationStatusByConvertID(ctx context.Context, arg UpdateConversationStatusByConvertIDParams) error
+	UpdateConversationStatusByDiarizeID(ctx context.Context, arg UpdateConversationStatusByDiarizeIDParams) error
 	UpdateConversationStatusByID(ctx context.Context, arg UpdateConversationStatusByIDParams) error
-	UpdateConvertByTaskID(ctx context.Context, arg UpdateConvertByTaskIDParams) error
+	UpdateConvertByTaskID(ctx context.Context, arg UpdateConvertByTaskIDParams) (uuid.UUID, error)
 	UpdateParticipantByID(ctx context.Context, arg UpdateParticipantByIDParams) error
 	UpdatePromptByID(ctx context.Context, arg UpdatePromptByIDParams) error
 	UpdateTaskStatus(ctx context.Context, arg UpdateTaskStatusParams) error

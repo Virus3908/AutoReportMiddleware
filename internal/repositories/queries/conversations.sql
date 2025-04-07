@@ -24,5 +24,14 @@ WHERE
     convert.id = $2
     AND convert.conversations_id = conversations.id;
 
+-- name: UpdateConversationStatusByDiarizeID :exec
+UPDATE conversations
+SET status = $1
+FROM convert, diarize
+WHERE
+    diarize.id = $2
+    AND diarize.convert_id = convert.id
+    AND convert.conversations_id = conversations.id;
+
 -- name: UpdateConversationStatusByID :exec
 UPDATE conversations SET status = $1 WHERE id = $2;

@@ -70,11 +70,18 @@ func (r *RepositoryStruct) DeleteConversation(ctx context.Context, tx pgx.Tx, co
 	return query.DeleteConversationByID(ctx, conversationID)
 }
 
-func (r *RepositoryStruct) UpdateConvertFileURL(ctx context.Context, tx pgx.Tx, taskID uuid.UUID, fileURL string) error {
+func (r *RepositoryStruct) UpdateConvertByTaskID(
+	ctx context.Context,
+	tx pgx.Tx,
+	taskID uuid.UUID,
+	fileURL string,
+	audioLen float64,
+) (uuid.UUID, error) {
 	query := r.queries.WithTx(tx)
 	return query.UpdateConvertByTaskID(ctx, db.UpdateConvertByTaskIDParams{
-		TaskID:  taskID,
-		FileUrl: &fileURL,
+		TaskID:   taskID,
+		FileUrl:  &fileURL,
+		AudioLen: &audioLen,
 	})
 }
 
@@ -86,16 +93,50 @@ func (r *RepositoryStruct) UpdateTaskStatus(ctx context.Context, tx pgx.Tx, task
 	})
 }
 
-func (r *RepositoryStruct) UpdateConversationStatus(ctx context.Context, tx pgx.Tx, taskID uuid.UUID, status int32) error {
+func (r *RepositoryStruct) UpdateConversationStatusByConvertID(ctx context.Context, tx pgx.Tx, convertID uuid.UUID) error {
 	query := r.queries.WithTx(tx)
-	switch status {
-	case StatusConverted:
-		return query.UpdateConversationStatusByConvertID(ctx, db.UpdateConversationStatusByConvertIDParams{
-			ID:     taskID,
-			Status: status,
-		})
-	}
-	return query.UpdateConversationStatusByID(ctx, db.UpdateConversationStatusByIDParams{
-		ID:     taskID,
-		Status: StatusError})
+	return query.UpdateConversationStatusByConvertID(ctx, db.UpdateConversationStatusByConvertIDParams{
+		ID:     convertID,
+		Status: StatusConverted,
+	})
+}
+
+func (r *RepositoryStruct) UpdateConversationStatusByDiarizeID(ctx context.Context, tx pgx.Tx, diarizeID uuid.UUID) error {
+	query := r.queries.WithTx(tx)
+	return query.UpdateConversationStatusByDiarizeID(ctx, db.UpdateConversationStatusByDiarizeIDParams{
+		ID:     diarizeID,
+		Status: StatusDiarized,
+	})
+}
+
+func (r *RepositoryStruct) GetConvertFileURLByConversationID(ctx context.Context, conversationID uuid.UUID) (db.GetConvertFileURLByConversationIDRow, error) {
+	return r.queries.GetConvertFileURLByConversationID(ctx, conversationID)
+}
+
+func (r *RepositoryStruct) CreateDiarize(ctx context.Context, tx pgx.Tx, convertID, taskID uuid.UUID) error {
+	query := r.queries.WithTx(tx)
+	return query.CreateDiarize(ctx, db.CreateDiarizeParams{
+		TaskID:    taskID,
+		ConvertID: convertID,
+	})
+}
+
+func (r *RepositoryStruct) GetDiarizeIDByTaskID(ctx context.Context, taskID uuid.UUID) (uuid.UUID, error) {
+	return r.queries.GetDiarizeIDByTaskID(ctx, taskID)
+}
+
+func (r *RepositoryStruct) CreateSegment(
+	ctx context.Context,
+	tx pgx.Tx,
+	diarizeID uuid.UUID,
+	startTime, endTime float64,
+	speaker int32,
+) error {
+	query := r.queries.WithTx(tx)
+	return query.CreateSegment(ctx, db.CreateSegmentParams{
+		DiarizeID: diarizeID,
+		StartTime: startTime,
+		EndTime:   endTime,
+		Speaker:   speaker,
+	})
 }

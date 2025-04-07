@@ -13,8 +13,9 @@ type KafkaConfig struct {
 }
 
 type KafkaMessage struct {
-	Msg        string `json:"data"`
+	Msg         string `json:"data"`
 	CallbackURL string `json:"callback_url"`
+	TaskType    int32  `json:"task_type"`
 }
 
 type Producer struct {
@@ -39,10 +40,11 @@ func NewProducer(cfg KafkaConfig, host string, port int) (*Producer, error) {
 	}, nil
 }
 
-func (p *Producer) SendMessage(ctx context.Context, key string, msg string) error {
+func (p *Producer) SendMessage(ctx context.Context, taskType int32, key string, msg string) error {
 	message := KafkaMessage{
-		Msg:        msg,
+		Msg:         msg,
 		CallbackURL: p.callbackURL,
+		TaskType:    taskType,
 	}
 
 	value, err := json.Marshal(message)
