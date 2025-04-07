@@ -25,10 +25,22 @@ type SegmentsPayload struct {
 	Segments []Segment `json:"segments"`
 }
 
+type TranscriptionPayload struct {
+	Text string `json:"text"`
+}
+
 const (
 	StatusProcessing = 1
 	StatusOK         = 2
 	StatusError      = 3
+)
+
+const (
+	StatusConverted       = 1
+	StatusDiarized        = 2
+	StatusTranscribed     = 3
+	StatusReported        = 4
+	StatusSmthngWentWrong = 5
 )
 
 func NewTaskCallbackReceiver(storage StorageClient, repo *repositories.RepositoryStruct, txManager TxManager) *TaskCallbackReceiver {
@@ -59,7 +71,7 @@ func (s *TaskCallbackReceiver) HandleConvertCallback(
 		if err != nil {
 			return err
 		}
-		return s.Repo.UpdateConversationStatusByConvertID(ctx, tx, convertID)
+		return s.Repo.UpdateConversationStatusByConvertID(ctx, tx, convertID, StatusConverted)
 	})
 }
 
@@ -83,6 +95,35 @@ func (s *TaskCallbackReceiver) HandleDiarizeCallback(
 				return err
 			}
 		}
-		return s.Repo.UpdateConversationStatusByDiarizeID(ctx, tx, diarizeID)
+		return s.Repo.UpdateConversationStatusByDiarizeID(ctx, tx, diarizeID, StatusDiarized)
+	})
+}
+
+func (s *TaskCallbackReceiver) HandleTransctiprionCallback(
+	ctx context.Context,
+	taskID uuid.UUID,
+	payload TranscriptionPayload,
+) error {
+	conversationID, err := s.Repo.GetConversationIDByTranscriptionTaskID(ctx, taskID)
+	if err != nil {
+		return err
+	}
+	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
+		err := s.Repo.UpdateTaskStatus(ctx, tx, taskID, StatusOK)
+		if err != nil {
+			return err
+		}
+		err = s.Repo.UpdateTransctiptionTextByID(ctx, tx, taskID, payload.Text)
+		if err != nil {
+			return err
+		}
+		count_of_untranscribed, err := s.Repo.GetCountOfUntranscribedSegments(ctx, tx, conversationID)
+		if err != nil {
+			return err
+		}
+		if count_of_untranscribed == 0 {
+			return s.Repo.UpdateConversationStatusByID(ctx, tx, conversationID, StatusTranscribed)
+		}
+		return nil
 	})
 }

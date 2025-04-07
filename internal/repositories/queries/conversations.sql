@@ -26,7 +26,8 @@ WHERE
 
 -- name: UpdateConversationStatusByDiarizeID :exec
 UPDATE conversations
-SET status = $1
+SET
+    status = $1
 FROM convert, diarize
 WHERE
     diarize.id = $2
@@ -35,3 +36,14 @@ WHERE
 
 -- name: UpdateConversationStatusByID :exec
 UPDATE conversations SET status = $1 WHERE id = $2;
+
+-- name: GetConversationIDByTranscriptionTaskID :one
+SELECT c.id
+FROM
+    conversations AS c
+    JOIN convert AS conv ON c.id = conv.conversations_id
+    JOIN diarize AS d ON conv.id = d.convert_id
+    JOIN segments AS s ON d.id = s.diarize_id
+    JOIN transcriptions AS t ON s.id = t.segment_id
+    JOIN tasks AS tasks ON tasks.id = t.task_id
+WHERE tasks.id = $1;

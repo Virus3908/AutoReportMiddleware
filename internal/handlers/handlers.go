@@ -67,6 +67,9 @@ func (r *RouterStruct) taskHandlers() {
 	r.Router.HandleFunc("/api/task/create/diarize/{id}",
 		wrapperWithID(r.Service.Tasks.CreateDiarizeTask),
 	).Methods(http.MethodPost)
+	r.Router.HandleFunc("/api/task/create/transcription/{id}",
+		wrapperWithID(r.Service.Tasks.CreateTranscribeTask),
+	).Methods(http.MethodPost)
 }
 
 func (r *RouterStruct) callbackHandlers() {
@@ -75,7 +78,10 @@ func (r *RouterStruct) callbackHandlers() {
 	).Methods(http.MethodPatch)
 	r.Router.HandleFunc("/api/task/update/diarize/{id}",
 		wrapperWithIDAndPayload(r.Service.TaskCallbackReceiver.HandleDiarizeCallback),
-)
+	).Methods(http.MethodPatch)
+	r.Router.HandleFunc("/api/task/update/transcription/{id}",
+		wrapperWithIDAndPayload(r.Service.TaskCallbackReceiver.HandleTransctiprionCallback),
+	).Methods(http.MethodPatch)
 }
 
 func respondWithError(w http.ResponseWriter, msg string, err error, status int) {

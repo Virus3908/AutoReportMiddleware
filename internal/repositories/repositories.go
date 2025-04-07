@@ -9,14 +9,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const (
-	StatusConverted   = 1
-	StatusDiarized    = 2
-	StatusTranscribed = 3
-	StatusReported    = 4
-	StatusError       = 5
-)
-
 type RepositoryStruct struct {
 	queries *db.Queries
 }
@@ -93,19 +85,19 @@ func (r *RepositoryStruct) UpdateTaskStatus(ctx context.Context, tx pgx.Tx, task
 	})
 }
 
-func (r *RepositoryStruct) UpdateConversationStatusByConvertID(ctx context.Context, tx pgx.Tx, convertID uuid.UUID) error {
+func (r *RepositoryStruct) UpdateConversationStatusByConvertID(ctx context.Context, tx pgx.Tx, convertID uuid.UUID, status int32) error {
 	query := r.queries.WithTx(tx)
 	return query.UpdateConversationStatusByConvertID(ctx, db.UpdateConversationStatusByConvertIDParams{
 		ID:     convertID,
-		Status: StatusConverted,
+		Status: status,
 	})
 }
 
-func (r *RepositoryStruct) UpdateConversationStatusByDiarizeID(ctx context.Context, tx pgx.Tx, diarizeID uuid.UUID) error {
+func (r *RepositoryStruct) UpdateConversationStatusByDiarizeID(ctx context.Context, tx pgx.Tx, diarizeID uuid.UUID, status int32) error {
 	query := r.queries.WithTx(tx)
 	return query.UpdateConversationStatusByDiarizeID(ctx, db.UpdateConversationStatusByDiarizeIDParams{
 		ID:     diarizeID,
-		Status: StatusDiarized,
+		Status: status,
 	})
 }
 
@@ -138,5 +130,72 @@ func (r *RepositoryStruct) CreateSegment(
 		StartTime: startTime,
 		EndTime:   endTime,
 		Speaker:   speaker,
+	})
+}
+
+func (r *RepositoryStruct) GetSegmentsByConversationsID(
+	ctx context.Context,
+	conversationID uuid.UUID,
+) ([]db.GetSegmentsByConversationsIDRow, error) {
+	return r.queries.GetSegmentsByConversationsID(ctx, conversationID)
+}
+
+func (r *RepositoryStruct) CreateTranscriptionWithTaskAndSegmentID(
+	ctx context.Context,
+	tx pgx.Tx,
+	taskID uuid.UUID,
+	segmentID uuid.UUID,
+) error {
+	query := r.queries.WithTx(tx)
+	return query.CreateTranscriptionWithTaskAndSegmentID(
+		ctx, db.CreateTranscriptionWithTaskAndSegmentIDParams{
+			TaskID:    taskID,
+			SegmentID: segmentID,
+		},
+	)
+}
+
+func (r *RepositoryStruct) UpdateTransctiptionTextByID(
+	ctx context.Context,
+	tx pgx.Tx,
+	taskID uuid.UUID,
+	text string,
+) error {
+	query := r.queries.WithTx(tx)
+	return query.UpdateTransctiptionTextByID(ctx, db.UpdateTransctiptionTextByIDParams{
+		TaskID:        taskID,
+		Transcription: &text,
+	})
+}
+
+func (r *RepositoryStruct) GetCountOfUntranscribedSegments(
+	ctx context.Context,
+	tx pgx.Tx,
+	conversationID uuid.UUID,
+) (int64, error) {
+	query := r.queries
+	if tx != nil {
+		query = r.queries.WithTx(tx)
+	}
+	return query.GetCountOfUntranscribedSegments(ctx, conversationID)
+}
+
+func (r *RepositoryStruct) GetConversationIDByTranscriptionTaskID(
+	ctx context.Context,
+	taskID uuid.UUID,
+) (uuid.UUID, error) {
+	return r.queries.GetConversationIDByTranscriptionTaskID(ctx, taskID)
+}
+
+func (r *RepositoryStruct) UpdateConversationStatusByID(
+	ctx context.Context,
+	tx pgx.Tx,
+	conversationID uuid.UUID,
+	status int32,
+) error {
+	query := r.queries.WithTx(tx)
+	return query.UpdateConversationStatusByID(ctx, db.UpdateConversationStatusByIDParams{
+		ID: conversationID,
+		Status: status,
 	})
 }

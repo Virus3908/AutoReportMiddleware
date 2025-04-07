@@ -22,9 +22,11 @@ const (
 	TranscribeTask = 3
 )
 
-type MessageWithFileURL struct {
+type Message struct {
 	TaskID          uuid.UUID `json:"task_id"`
 	FileURL         string    `json:"file_url"`
+	StartTime       float64   `json:"start_time,omitempty"`
+	EndTime         float64   `json:"end_time,omitempty"`
 	CallbackPostfix string    `json:"callback_postfix"`
 }
 
@@ -50,7 +52,7 @@ func (s *TaskDispatcher) CreateConvertTask(ctx context.Context, conversationID u
 		if err != nil {
 			return err
 		}
-		convertMessage := MessageWithFileURL{
+		convertMessage := Message{
 			TaskID:          taskID,
 			FileURL:         fileURL,
 			CallbackPostfix: "/api/task/update/convert/",
@@ -80,7 +82,7 @@ func (s *TaskDispatcher) CreateDiarizeTask(ctx context.Context, conversationID u
 		if err != nil {
 			return err
 		}
-		diarizeMessage := MessageWithFileURL{
+		diarizeMessage := Message{
 			TaskID:          taskID,
 			FileURL:         *response.FileUrl,
 			CallbackPostfix: "/api/task/update/diarize/",
@@ -91,5 +93,43 @@ func (s *TaskDispatcher) CreateDiarizeTask(ctx context.Context, conversationID u
 		}
 
 		return s.Messenger.SendMessage(ctx, DiarizeTask, conversationID.String(), string(diarizeMessageJSON))
+	})
+}
+
+func (s *TaskDispatcher) CreateTranscribeTask(ctx context.Context, conversationID uuid.UUID) error {
+	response, err := s.Repo.GetSegmentsByConversationsID(ctx, conversationID)
+	if err != nil {
+		return err
+	}
+	if len(response) == 0 {
+		return fmt.Errorf("no segments")
+	}
+	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
+		for _, segment := range response {
+			taskID, err := s.Repo.CreateTask(ctx, tx, TranscribeTask)
+			if err != nil {
+				return err
+			}
+			err = s.Repo.CreateTranscriptionWithTaskAndSegmentID(ctx, tx, taskID, segment.SegmentID)
+			if err != nil {
+				return err
+			}
+			transcribeMessage := Message{
+				TaskID:          taskID,
+				FileURL:         *segment.FileUrl,
+				StartTime:       segment.StartTime,
+				EndTime:         segment.EndTime,
+				CallbackPostfix: "/api/task/update/transcription/",
+			}
+			transcribeMessageJSON, err := json.Marshal(transcribeMessage)
+			if err != nil {
+				return fmt.Errorf("failed to marshal convert message: %w", err)
+			}
+			err = s.Messenger.SendMessage(ctx, TranscribeTask, segment.ConversationID.String(), string(transcribeMessageJSON))
+			if err != nil {
+				return fmt.Errorf("failed to send message: %s", err)
+			}
+		}
+		return err
 	})
 }

@@ -67,6 +67,24 @@ func (q *Queries) GetConversationFileURL(ctx context.Context, id uuid.UUID) (str
 	return file_url, err
 }
 
+const getConversationIDByTranscriptionTaskID = `-- name: GetConversationIDByTranscriptionTaskID :one
+SELECT c.id
+FROM
+    conversations AS c
+    JOIN convert AS conv ON c.id = conv.conversations_id
+    JOIN diarize AS d ON conv.id = d.convert_id
+    JOIN segments AS s ON d.id = s.diarize_id
+    JOIN transcriptions AS t ON s.id = t.segment_id
+    JOIN tasks AS tasks ON tasks.id = t.task_id
+WHERE tasks.id = $1
+`
+
+func (q *Queries) GetConversationIDByTranscriptionTaskID(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, getConversationIDByTranscriptionTaskID, id)
+	err := row.Scan(&id)
+	return id, err
+}
+
 const getConversations = `-- name: GetConversations :many
 SELECT id, conversation_name, file_url, status, created_at, updated_at FROM Conversations
 `
@@ -120,7 +138,8 @@ func (q *Queries) UpdateConversationStatusByConvertID(ctx context.Context, arg U
 
 const updateConversationStatusByDiarizeID = `-- name: UpdateConversationStatusByDiarizeID :exec
 UPDATE conversations
-SET status = $1
+SET
+    status = $1
 FROM convert, diarize
 WHERE
     diarize.id = $2
