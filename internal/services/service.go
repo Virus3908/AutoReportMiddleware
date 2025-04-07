@@ -11,10 +11,7 @@ import (
 
 
 type TxManager interface {
-	StartTransaction(ctx context.Context) (pgx.Tx, error)
-	StartNestedTransaction(ctx context.Context, tx pgx.Tx) (pgx.Tx, error)
-	CommitTransaction(ctx context.Context, tx pgx.Tx) error
-	RollbackTransactionIfExist(ctx context.Context, tx pgx.Tx) error
+	WithTx(ctx context.Context, fn func(tx pgx.Tx) error) error
 }
 
 type StorageClient interface {

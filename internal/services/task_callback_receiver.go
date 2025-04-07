@@ -6,6 +6,7 @@ import (
 	"mime/multipart"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 type TaskCallbackReceiver struct {
@@ -49,24 +50,17 @@ func (s *TaskCallbackReceiver) HandleConvertCallback(
 	if err != nil {
 		return err
 	}
-	tx, err := s.TxManager.StartTransaction(ctx)
-	if err != nil {
-		return err
-	}
-	defer s.TxManager.RollbackTransactionIfExist(ctx, tx)
-	convertID, err := s.Repo.UpdateConvertByTaskID(ctx, tx, taskID, fileURL, audioLen)
-	if err != nil {
-		return err
-	}
-	err = s.Repo.UpdateTaskStatus(ctx, tx, taskID, StatusOK)
-	if err != nil {
-		return err
-	}
-	err = s.Repo.UpdateConversationStatusByConvertID(ctx, tx, convertID)
-	if err != nil {
-		return err
-	}
-	return s.TxManager.CommitTransaction(ctx, tx)
+	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
+		convertID, err := s.Repo.UpdateConvertByTaskID(ctx, tx, taskID, fileURL, audioLen)
+		if err != nil {
+			return err
+		}
+		err = s.Repo.UpdateTaskStatus(ctx, tx, taskID, StatusOK)
+		if err != nil {
+			return err
+		}
+		return s.Repo.UpdateConversationStatusByConvertID(ctx, tx, convertID)
+	})
 }
 
 func (s *TaskCallbackReceiver) HandleDiarizeCallback(
@@ -78,24 +72,17 @@ func (s *TaskCallbackReceiver) HandleDiarizeCallback(
 	if err != nil {
 		return err
 	}
-	tx, err := s.TxManager.StartTransaction(ctx)
-	if err != nil {
-		return err
-	}
-	defer s.TxManager.RollbackTransactionIfExist(ctx, tx)
-	err = s.Repo.UpdateTaskStatus(ctx, tx, taskID, StatusOK)
-	if err != nil {
-		return err
-	}
-	for _, segment := range payload.Segments {
-		err := s.Repo.CreateSegment(ctx, tx, diarizeID, segment.Start, segment.End, segment.Speaker)
+	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
+		err = s.Repo.UpdateTaskStatus(ctx, tx, taskID, StatusOK)
 		if err != nil {
 			return err
 		}
-	}
-	err = s.Repo.UpdateConversationStatusByDiarizeID(ctx, tx, diarizeID)
-	if err != nil {
-		return err
-	}
-	return s.TxManager.CommitTransaction(ctx, tx)
+		for _, segment := range payload.Segments {
+			err := s.Repo.CreateSegment(ctx, tx, diarizeID, segment.Start, segment.End, segment.Speaker)
+			if err != nil {
+				return err
+			}
+		}
+		return s.Repo.UpdateConversationStatusByDiarizeID(ctx, tx, diarizeID)
+	})
 }

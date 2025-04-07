@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"main/internal/repositories"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 type TaskDispatcher struct {
@@ -26,7 +28,6 @@ type MessageWithFileURL struct {
 	CallbackPostfix string    `json:"callback_postfix"`
 }
 
-
 func NewTaskDispatcher(repo *repositories.RepositoryStruct, messenger MessageClient, txManager TxManager) *TaskDispatcher {
 	return &TaskDispatcher{
 		Repo:      repo,
@@ -40,34 +41,26 @@ func (s *TaskDispatcher) CreateConvertTask(ctx context.Context, conversationID u
 	if err != nil {
 		return err
 	}
-	tx, err := s.TxManager.StartTransaction(ctx)
-	if err != nil {
-		return err
-	}
-	defer s.TxManager.RollbackTransactionIfExist(ctx, tx)
-
-	taskID, err := s.Repo.CreateTask(ctx, tx, ConvertTask)
-	if err != nil {
-		return err
-	}
-	err = s.Repo.CreateConvert(ctx, tx, taskID, conversationID)
-	if err != nil {
-		return err
-	}
-	convertMessage := MessageWithFileURL{
-		TaskID:          taskID,
-		FileURL:         fileURL,
-		CallbackPostfix: "/api/task/update/convert/",
-	}
-	convertMessageJSON, err := json.Marshal(convertMessage)
-	if err != nil {
-		return fmt.Errorf("failed to marshal convert message: %w", err)
-	}
-	err = s.Messenger.SendMessage(ctx, ConvertTask, conversationID.String(), string(convertMessageJSON))
-	if err != nil {
-		return fmt.Errorf("failed to send message: %w", err)
-	}
-	return s.TxManager.CommitTransaction(ctx, tx)
+	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
+		taskID, err := s.Repo.CreateTask(ctx, tx, ConvertTask)
+		if err != nil {
+			return err
+		}
+		err = s.Repo.CreateConvert(ctx, tx, taskID, conversationID)
+		if err != nil {
+			return err
+		}
+		convertMessage := MessageWithFileURL{
+			TaskID:          taskID,
+			FileURL:         fileURL,
+			CallbackPostfix: "/api/task/update/convert/",
+		}
+		convertMessageJSON, err := json.Marshal(convertMessage)
+		if err != nil {
+			return fmt.Errorf("failed to marshal convert message: %w", err)
+		}
+		return s.Messenger.SendMessage(ctx, ConvertTask, conversationID.String(), string(convertMessageJSON))
+	})
 }
 
 func (s *TaskDispatcher) CreateDiarizeTask(ctx context.Context, conversationID uuid.UUID) error {
@@ -78,32 +71,25 @@ func (s *TaskDispatcher) CreateDiarizeTask(ctx context.Context, conversationID u
 	if response.FileUrl == nil {
 		return fmt.Errorf("file is not converted")
 	}
-	tx, err := s.TxManager.StartTransaction(ctx)
-	if err != nil {
-		return err
-	}
-	defer s.TxManager.RollbackTransactionIfExist(ctx, tx)
-	taskID, err := s.Repo.CreateTask(ctx, tx, DiarizeTask)
-	if err != nil {
-		return err
-	}
-	err = s.Repo.CreateDiarize(ctx, tx, response.ID, taskID)
-	if err != nil {
-		return err
-	}
-	diarizeMessage := MessageWithFileURL{
-		TaskID: taskID,
-		FileURL: *response.FileUrl,
-		CallbackPostfix: "/api/task/update/diarize/",
-	}
-	diarizeMessageJSON, err := json.Marshal(diarizeMessage)
-	if err != nil {
-		return fmt.Errorf("failed to marshal convert message: %w", err)
-	}
+	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
+		taskID, err := s.Repo.CreateTask(ctx, tx, DiarizeTask)
+		if err != nil {
+			return err
+		}
+		err = s.Repo.CreateDiarize(ctx, tx, response.ID, taskID)
+		if err != nil {
+			return err
+		}
+		diarizeMessage := MessageWithFileURL{
+			TaskID:          taskID,
+			FileURL:         *response.FileUrl,
+			CallbackPostfix: "/api/task/update/diarize/",
+		}
+		diarizeMessageJSON, err := json.Marshal(diarizeMessage)
+		if err != nil {
+			return fmt.Errorf("failed to marshal convert message: %w", err)
+		}
 
-	err = s.Messenger.SendMessage(ctx, DiarizeTask, conversationID.String(), string(diarizeMessageJSON))
-	if err != nil {
-		return err
-	}
-	return s.TxManager.CommitTransaction(ctx, tx)
+		return s.Messenger.SendMessage(ctx, DiarizeTask, conversationID.String(), string(diarizeMessageJSON))
+	})
 }
