@@ -45,7 +45,7 @@ func main() {
 	}
 	defer kafkaProducer.Close()
 
-	service := services.New(repo, storage, kafkaProducer, db)
+	service := services.New(repo, storage, kafkaProducer, db, true)
 
 	middlewares := []mux.MiddlewareFunc{
 		logging.LoggingMidleware,
