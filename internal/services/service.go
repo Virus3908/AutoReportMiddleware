@@ -26,14 +26,18 @@ type MessageClient interface {
 type ServiceStruct struct {
 	Conversations *ConversationsService
 	Tasks *TaskDispatcher
-	TaskCallbackReceiver *TaskCallbackReceiver
 }
 
-func New(repo *repositories.RepositoryStruct, storage StorageClient, messenger MessageClient, txManager TxManager) *ServiceStruct {
+func New(
+	repo *repositories.RepositoryStruct, 
+	storage StorageClient, 
+	messenger MessageClient, 
+	txManager TxManager,
+	taskFlow bool,
+) *ServiceStruct {
 	return &ServiceStruct{
 		Conversations: NewConversationsService(repo, storage, txManager),
-		Tasks: NewTaskDispatcher(repo, messenger, txManager),
-		TaskCallbackReceiver: NewTaskCallbackReceiver(storage, repo, txManager),
+		Tasks: NewTaskDispatcher(repo, messenger, storage, txManager, taskFlow),
 	}
 }
 

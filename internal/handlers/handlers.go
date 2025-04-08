@@ -77,10 +77,10 @@ func (r *RouterStruct) callbackHandlers() {
 		r.UpdateConvert,
 	).Methods(http.MethodPatch)
 	r.Router.HandleFunc("/api/task/update/diarize/{id}",
-		wrapperWithIDAndPayload(r.Service.TaskCallbackReceiver.HandleDiarizeCallback),
+		wrapperWithIDAndPayload(r.Service.Tasks.HandleDiarizeCallback),
 	).Methods(http.MethodPatch)
 	r.Router.HandleFunc("/api/task/update/transcription/{id}",
-		wrapperWithIDAndPayload(r.Service.TaskCallbackReceiver.HandleTransctiprionCallback),
+		wrapperWithIDAndPayload(r.Service.Tasks.HandleTransctiprionCallback),
 	).Methods(http.MethodPatch)
 }
 
@@ -140,7 +140,7 @@ func (h *RouterStruct) UpdateConvert(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	err = h.Service.TaskCallbackReceiver.HandleConvertCallback(r.Context(), taskID, file, header.Filename, audioLen)
+	err = h.Service.Tasks.HandleConvertCallback(r.Context(), taskID, file, header.Filename, audioLen)
 	if err != nil {
 		respondWithError(w, "failed to update convert", err, http.StatusInternalServerError)
 		return

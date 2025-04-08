@@ -2,10 +2,11 @@ package services
 
 import (
 	"context"
+	"main/internal/models"
 	"main/internal/repositories"
 	"main/internal/repositories/gen"
 	"mime/multipart"
-
+	// "log"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	// "mime/multipart"
@@ -39,10 +40,6 @@ func (s *ConversationsService) GetConversations(ctx context.Context) ([]db.Conve
 	return s.Repo.GetConversations(ctx)
 }
 
-func (s *ConversationsService) GetConversationDetails(ctx context.Context, conversationID uuid.UUID) (*db.Conversation, error) {
-	return s.Repo.GetConversationDetails(ctx, conversationID)
-}
-
 func (s *ConversationsService) DeleteConversation(ctx context.Context, conversationID uuid.UUID) error {
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
 		fileURL, err := s.Repo.DeleteConversation(ctx, tx, conversationID)
@@ -51,4 +48,56 @@ func (s *ConversationsService) DeleteConversation(ctx context.Context, conversat
 		}
 		return s.Storage.DeleteFileByURL(ctx, fileURL)
 	})
+}
+
+func (s *ConversationsService) GetConversationDetails(ctx context.Context, conversationID uuid.UUID) (*models.ConversationDetail, error) {
+	conv, err := s.Repo.GetConversationDetails(ctx, conversationID)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &models.ConversationDetail{
+		ConversationID:   conv.ID,
+		ConversationName: conv.ConversationName,
+		FileURL:          conv.FileUrl,
+		Status:           conv.Status,
+	}
+
+	if conv.Status >= 1 {
+		file, err := s.Repo.GetConvertFileURLByConversationID(ctx, conversationID)
+		if err != nil {
+			return nil, err
+		}
+		if file.FileUrl != nil {
+			result.ConvertedFileURL = *file.FileUrl
+		}
+	}
+
+	if conv.Status >= 2 {
+		rows, err := s.Repo.GetSegmentsWithTranscriptionByConversationID(ctx, conversationID)
+		if err != nil {
+			return nil, err
+		}
+
+		segments := make([]models.SegmentDetail, 0, len(rows))
+		for _, row := range rows {
+			seg := models.SegmentDetail{
+				SegmentID:     row.SegmentID,
+				StartTime:     row.StartTime,
+				EndTime:       row.EndTime,
+				Speaker:       row.Speaker,
+				Transcription: "",
+			}
+			if row.TranscriptionID != nil {
+				seg.TranscriptionID = *row.TranscriptionID
+			}
+			if row.Transcription != nil {
+				seg.Transcription = *row.Transcription
+			}
+			segments = append(segments, seg)
+		}
+		result.Segments = segments
+	}
+
+	return result, nil
 }

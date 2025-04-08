@@ -115,15 +115,13 @@ func (q *Queries) GetConvertFileURLByConversationID(ctx context.Context, convers
 	return i, err
 }
 
-const updateConvertByTaskID = `-- name: UpdateConvertByTaskID :one
+const updateConvertByTaskID = `-- name: UpdateConvertByTaskID :exec
 UPDATE convert
 SET
     file_url = $1,
     audio_len = $2
 WHERE
     task_id = $3
-RETURNING
-    id
 `
 
 type UpdateConvertByTaskIDParams struct {
@@ -132,9 +130,7 @@ type UpdateConvertByTaskIDParams struct {
 	TaskID   uuid.UUID `json:"task_id"`
 }
 
-func (q *Queries) UpdateConvertByTaskID(ctx context.Context, arg UpdateConvertByTaskIDParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, updateConvertByTaskID, arg.FileUrl, arg.AudioLen, arg.TaskID)
-	var id uuid.UUID
-	err := row.Scan(&id)
-	return id, err
+func (q *Queries) UpdateConvertByTaskID(ctx context.Context, arg UpdateConvertByTaskIDParams) error {
+	_, err := q.db.Exec(ctx, updateConvertByTaskID, arg.FileUrl, arg.AudioLen, arg.TaskID)
+	return err
 }

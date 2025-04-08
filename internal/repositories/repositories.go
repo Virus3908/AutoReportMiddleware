@@ -68,7 +68,7 @@ func (r *RepositoryStruct) UpdateConvertByTaskID(
 	taskID uuid.UUID,
 	fileURL string,
 	audioLen float64,
-) (uuid.UUID, error) {
+) error {
 	query := r.queries.WithTx(tx)
 	return query.UpdateConvertByTaskID(ctx, db.UpdateConvertByTaskIDParams{
 		TaskID:   taskID,
@@ -81,22 +81,6 @@ func (r *RepositoryStruct) UpdateTaskStatus(ctx context.Context, tx pgx.Tx, task
 	query := r.queries.WithTx(tx)
 	return query.UpdateTaskStatus(ctx, db.UpdateTaskStatusParams{
 		ID:     taskID,
-		Status: status,
-	})
-}
-
-func (r *RepositoryStruct) UpdateConversationStatusByConvertID(ctx context.Context, tx pgx.Tx, convertID uuid.UUID, status int32) error {
-	query := r.queries.WithTx(tx)
-	return query.UpdateConversationStatusByConvertID(ctx, db.UpdateConversationStatusByConvertIDParams{
-		ID:     convertID,
-		Status: status,
-	})
-}
-
-func (r *RepositoryStruct) UpdateConversationStatusByDiarizeID(ctx context.Context, tx pgx.Tx, diarizeID uuid.UUID, status int32) error {
-	query := r.queries.WithTx(tx)
-	return query.UpdateConversationStatusByDiarizeID(ctx, db.UpdateConversationStatusByDiarizeIDParams{
-		ID:     diarizeID,
 		Status: status,
 	})
 }
@@ -195,7 +179,28 @@ func (r *RepositoryStruct) UpdateConversationStatusByID(
 ) error {
 	query := r.queries.WithTx(tx)
 	return query.UpdateConversationStatusByID(ctx, db.UpdateConversationStatusByIDParams{
-		ID: conversationID,
+		ID:     conversationID,
 		Status: status,
 	})
+}
+
+func (r *RepositoryStruct) GetConversationIDByConvertTaskID(
+	ctx context.Context,
+	taskID uuid.UUID,
+) (uuid.UUID, error) {
+	return r.queries.GetConversationIDByConvertTaskID(ctx, taskID)
+}
+
+func (r *RepositoryStruct) GetConversationIDByDiarizeTaskID(
+	ctx context.Context,
+	taskID uuid.UUID,
+) (uuid.UUID, error) {
+	return r.queries.GetConversationIDByDiarizeTaskID(ctx, taskID)
+}
+
+func (r *RepositoryStruct) GetSegmentsWithTranscriptionByConversationID(
+	ctx context.Context,
+	conversationID uuid.UUID,
+) ([]db.GetSegmentsWithTranscriptionByConversationIDRow, error) {
+	return r.queries.GetSegmentsWithTranscriptionByConversationID(ctx, conversationID)
 }
