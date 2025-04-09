@@ -6,7 +6,7 @@ type ConversationDetail struct {
 	ConversationName string `json:"conversation_name"`
 	ConversationID uuid.UUID `json:"id"`
 	FileURL string `json:"file_url"`
-	Status int32 `json:"status"`
+	Status ConversationStatus `json:"status"`
 	ConvertedFileURL string `json:"converted_file_url,omitempty"`
 	Segments []SegmentDetail `json:"segments,omitempty"`
 }
@@ -20,44 +20,30 @@ type SegmentDetail struct {
 	Transcription string `json:"transcription,omitempty"`
 }
 
-const (
-	ConvertTask    = 1
-	DiarizeTask    = 2
-	TranscribeTask = 3
-)
-
-type Segment struct {
-	Speaker int32   `json:"speaker"`
-	Start   float64 `json:"start"`
-	End     float64 `json:"end"`
-}
-
-type SegmentsPayload struct {
-	Segments []Segment `json:"segments"`
-}
-
-type TranscriptionPayload struct {
-	Text string `json:"text"`
-}
+type TaskStatus string
 
 const (
-	StatusTaskProcessing = 1
-	StatusTaskOK         = 2
-	StatusTaskError      = 3
+	StatusTaskProcessing TaskStatus = "PROCESSING"
+	StatusTaskOK         TaskStatus = "OK"
+	StatusTaskError      TaskStatus = "ERROR"
 )
+
+type ConversationStatus string
 
 const (
-	StatusConverted   = 1
-	StatusDiarized    = 2
-	StatusTranscribed = 3
-	StatusReported    = 4
-	StatusError       = 5
+	StatusCreated    ConversationStatus = "CREATED"
+	StatusConverted   ConversationStatus = "CONVERTED"
+	StatusDiarized    ConversationStatus = "DIARIZED"
+	StatusTranscribed ConversationStatus = "TRANSCRIBED"
+	StatusReported    ConversationStatus = "REPORTED"
+	StatusError       ConversationStatus = "ERROR"
 )
 
-type Message struct {
-	TaskID          uuid.UUID `json:"task_id"`
-	FileURL         string    `json:"file_url"`
-	StartTime       float64   `json:"start_time,omitempty"`
-	EndTime         float64   `json:"end_time,omitempty"`
-	CallbackPostfix string    `json:"callback_postfix"`
-}
+type TaskType int
+
+const (
+	NoTask TaskType = iota
+	ConvertTask=1
+	DiarizeTask=2
+	TranscribeTask=3
+)

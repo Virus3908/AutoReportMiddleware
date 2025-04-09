@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"main/internal/models"
 )
 
 const createConversation = `-- name: CreateConversation :exec
@@ -213,8 +214,8 @@ WHERE
 `
 
 type UpdateConversationStatusByConvertIDParams struct {
-	Status int32     `json:"status"`
-	ID     uuid.UUID `json:"id"`
+	Status models.ConversationStatus `json:"status"`
+	ID     uuid.UUID                 `json:"id"`
 }
 
 func (q *Queries) UpdateConversationStatusByConvertID(ctx context.Context, arg UpdateConversationStatusByConvertIDParams) error {
@@ -234,8 +235,8 @@ WHERE
 `
 
 type UpdateConversationStatusByDiarizeIDParams struct {
-	Status int32     `json:"status"`
-	ID     uuid.UUID `json:"id"`
+	Status models.ConversationStatus `json:"status"`
+	ID     uuid.UUID                 `json:"id"`
 }
 
 func (q *Queries) UpdateConversationStatusByDiarizeID(ctx context.Context, arg UpdateConversationStatusByDiarizeIDParams) error {
@@ -248,8 +249,8 @@ UPDATE conversations SET status = $1 WHERE id = $2
 `
 
 type UpdateConversationStatusByIDParams struct {
-	Status int32     `json:"status"`
-	ID     uuid.UUID `json:"id"`
+	Status models.ConversationStatus `json:"status"`
+	ID     uuid.UUID                 `json:"id"`
 }
 
 func (q *Queries) UpdateConversationStatusByID(ctx context.Context, arg UpdateConversationStatusByIDParams) error {

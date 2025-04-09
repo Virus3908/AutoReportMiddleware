@@ -6,11 +6,19 @@ import (
 	"main/internal/repositories"
 	"main/internal/repositories/gen"
 	"mime/multipart"
-	// "log"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	// "mime/multipart"
 )
+
+var conversationStatusPriority = map[models.ConversationStatus]int{
+	models.StatusError:       -1,
+	models.StatusCreated:     0,
+	models.StatusConverted:   1,
+	models.StatusDiarized:    2,
+	models.StatusTranscribed: 3,
+	models.StatusReported:    4,
+}
 
 type ConversationsService struct {
 	Repo      *repositories.RepositoryStruct
@@ -63,7 +71,7 @@ func (s *ConversationsService) GetConversationDetails(ctx context.Context, conve
 		Status:           conv.Status,
 	}
 
-	if conv.Status >= 1 {
+	if conversationStatusPriority[conv.Status] >= conversationStatusPriority[models.StatusConverted] {
 		file, err := s.Repo.GetConvertFileURLByConversationID(ctx, conversationID)
 		if err != nil {
 			return nil, err
@@ -73,7 +81,7 @@ func (s *ConversationsService) GetConversationDetails(ctx context.Context, conve
 		}
 	}
 
-	if conv.Status >= 2 {
+	if conversationStatusPriority[conv.Status] >= conversationStatusPriority[models.StatusDiarized] {
 		rows, err := s.Repo.GetSegmentsWithTranscriptionByConversationID(ctx, conversationID)
 		if err != nil {
 			return nil, err

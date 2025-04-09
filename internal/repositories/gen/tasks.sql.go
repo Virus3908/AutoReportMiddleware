@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"main/internal/models"
 )
 
 const createTask = `-- name: CreateTask :one
@@ -84,8 +85,8 @@ UPDATE tasks SET status = $1 WHERE id = $2
 `
 
 type UpdateTaskStatusParams struct {
-	Status int32     `json:"status"`
-	ID     uuid.UUID `json:"id"`
+	Status models.TaskStatus `json:"status"`
+	ID     uuid.UUID         `json:"id"`
 }
 
 func (q *Queries) UpdateTaskStatus(ctx context.Context, arg UpdateTaskStatusParams) error {

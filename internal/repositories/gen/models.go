@@ -5,18 +5,110 @@
 package db
 
 import (
+	"database/sql/driver"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"main/internal/models"
 )
 
+type ConversationStatus string
+
+const (
+	ConversationStatusCREATED     ConversationStatus = "CREATED"
+	ConversationStatusCONVERTED   ConversationStatus = "CONVERTED"
+	ConversationStatusDIARIZED    ConversationStatus = "DIARIZED"
+	ConversationStatusTRANSCRIBED ConversationStatus = "TRANSCRIBED"
+	ConversationStatusREPORTED    ConversationStatus = "REPORTED"
+	ConversationStatusERROR       ConversationStatus = "ERROR"
+)
+
+func (e *ConversationStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ConversationStatus(s)
+	case string:
+		*e = ConversationStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ConversationStatus: %T", src)
+	}
+	return nil
+}
+
+type NullConversationStatus struct {
+	ConversationStatus ConversationStatus `json:"conversation_status"`
+	Valid              bool               `json:"valid"` // Valid is true if ConversationStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullConversationStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.ConversationStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ConversationStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullConversationStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ConversationStatus), nil
+}
+
+type TaskStatus string
+
+const (
+	TaskStatusPROCESSING TaskStatus = "PROCESSING"
+	TaskStatusOK         TaskStatus = "OK"
+	TaskStatusERROR      TaskStatus = "ERROR"
+)
+
+func (e *TaskStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = TaskStatus(s)
+	case string:
+		*e = TaskStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for TaskStatus: %T", src)
+	}
+	return nil
+}
+
+type NullTaskStatus struct {
+	TaskStatus TaskStatus `json:"task_status"`
+	Valid      bool       `json:"valid"` // Valid is true if TaskStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullTaskStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.TaskStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.TaskStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullTaskStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.TaskStatus), nil
+}
+
 type Conversation struct {
-	ID               uuid.UUID `json:"id"`
-	ConversationName string    `json:"conversation_name"`
-	FileUrl          string    `json:"file_url"`
-	Status           int32     `json:"status"`
-	CreatedAt        time.Time `json:"created_at"`
-	UpdatedAt        time.Time `json:"updated_at"`
+	ID               uuid.UUID                 `json:"id"`
+	ConversationName string                    `json:"conversation_name"`
+	FileUrl          string                    `json:"file_url"`
+	Status           models.ConversationStatus `json:"status"`
+	CreatedAt        time.Time                 `json:"created_at"`
+	UpdatedAt        time.Time                 `json:"updated_at"`
 }
 
 type ConversationsParticipant struct {
@@ -82,11 +174,11 @@ type Segment struct {
 }
 
 type Task struct {
-	ID        uuid.UUID `json:"id"`
-	Status    int32     `json:"status"`
-	TaskType  int32     `json:"task_type"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        uuid.UUID         `json:"id"`
+	Status    models.TaskStatus `json:"status"`
+	TaskType  int32             `json:"task_type"`
+	CreatedAt time.Time         `json:"created_at"`
+	UpdatedAt time.Time         `json:"updated_at"`
 }
 
 type Transcription struct {

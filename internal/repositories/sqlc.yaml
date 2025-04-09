@@ -1,12 +1,12 @@
 version: "2"          
 sql:
   - engine: "postgresql"
-    schema: "internal/repositories/schema.sql"
-    queries: "internal/repositories/queries"
+    schema: "schema.sql"
+    queries: "queries"
     gen:
       go:
         package: "db"
-        out: "internal/repositories/gen"
+        out: "gen"
         sql_package: pgx/v5
         emit_prepared_queries: true
         emit_interface: true
@@ -59,3 +59,16 @@ sql:
             go_type:
               type: "float64"
               pointer: true
+          - db_type: "task_status"
+            nullable: false
+            go_type:
+              import: "main/internal/models"
+              type: "TaskStatus"
+              pointer: false
+          - db_type: "conversation_status"
+            nullable: false
+            go_type:
+              import: "main/internal/models"
+              type: "ConversationStatus"
+              pointer: false
+

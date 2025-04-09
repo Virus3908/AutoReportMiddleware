@@ -37,6 +37,30 @@ func NewTaskDispatcher(
 	}
 }
 
+
+
+type Segment struct {
+	Speaker int32   `json:"speaker"`
+	Start   float64 `json:"start"`
+	End     float64 `json:"end"`
+}
+
+type SegmentsPayload struct {
+	Segments []Segment `json:"segments"`
+}
+
+type TranscriptionPayload struct {
+	Text string `json:"text"`
+}
+
+type Message struct {
+	TaskID          uuid.UUID `json:"task_id"`
+	FileURL         string    `json:"file_url"`
+	StartTime       float64   `json:"start_time,omitempty"`
+	EndTime         float64   `json:"end_time,omitempty"`
+	CallbackPostfix string    `json:"callback_postfix"`
+}
+
 func (s *TaskDispatcher) CreateConvertTask(ctx context.Context, conversationID uuid.UUID) error {
 	fileURL, err := s.Repo.GetConversationFileURL(ctx, conversationID)
 	if err != nil {
@@ -51,7 +75,7 @@ func (s *TaskDispatcher) CreateConvertTask(ctx context.Context, conversationID u
 		if err != nil {
 			return err
 		}
-		convertMessage := models.Message{
+		convertMessage := Message{
 			TaskID:          taskID,
 			FileURL:         fileURL,
 			CallbackPostfix: "/api/task/update/convert/",
@@ -81,7 +105,7 @@ func (s *TaskDispatcher) CreateDiarizeTask(ctx context.Context, conversationID u
 		if err != nil {
 			return err
 		}
-		diarizeMessage := models.Message{
+		diarizeMessage := Message{
 			TaskID:          taskID,
 			FileURL:         *response.FileUrl,
 			CallbackPostfix: "/api/task/update/diarize/",
@@ -113,7 +137,7 @@ func (s *TaskDispatcher) CreateTranscribeTask(ctx context.Context, conversationI
 			if err != nil {
 				return err
 			}
-			transcribeMessage := models.Message{
+			transcribeMessage := Message{
 				TaskID:          taskID,
 				FileURL:         *segment.FileUrl,
 				StartTime:       segment.StartTime,
@@ -169,7 +193,7 @@ func (s *TaskDispatcher) HandleConvertCallback(
 func (s *TaskDispatcher) HandleDiarizeCallback(
 	ctx context.Context,
 	taskID uuid.UUID,
-	payload models.SegmentsPayload,
+	payload SegmentsPayload,
 ) error {
 	diarizeID, err := s.Repo.GetDiarizeIDByTaskID(ctx, taskID)
 	if err != nil {
@@ -202,7 +226,7 @@ func (s *TaskDispatcher) HandleDiarizeCallback(
 func (s *TaskDispatcher) HandleTransctiprionCallback(
 	ctx context.Context,
 	taskID uuid.UUID,
-	payload models.TranscriptionPayload,
+	payload TranscriptionPayload,
 ) error {
 	conversationID, err := s.Repo.GetConversationIDByTranscriptionTaskID(ctx, taskID)
 	if err != nil {

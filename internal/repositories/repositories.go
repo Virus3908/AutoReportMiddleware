@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"main/internal/models"
 	"main/internal/repositories/gen"
 
 	"github.com/google/uuid"
@@ -77,7 +78,7 @@ func (r *RepositoryStruct) UpdateConvertByTaskID(
 	})
 }
 
-func (r *RepositoryStruct) UpdateTaskStatus(ctx context.Context, tx pgx.Tx, taskID uuid.UUID, status int32) error {
+func (r *RepositoryStruct) UpdateTaskStatus(ctx context.Context, tx pgx.Tx, taskID uuid.UUID, status models.TaskStatus) error {
 	query := r.queries.WithTx(tx)
 	return query.UpdateTaskStatus(ctx, db.UpdateTaskStatusParams{
 		ID:     taskID,
@@ -175,7 +176,7 @@ func (r *RepositoryStruct) UpdateConversationStatusByID(
 	ctx context.Context,
 	tx pgx.Tx,
 	conversationID uuid.UUID,
-	status int32,
+	status models.ConversationStatus,
 ) error {
 	query := r.queries.WithTx(tx)
 	return query.UpdateConversationStatusByID(ctx, db.UpdateConversationStatusByIDParams{

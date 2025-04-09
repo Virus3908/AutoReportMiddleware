@@ -1,11 +1,15 @@
 -- Active: 1742118800602@@127.0.0.1@5432@db
 CREATE EXTENSION IF NOT EXISTS "pgcrypto"; -- Включает поддержку UUID
 
+CREATE TYPE task_status AS ENUM ('PROCESSING', 'OK', 'ERROR');
+CREATE TYPE conversation_status AS ENUM ('CREATED', 'CONVERTED', 'DIARIZED', 'TRANSCRIBED', 'REPORTED', 'ERROR');
+
+
 CREATE TABLE conversations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     conversation_name VARCHAR(255) NOT NULL,
     file_url VARCHAR(255) NOT NULL,
-    status INTEGER DEFAULT 0 NOT NULL,
+    status conversation_status DEFAULT 'CREATED' NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
@@ -29,7 +33,7 @@ CREATE TABLE conversations_participant (
 
 CREATE TABLE tasks (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    status INTEGER DEFAULT 0 NOT NULL,
+    status task_status DEFAULT 'PROCESSING' NOT NULL,
     task_type INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
