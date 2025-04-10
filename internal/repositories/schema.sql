@@ -18,10 +18,10 @@ CREATE TABLE participants (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-CREATE TABLE conversations_participant (
+CREATE TABLE conversation_speakers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES participants(id) NOT NULL ,
-    speaker INTEGER,
+    user_id UUID REFERENCES participants(id),
+    speaker INTEGER NOT NULL,
     conversation_id UUID REFERENCES conversations(id) ON DELETE CASCADE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
@@ -58,7 +58,7 @@ CREATE TABLE segments (
     diarize_id UUID REFERENCES diarize(id) ON DELETE CASCADE NOT NULL,
     start_time FLOAT NOT NULL,
     end_time FLOAT NOT NULL,
-    speaker INTEGER NOT NULL,
+    speaker_id UUID REFERENCES conversation_speakers(id) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
@@ -107,8 +107,8 @@ BEFORE UPDATE ON participants
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER trigger_update_conversations_participant
-BEFORE UPDATE ON conversations_participant
+CREATE TRIGGER trigger_update_conversation_speakers
+BEFORE UPDATE ON conversation_speakers
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 

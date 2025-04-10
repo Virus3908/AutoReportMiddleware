@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"main/internal/models"
 	"main/internal/repositories/gen"
 
 	"github.com/google/uuid"
@@ -44,7 +45,7 @@ func (r *RepositoryStruct) GetConversationFileURL(ctx context.Context, conversat
 	return r.queries.GetConversationFileURL(ctx, conversationID)
 }
 
-func (r *RepositoryStruct) CreateTask(ctx context.Context, tx pgx.Tx, taskType int32) (uuid.UUID, error) {
+func (r *RepositoryStruct) CreateTask(ctx context.Context, tx pgx.Tx, taskType models.TaskType) (uuid.UUID, error) {
 	query := r.queries.WithTx(tx)
 	return query.CreateTask(ctx, taskType)
 }
@@ -77,7 +78,7 @@ func (r *RepositoryStruct) UpdateConvertByTaskID(
 	})
 }
 
-func (r *RepositoryStruct) UpdateTaskStatus(ctx context.Context, tx pgx.Tx, taskID uuid.UUID, status int32) error {
+func (r *RepositoryStruct) UpdateTaskStatus(ctx context.Context, tx pgx.Tx, taskID uuid.UUID, status models.TaskStatus) error {
 	query := r.queries.WithTx(tx)
 	return query.UpdateTaskStatus(ctx, db.UpdateTaskStatusParams{
 		ID:     taskID,
@@ -106,14 +107,14 @@ func (r *RepositoryStruct) CreateSegment(
 	tx pgx.Tx,
 	diarizeID uuid.UUID,
 	startTime, endTime float64,
-	speaker int32,
+	speakerID uuid.UUID,
 ) error {
 	query := r.queries.WithTx(tx)
 	return query.CreateSegment(ctx, db.CreateSegmentParams{
 		DiarizeID: diarizeID,
 		StartTime: startTime,
 		EndTime:   endTime,
-		Speaker:   speaker,
+		SpeakerID: speakerID,
 	})
 }
 
@@ -175,7 +176,7 @@ func (r *RepositoryStruct) UpdateConversationStatusByID(
 	ctx context.Context,
 	tx pgx.Tx,
 	conversationID uuid.UUID,
-	status int32,
+	status models.ConversationStatus,
 ) error {
 	query := r.queries.WithTx(tx)
 	return query.UpdateConversationStatusByID(ctx, db.UpdateConversationStatusByIDParams{
@@ -203,4 +204,18 @@ func (r *RepositoryStruct) GetSegmentsWithTranscriptionByConversationID(
 	conversationID uuid.UUID,
 ) ([]db.GetSegmentsWithTranscriptionByConversationIDRow, error) {
 	return r.queries.GetSegmentsWithTranscriptionByConversationID(ctx, conversationID)
+}
+
+func (r *RepositoryStruct) CreateSpeakerWithConversationsID(
+	ctx context.Context,
+	tx pgx.Tx,
+	conversationID uuid.UUID,
+	speaker int32,
+) (uuid.UUID, error) {
+	query := r.queries.WithTx(tx)
+	return query.CreateSpeakerWithConversationsID(ctx,
+		db.CreateSpeakerWithConversationsIDParams{
+			ConversationID: conversationID,
+			Speaker:        speaker,
+		})
 }

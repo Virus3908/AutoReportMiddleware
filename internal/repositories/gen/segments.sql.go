@@ -17,7 +17,7 @@ INSERT INTO
         diarize_id,
         start_time,
         end_time,
-        speaker
+        speaker_id
     )
 VALUES ($1, $2, $3, $4)
 `
@@ -26,7 +26,7 @@ type CreateSegmentParams struct {
 	DiarizeID uuid.UUID `json:"diarize_id"`
 	StartTime float64   `json:"start_time"`
 	EndTime   float64   `json:"end_time"`
-	Speaker   int32     `json:"speaker"`
+	SpeakerID uuid.UUID `json:"speaker_id"`
 }
 
 func (q *Queries) CreateSegment(ctx context.Context, arg CreateSegmentParams) error {
@@ -34,7 +34,7 @@ func (q *Queries) CreateSegment(ctx context.Context, arg CreateSegmentParams) er
 		arg.DiarizeID,
 		arg.StartTime,
 		arg.EndTime,
-		arg.Speaker,
+		arg.SpeakerID,
 	)
 	return err
 }

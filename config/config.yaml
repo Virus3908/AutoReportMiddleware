@@ -20,4 +20,3 @@ s3:
 kafka:
   brokers:
     - "localhost:9092"
-  topic: "tasks"

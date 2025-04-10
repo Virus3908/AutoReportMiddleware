@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-
+	"io"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+
+	"google.golang.org/protobuf/proto"
 )
 
 func wrapperReturningData[T any](fn func(ctx context.Context) ([]T, error)) http.HandlerFunc {
@@ -103,3 +105,34 @@ func wrapperWithIDAndPayload[T any](fn func(ctx context.Context, id uuid.UUID, p
 	}
 }
 
+func handleProtoRequest[T proto.Message](
+	w http.ResponseWriter,
+	req *http.Request,
+	msg T,
+	handler func(context.Context, uuid.UUID, T) error,
+) {
+	params := mux.Vars(req)
+	id, err := uuid.Parse(params["id"])
+	if err != nil {
+		respondWithError(w, "Invalid UUID", err, http.StatusBadRequest)
+		return
+	}
+
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		respondWithError(w, "Read body failed", err, http.StatusBadRequest)
+		return
+	}
+
+	if err := proto.Unmarshal(body, msg); err != nil {
+		respondWithError(w, "Unmarshal failed", err, http.StatusBadRequest)
+		return
+	}
+
+	if err := handler(req.Context(), id, msg); err != nil {
+		respondWithError(w, "Handle failed", err, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

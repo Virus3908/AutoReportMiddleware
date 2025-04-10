@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"main/internal/models"
 )
 
 const createTask = `-- name: CreateTask :one
@@ -16,7 +17,7 @@ INSERT INTO tasks (task_type) VALUES ($1)
 RETURNING id
 `
 
-func (q *Queries) CreateTask(ctx context.Context, taskType int32) (uuid.UUID, error) {
+func (q *Queries) CreateTask(ctx context.Context, taskType models.TaskType) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, createTask, taskType)
 	var id uuid.UUID
 	err := row.Scan(&id)
@@ -84,8 +85,8 @@ UPDATE tasks SET status = $1 WHERE id = $2
 `
 
 type UpdateTaskStatusParams struct {
-	Status int32     `json:"status"`
-	ID     uuid.UUID `json:"id"`
+	Status models.TaskStatus `json:"status"`
+	ID     uuid.UUID         `json:"id"`
 }
 
 func (q *Queries) UpdateTaskStatus(ctx context.Context, arg UpdateTaskStatusParams) error {

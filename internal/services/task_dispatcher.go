@@ -2,38 +2,50 @@ package services
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"main/internal/models"
 	"main/internal/repositories"
+	"main/pkg/messages/proto"
 	"mime/multipart"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
+const (
+	ConvertCallbackPostfix    = "/api/task/update/convert/"
+	DiarizeCallbackPostfix    = "/api/task/update/diarize/"
+	TranscribeCallbackPostfix = "/api/task/update/transcription/"
+	ErrorCallbackPostfix      = "/api/task/update/error/"
+)
+
 type TaskDispatcher struct {
-	Repo      *repositories.RepositoryStruct
-	Messenger MessageClient
-	Storage StorageClient
-	TxManager TxManager
-	TaskFlow bool
+	Repo        *repositories.RepositoryStruct
+	Messenger   MessageClient
+	Storage     StorageClient
+	TxManager   TxManager
+	CallbackURL string
+	TaskFlow    bool
 }
 
 func NewTaskDispatcher(
-	repo *repositories.RepositoryStruct, 
-	messenger MessageClient, 
+	repo *repositories.RepositoryStruct,
+	messenger MessageClient,
 	storage StorageClient,
 	txManager TxManager,
 	taskFlow bool,
+	host string,
+	port int,
 ) *TaskDispatcher {
+
 	return &TaskDispatcher{
-		Repo:      repo,
-		Messenger: messenger,
-		Storage: storage,
-		TxManager: txManager,
-		TaskFlow: taskFlow,
+		Repo:        repo,
+		Messenger:   messenger,
+		Storage:     storage,
+		TxManager:   txManager,
+		TaskFlow:    taskFlow,
+		CallbackURL: fmt.Sprintf("http://%s:%d", host, port),
 	}
 }
 
@@ -51,16 +63,14 @@ func (s *TaskDispatcher) CreateConvertTask(ctx context.Context, conversationID u
 		if err != nil {
 			return err
 		}
-		convertMessage := models.Message{
-			TaskID:          taskID,
-			FileURL:         fileURL,
-			CallbackPostfix: "/api/task/update/convert/",
+		convertMessage := &messages.MessageConvertTask{
+			TaskId:      taskID.String(),
+			FileUrl:     fileURL,
+			CallbackUrl: s.CallbackURL,
+			CallbackPostfix: ConvertCallbackPostfix,
+			ErrorCallbackPostfix: ErrorCallbackPostfix,
 		}
-		convertMessageJSON, err := json.Marshal(convertMessage)
-		if err != nil {
-			return fmt.Errorf("failed to marshal convert message: %w", err)
-		}
-		return s.Messenger.SendMessage(ctx, models.ConvertTask, conversationID.String(), string(convertMessageJSON))
+		return s.Messenger.SendMessage(ctx, models.ConvertTask, conversationID.String(), convertMessage)
 	})
 }
 
@@ -81,17 +91,15 @@ func (s *TaskDispatcher) CreateDiarizeTask(ctx context.Context, conversationID u
 		if err != nil {
 			return err
 		}
-		diarizeMessage := models.Message{
-			TaskID:          taskID,
-			FileURL:         *response.FileUrl,
-			CallbackPostfix: "/api/task/update/diarize/",
-		}
-		diarizeMessageJSON, err := json.Marshal(diarizeMessage)
-		if err != nil {
-			return fmt.Errorf("failed to marshal convert message: %w", err)
+		diarizeMessage := &messages.MessageDiarizeTask{
+			TaskId:           taskID.String(),
+			ConvertedFileUrl: *response.FileUrl,
+			CallbackUrl: s.CallbackURL,
+			CallbackPostfix: DiarizeCallbackPostfix,
+			ErrorCallbackPostfix: ErrorCallbackPostfix,
 		}
 
-		return s.Messenger.SendMessage(ctx, models.DiarizeTask, conversationID.String(), string(diarizeMessageJSON))
+		return s.Messenger.SendMessage(ctx, models.DiarizeTask, conversationID.String(), diarizeMessage)
 	})
 }
 
@@ -113,18 +121,16 @@ func (s *TaskDispatcher) CreateTranscribeTask(ctx context.Context, conversationI
 			if err != nil {
 				return err
 			}
-			transcribeMessage := models.Message{
-				TaskID:          taskID,
-				FileURL:         *segment.FileUrl,
+			transcribeMessage := &messages.MessageTranscriptionTask{
+				TaskId:          taskID.String(),
+				FileUrl:         *segment.FileUrl,
 				StartTime:       segment.StartTime,
 				EndTime:         segment.EndTime,
-				CallbackPostfix: "/api/task/update/transcription/",
+				CallbackUrl: s.CallbackURL,
+				CallbackPostfix: TranscribeCallbackPostfix,
+				ErrorCallbackPostfix: ErrorCallbackPostfix,
 			}
-			transcribeMessageJSON, err := json.Marshal(transcribeMessage)
-			if err != nil {
-				return fmt.Errorf("failed to marshal convert message: %w", err)
-			}
-			err = s.Messenger.SendMessage(ctx, models.TranscribeTask, segment.ConversationID.String(), string(transcribeMessageJSON))
+			err = s.Messenger.SendMessage(ctx, models.TranscribeTask, segment.ConversationID.String(), transcribeMessage)
 			if err != nil {
 				return fmt.Errorf("failed to send message: %s", err)
 			}
@@ -169,7 +175,7 @@ func (s *TaskDispatcher) HandleConvertCallback(
 func (s *TaskDispatcher) HandleDiarizeCallback(
 	ctx context.Context,
 	taskID uuid.UUID,
-	payload models.SegmentsPayload,
+	segments *messages.SegmentsTaskResponse,
 ) error {
 	diarizeID, err := s.Repo.GetDiarizeIDByTaskID(ctx, taskID)
 	if err != nil {
@@ -184,8 +190,16 @@ func (s *TaskDispatcher) HandleDiarizeCallback(
 		if err != nil {
 			return err
 		}
-		for _, segment := range payload.Segments {
-			err := s.Repo.CreateSegment(ctx, tx, diarizeID, segment.Start, segment.End, segment.Speaker)
+		speakerMap := make(map[int32]uuid.UUID)
+		for speaker := 0; speaker < int(segments.GetNumOfSpeakers()); speaker++ {
+			speakerID, err := s.Repo.CreateSpeakerWithConversationsID(ctx, tx, conversationID, int32(speaker))
+			if err != nil {
+				return err
+			}
+			speakerMap[int32(speaker)] = speakerID
+		}
+		for _, segment := range segments.GetSegments() {
+			err := s.Repo.CreateSegment(ctx, tx, diarizeID, segment.GetStartTime(), segment.GetEndTime(), speakerMap[segment.GetSpeaker()])
 			if err != nil {
 				return err
 			}
@@ -202,7 +216,7 @@ func (s *TaskDispatcher) HandleDiarizeCallback(
 func (s *TaskDispatcher) HandleTransctiprionCallback(
 	ctx context.Context,
 	taskID uuid.UUID,
-	payload models.TranscriptionPayload,
+	transcription *messages.TranscriptionTaskResponse,
 ) error {
 	conversationID, err := s.Repo.GetConversationIDByTranscriptionTaskID(ctx, taskID)
 	if err != nil {
@@ -213,7 +227,7 @@ func (s *TaskDispatcher) HandleTransctiprionCallback(
 		if err != nil {
 			return err
 		}
-		err = s.Repo.UpdateTransctiptionTextByID(ctx, tx, taskID, payload.Text)
+		err = s.Repo.UpdateTransctiptionTextByID(ctx, tx, taskID, transcription.GetTranscription())
 		if err != nil {
 			return err
 		}
@@ -246,4 +260,14 @@ func (s *TaskDispatcher) dispatchNext(taskType int, conversationID uuid.UUID) {
 			log.Printf("Failed to dispatch next task after type %d: %v\n", taskType, err)
 		}
 	}()
+}
+
+func (s *TaskDispatcher) HandleErrorCallback(
+	ctx context.Context, 
+	taskID uuid.UUID,
+	_ *messages.ErrorTaskResponse,
+) error {
+	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
+		return s.Repo.UpdateTaskStatus(ctx, tx, taskID, models.StatusTaskError)
+	})
 }

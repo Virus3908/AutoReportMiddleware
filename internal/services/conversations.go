@@ -6,10 +6,9 @@ import (
 	"main/internal/repositories"
 	"main/internal/repositories/gen"
 	"mime/multipart"
-	// "log"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	// "mime/multipart"
 )
 
 type ConversationsService struct {
@@ -63,7 +62,7 @@ func (s *ConversationsService) GetConversationDetails(ctx context.Context, conve
 		Status:           conv.Status,
 	}
 
-	if conv.Status >= 1 {
+	if conv.Status >= models.StatusConverted {
 		file, err := s.Repo.GetConvertFileURLByConversationID(ctx, conversationID)
 		if err != nil {
 			return nil, err
@@ -73,7 +72,7 @@ func (s *ConversationsService) GetConversationDetails(ctx context.Context, conve
 		}
 	}
 
-	if conv.Status >= 2 {
+	if conv.Status >= models.StatusDiarized {
 		rows, err := s.Repo.GetSegmentsWithTranscriptionByConversationID(ctx, conversationID)
 		if err != nil {
 			return nil, err

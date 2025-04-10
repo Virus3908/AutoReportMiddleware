@@ -3,6 +3,7 @@ package handlers
 import (
 	"log"
 	"main/internal/services"
+	messages "main/pkg/messages/proto"
 	"net/http"
 	"strconv"
 	"strings"
@@ -77,10 +78,13 @@ func (r *RouterStruct) callbackHandlers() {
 		r.UpdateConvert,
 	).Methods(http.MethodPatch)
 	r.Router.HandleFunc("/api/task/update/diarize/{id}",
-		wrapperWithIDAndPayload(r.Service.Tasks.HandleDiarizeCallback),
+		r.handleDiarizeCallback,
 	).Methods(http.MethodPatch)
 	r.Router.HandleFunc("/api/task/update/transcription/{id}",
-		wrapperWithIDAndPayload(r.Service.Tasks.HandleTransctiprionCallback),
+		r.handleTranscriptionCallback,
+	).Methods(http.MethodPatch)
+	r.Router.HandleFunc("/api/task/update/error/{id}",
+		r.handleErrorCallback,
 	).Methods(http.MethodPatch)
 }
 
@@ -147,4 +151,16 @@ func (h *RouterStruct) UpdateConvert(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (r *RouterStruct) handleDiarizeCallback(w http.ResponseWriter, req *http.Request) {
+	handleProtoRequest(w, req, &messages.SegmentsTaskResponse{}, r.Service.Tasks.HandleDiarizeCallback)
+}
+
+func (r *RouterStruct) handleTranscriptionCallback(w http.ResponseWriter, req *http.Request) {
+	handleProtoRequest(w, req, &messages.TranscriptionTaskResponse{}, r.Service.Tasks.HandleTransctiprionCallback)
+}
+
+func (r *RouterStruct) handleErrorCallback(w http.ResponseWriter, req *http.Request) {
+	handleProtoRequest(w, req, &messages.ErrorTaskResponse{}, r.Service.Tasks.HandleErrorCallback)
 }
