@@ -17,6 +17,7 @@ const (
 	ConvertCallbackPostfix    = "/api/task/update/convert/"
 	DiarizeCallbackPostfix    = "/api/task/update/diarize/"
 	TranscribeCallbackPostfix = "/api/task/update/transcription/"
+	ErrorCallbackPostfix      = "/api/task/update/error/"
 )
 
 type TaskDispatcher struct {
@@ -65,7 +66,9 @@ func (s *TaskDispatcher) CreateConvertTask(ctx context.Context, conversationID u
 		convertMessage := &messages.MessageConvertTask{
 			TaskId:      taskID.String(),
 			FileUrl:     fileURL,
-			CallbackUrl: s.CallbackURL + ConvertCallbackPostfix,
+			CallbackUrl: s.CallbackURL,
+			CallbackPostfix: ConvertCallbackPostfix,
+			ErrorCallbackPostfix: ErrorCallbackPostfix,
 		}
 		return s.Messenger.SendMessage(ctx, models.ConvertTask, conversationID.String(), convertMessage)
 	})
@@ -91,7 +94,9 @@ func (s *TaskDispatcher) CreateDiarizeTask(ctx context.Context, conversationID u
 		diarizeMessage := &messages.MessageDiarizeTask{
 			TaskId:           taskID.String(),
 			ConvertedFileUrl: *response.FileUrl,
-			CallbackUrl:      s.CallbackURL + DiarizeCallbackPostfix,
+			CallbackUrl: s.CallbackURL,
+			CallbackPostfix: DiarizeCallbackPostfix,
+			ErrorCallbackPostfix: ErrorCallbackPostfix,
 		}
 
 		return s.Messenger.SendMessage(ctx, models.DiarizeTask, conversationID.String(), diarizeMessage)
@@ -121,7 +126,9 @@ func (s *TaskDispatcher) CreateTranscribeTask(ctx context.Context, conversationI
 				FileUrl:         *segment.FileUrl,
 				StartTime:       segment.StartTime,
 				EndTime:         segment.EndTime,
-				CallbackUrl: 	s.CallbackURL + TranscribeCallbackPostfix,
+				CallbackUrl: s.CallbackURL,
+				CallbackPostfix: TranscribeCallbackPostfix,
+				ErrorCallbackPostfix: ErrorCallbackPostfix,
 			}
 			err = s.Messenger.SendMessage(ctx, models.TranscribeTask, segment.ConversationID.String(), transcribeMessage)
 			if err != nil {
@@ -245,4 +252,14 @@ func (s *TaskDispatcher) dispatchNext(taskType int, conversationID uuid.UUID) {
 			log.Printf("Failed to dispatch next task after type %d: %v\n", taskType, err)
 		}
 	}()
+}
+
+func (s *TaskDispatcher) HandleErrorCallback(
+	ctx context.Context, 
+	taskID uuid.UUID,
+	_ *messages.ErrorTaskResponse,
+) error {
+	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
+		return s.Repo.UpdateTaskStatus(ctx, tx, taskID, models.StatusTaskError)
+	})
 }

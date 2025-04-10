@@ -23,14 +23,16 @@ const (
 
 // ===== TRANSCRIPTION TASK =====
 type MessageTranscriptionTask struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	TaskId        string                 `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
-	FileUrl       string                 `protobuf:"bytes,2,opt,name=file_url,json=fileUrl,proto3" json:"file_url,omitempty"`
-	CallbackUrl   string                 `protobuf:"bytes,3,opt,name=callback_url,json=callbackUrl,proto3" json:"callback_url,omitempty"`
-	StartTime     float64                `protobuf:"fixed64,4,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
-	EndTime       float64                `protobuf:"fixed64,5,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	TaskId               string                 `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	FileUrl              string                 `protobuf:"bytes,2,opt,name=file_url,json=fileUrl,proto3" json:"file_url,omitempty"`
+	StartTime            float64                `protobuf:"fixed64,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+	EndTime              float64                `protobuf:"fixed64,4,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	CallbackUrl          string                 `protobuf:"bytes,5,opt,name=callback_url,json=callbackUrl,proto3" json:"callback_url,omitempty"`
+	CallbackPostfix      string                 `protobuf:"bytes,6,opt,name=callback_postfix,json=callbackPostfix,proto3" json:"callback_postfix,omitempty"`
+	ErrorCallbackPostfix string                 `protobuf:"bytes,7,opt,name=error_callback_postfix,json=errorCallbackPostfix,proto3" json:"error_callback_postfix,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *MessageTranscriptionTask) Reset() {
@@ -77,13 +79,6 @@ func (x *MessageTranscriptionTask) GetFileUrl() string {
 	return ""
 }
 
-func (x *MessageTranscriptionTask) GetCallbackUrl() string {
-	if x != nil {
-		return x.CallbackUrl
-	}
-	return ""
-}
-
 func (x *MessageTranscriptionTask) GetStartTime() float64 {
 	if x != nil {
 		return x.StartTime
@@ -98,14 +93,37 @@ func (x *MessageTranscriptionTask) GetEndTime() float64 {
 	return 0
 }
 
+func (x *MessageTranscriptionTask) GetCallbackUrl() string {
+	if x != nil {
+		return x.CallbackUrl
+	}
+	return ""
+}
+
+func (x *MessageTranscriptionTask) GetCallbackPostfix() string {
+	if x != nil {
+		return x.CallbackPostfix
+	}
+	return ""
+}
+
+func (x *MessageTranscriptionTask) GetErrorCallbackPostfix() string {
+	if x != nil {
+		return x.ErrorCallbackPostfix
+	}
+	return ""
+}
+
 // ===== CONVERT TASK =====
 type MessageConvertTask struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	TaskId        string                 `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
-	FileUrl       string                 `protobuf:"bytes,2,opt,name=file_url,json=fileUrl,proto3" json:"file_url,omitempty"`
-	CallbackUrl   string                 `protobuf:"bytes,3,opt,name=callback_url,json=callbackUrl,proto3" json:"callback_url,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	TaskId               string                 `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	FileUrl              string                 `protobuf:"bytes,2,opt,name=file_url,json=fileUrl,proto3" json:"file_url,omitempty"`
+	CallbackUrl          string                 `protobuf:"bytes,3,opt,name=callback_url,json=callbackUrl,proto3" json:"callback_url,omitempty"`
+	CallbackPostfix      string                 `protobuf:"bytes,4,opt,name=callback_postfix,json=callbackPostfix,proto3" json:"callback_postfix,omitempty"`
+	ErrorCallbackPostfix string                 `protobuf:"bytes,5,opt,name=error_callback_postfix,json=errorCallbackPostfix,proto3" json:"error_callback_postfix,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *MessageConvertTask) Reset() {
@@ -159,14 +177,30 @@ func (x *MessageConvertTask) GetCallbackUrl() string {
 	return ""
 }
 
+func (x *MessageConvertTask) GetCallbackPostfix() string {
+	if x != nil {
+		return x.CallbackPostfix
+	}
+	return ""
+}
+
+func (x *MessageConvertTask) GetErrorCallbackPostfix() string {
+	if x != nil {
+		return x.ErrorCallbackPostfix
+	}
+	return ""
+}
+
 // ===== DIARIZE TASK =====
 type MessageDiarizeTask struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	TaskId           string                 `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
-	ConvertedFileUrl string                 `protobuf:"bytes,2,opt,name=converted_file_url,json=convertedFileUrl,proto3" json:"converted_file_url,omitempty"`
-	CallbackUrl      string                 `protobuf:"bytes,3,opt,name=callback_url,json=callbackUrl,proto3" json:"callback_url,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	TaskId               string                 `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	ConvertedFileUrl     string                 `protobuf:"bytes,2,opt,name=converted_file_url,json=convertedFileUrl,proto3" json:"converted_file_url,omitempty"`
+	CallbackUrl          string                 `protobuf:"bytes,3,opt,name=callback_url,json=callbackUrl,proto3" json:"callback_url,omitempty"`
+	CallbackPostfix      string                 `protobuf:"bytes,4,opt,name=callback_postfix,json=callbackPostfix,proto3" json:"callback_postfix,omitempty"`
+	ErrorCallbackPostfix string                 `protobuf:"bytes,5,opt,name=error_callback_postfix,json=errorCallbackPostfix,proto3" json:"error_callback_postfix,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *MessageDiarizeTask) Reset() {
@@ -216,6 +250,20 @@ func (x *MessageDiarizeTask) GetConvertedFileUrl() string {
 func (x *MessageDiarizeTask) GetCallbackUrl() string {
 	if x != nil {
 		return x.CallbackUrl
+	}
+	return ""
+}
+
+func (x *MessageDiarizeTask) GetCallbackPostfix() string {
+	if x != nil {
+		return x.CallbackPostfix
+	}
+	return ""
+}
+
+func (x *MessageDiarizeTask) GetErrorCallbackPostfix() string {
+	if x != nil {
+		return x.ErrorCallbackPostfix
 	}
 	return ""
 }
@@ -369,26 +417,76 @@ func (x *TranscriptionTaskResponse) GetTranscription() string {
 	return ""
 }
 
+type ErrorTaskResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Error         string                 `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ErrorTaskResponse) Reset() {
+	*x = ErrorTaskResponse{}
+	mi := &file_proto_messages_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ErrorTaskResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ErrorTaskResponse) ProtoMessage() {}
+
+func (x *ErrorTaskResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_messages_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ErrorTaskResponse.ProtoReflect.Descriptor instead.
+func (*ErrorTaskResponse) Descriptor() ([]byte, []int) {
+	return file_proto_messages_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *ErrorTaskResponse) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
 var File_proto_messages_proto protoreflect.FileDescriptor
 
 const file_proto_messages_proto_rawDesc = "" +
 	"\n" +
-	"\x14proto/messages.proto\x12\bmessages\"\xab\x01\n" +
+	"\x14proto/messages.proto\x12\bmessages\"\x8c\x02\n" +
 	"\x18MessageTranscriptionTask\x12\x17\n" +
 	"\atask_id\x18\x01 \x01(\tR\x06taskId\x12\x19\n" +
-	"\bfile_url\x18\x02 \x01(\tR\afileUrl\x12!\n" +
-	"\fcallback_url\x18\x03 \x01(\tR\vcallbackUrl\x12\x1d\n" +
+	"\bfile_url\x18\x02 \x01(\tR\afileUrl\x12\x1d\n" +
 	"\n" +
-	"start_time\x18\x04 \x01(\x01R\tstartTime\x12\x19\n" +
-	"\bend_time\x18\x05 \x01(\x01R\aendTime\"k\n" +
+	"start_time\x18\x03 \x01(\x01R\tstartTime\x12\x19\n" +
+	"\bend_time\x18\x04 \x01(\x01R\aendTime\x12!\n" +
+	"\fcallback_url\x18\x05 \x01(\tR\vcallbackUrl\x12)\n" +
+	"\x10callback_postfix\x18\x06 \x01(\tR\x0fcallbackPostfix\x124\n" +
+	"\x16error_callback_postfix\x18\a \x01(\tR\x14errorCallbackPostfix\"\xcc\x01\n" +
 	"\x12MessageConvertTask\x12\x17\n" +
 	"\atask_id\x18\x01 \x01(\tR\x06taskId\x12\x19\n" +
 	"\bfile_url\x18\x02 \x01(\tR\afileUrl\x12!\n" +
-	"\fcallback_url\x18\x03 \x01(\tR\vcallbackUrl\"~\n" +
+	"\fcallback_url\x18\x03 \x01(\tR\vcallbackUrl\x12)\n" +
+	"\x10callback_postfix\x18\x04 \x01(\tR\x0fcallbackPostfix\x124\n" +
+	"\x16error_callback_postfix\x18\x05 \x01(\tR\x14errorCallbackPostfix\"\xdf\x01\n" +
 	"\x12MessageDiarizeTask\x12\x17\n" +
 	"\atask_id\x18\x01 \x01(\tR\x06taskId\x12,\n" +
 	"\x12converted_file_url\x18\x02 \x01(\tR\x10convertedFileUrl\x12!\n" +
-	"\fcallback_url\x18\x03 \x01(\tR\vcallbackUrl\"]\n" +
+	"\fcallback_url\x18\x03 \x01(\tR\vcallbackUrl\x12)\n" +
+	"\x10callback_postfix\x18\x04 \x01(\tR\x0fcallbackPostfix\x124\n" +
+	"\x16error_callback_postfix\x18\x05 \x01(\tR\x14errorCallbackPostfix\"]\n" +
 	"\aSegment\x12\x18\n" +
 	"\aspeaker\x18\x01 \x01(\x05R\aspeaker\x12\x1d\n" +
 	"\n" +
@@ -397,7 +495,9 @@ const file_proto_messages_proto_rawDesc = "" +
 	"\x14SegmentsTaskResponse\x12-\n" +
 	"\bsegments\x18\x01 \x03(\v2\x11.messages.SegmentR\bsegments\"A\n" +
 	"\x19TranscriptionTaskResponse\x12$\n" +
-	"\rtranscription\x18\x01 \x01(\tR\rtranscriptionB\x13Z\x11main/pkg/messagesb\x06proto3"
+	"\rtranscription\x18\x01 \x01(\tR\rtranscription\")\n" +
+	"\x11ErrorTaskResponse\x12\x14\n" +
+	"\x05error\x18\x01 \x01(\tR\x05errorB\x13Z\x11main/pkg/messagesb\x06proto3"
 
 var (
 	file_proto_messages_proto_rawDescOnce sync.Once
@@ -411,7 +511,7 @@ func file_proto_messages_proto_rawDescGZIP() []byte {
 	return file_proto_messages_proto_rawDescData
 }
 
-var file_proto_messages_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_proto_messages_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_proto_messages_proto_goTypes = []any{
 	(*MessageTranscriptionTask)(nil),  // 0: messages.MessageTranscriptionTask
 	(*MessageConvertTask)(nil),        // 1: messages.MessageConvertTask
@@ -419,6 +519,7 @@ var file_proto_messages_proto_goTypes = []any{
 	(*Segment)(nil),                   // 3: messages.Segment
 	(*SegmentsTaskResponse)(nil),      // 4: messages.SegmentsTaskResponse
 	(*TranscriptionTaskResponse)(nil), // 5: messages.TranscriptionTaskResponse
+	(*ErrorTaskResponse)(nil),         // 6: messages.ErrorTaskResponse
 }
 var file_proto_messages_proto_depIdxs = []int32{
 	3, // 0: messages.SegmentsTaskResponse.segments:type_name -> messages.Segment
@@ -440,7 +541,7 @@ func file_proto_messages_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_messages_proto_rawDesc), len(file_proto_messages_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
