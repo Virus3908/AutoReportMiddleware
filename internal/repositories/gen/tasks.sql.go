@@ -17,7 +17,7 @@ INSERT INTO tasks (task_type) VALUES ($1)
 RETURNING id
 `
 
-func (q *Queries) CreateTask(ctx context.Context, taskType int32) (uuid.UUID, error) {
+func (q *Queries) CreateTask(ctx context.Context, taskType models.TaskType) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, createTask, taskType)
 	var id uuid.UUID
 	err := row.Scan(&id)

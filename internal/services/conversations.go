@@ -11,15 +11,6 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-var conversationStatusPriority = map[models.ConversationStatus]int{
-	models.StatusError:       -1,
-	models.StatusCreated:     0,
-	models.StatusConverted:   1,
-	models.StatusDiarized:    2,
-	models.StatusTranscribed: 3,
-	models.StatusReported:    4,
-}
-
 type ConversationsService struct {
 	Repo      *repositories.RepositoryStruct
 	Storage   StorageClient
@@ -71,7 +62,7 @@ func (s *ConversationsService) GetConversationDetails(ctx context.Context, conve
 		Status:           conv.Status,
 	}
 
-	if conversationStatusPriority[conv.Status] >= conversationStatusPriority[models.StatusConverted] {
+	if conv.Status >= models.StatusConverted {
 		file, err := s.Repo.GetConvertFileURLByConversationID(ctx, conversationID)
 		if err != nil {
 			return nil, err
@@ -81,7 +72,7 @@ func (s *ConversationsService) GetConversationDetails(ctx context.Context, conve
 		}
 	}
 
-	if conversationStatusPriority[conv.Status] >= conversationStatusPriority[models.StatusDiarized] {
+	if conv.Status >= models.StatusDiarized {
 		rows, err := s.Repo.GetSegmentsWithTranscriptionByConversationID(ctx, conversationID)
 		if err != nil {
 			return nil, err

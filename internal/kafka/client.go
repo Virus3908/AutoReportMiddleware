@@ -2,60 +2,41 @@ package kafka
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"main/internal/models"
+
 	"github.com/segmentio/kafka-go"
+	"google.golang.org/protobuf/proto"
 )
 
 type KafkaConfig struct {
 	Brokers []string `yaml:"brokers"`
-	Topic   string   `yaml:"topic"`
-}
-
-type KafkaMessage struct {
-	Msg         string `json:"data"`
-	CallbackURL string `json:"callback_url"`
-	TaskType    int32  `json:"task_type"`
 }
 
 type Producer struct {
-	writer      *kafka.Writer
-	callbackURL string
+	writer *kafka.Writer
+	topics map[models.TaskType]string
 }
 
-func NewProducer(cfg KafkaConfig, host string, port int) (*Producer, error) {
+func NewProducer(cfg KafkaConfig) (*Producer, error) {
 	if err := checkKafkaConnection(cfg.Brokers); err != nil {
 		return nil, fmt.Errorf("error connect to kafka: %s", err)
 	}
-	callbackURL := fmt.Sprintf("http://%s:%d", host, port)
 	writer := &kafka.Writer{
 		Addr:     kafka.TCP(cfg.Brokers...),
-		Topic:    cfg.Topic,
 		Balancer: &kafka.LeastBytes{},
 	}
 
+	topics := map[models.TaskType]string{
+		models.ConvertTask:    "convert",
+		models.DiarizeTask:    "diarize",
+		models.TranscribeTask: "transcribe",
+	}
+
 	return &Producer{
-		writer:      writer,
-		callbackURL: callbackURL,
+		writer: writer,
+		topics: topics,
 	}, nil
-}
-
-func (p *Producer) SendMessage(ctx context.Context, taskType int32, key string, msg string) error {
-	message := KafkaMessage{
-		Msg:         msg,
-		CallbackURL: p.callbackURL,
-		TaskType:    taskType,
-	}
-
-	value, err := json.Marshal(message)
-	if err != nil {
-		return fmt.Errorf("failed to marshal Kafka message: %w", err)
-	}
-
-	return p.writer.WriteMessages(ctx, kafka.Message{
-		Key:   []byte(key),
-		Value: value,
-	})
 }
 
 func checkKafkaConnection(brokers []string) error {
@@ -73,4 +54,22 @@ func checkKafkaConnection(brokers []string) error {
 
 func (p *Producer) Close() error {
 	return p.writer.Close()
+}
+
+func (p *Producer) SendMessage(ctx context.Context, taskType models.TaskType, key string, message proto.Message) error {
+	topic, ok := p.topics[taskType]
+	if !ok {
+		return fmt.Errorf("topic not found for task type: %d", taskType)
+	}
+
+	value, err := proto.Marshal(message)
+	if err != nil {
+		return fmt.Errorf("failed to marshal message: %w", err)
+	}
+
+	return p.writer.WriteMessages(ctx, kafka.Message{
+		Topic: topic,
+		Key:   []byte(key),
+		Value: value,
+	})
 }

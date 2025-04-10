@@ -65,10 +65,16 @@ sql:
               import: "main/internal/models"
               type: "TaskStatus"
               pointer: false
-          - db_type: "conversation_status"
-            nullable: false
+          - column: "conversations.status"
             go_type:
               import: "main/internal/models"
               type: "ConversationStatus"
-              pointer: false
+          - column: "tasks.status"
+            go_type:
+              import: "main/internal/models"
+              type: "TaskStatus"
+          - column: "tasks.task_type"
+            go_type:
+              import: "main/internal/models"
+              type: "TaskType"
 

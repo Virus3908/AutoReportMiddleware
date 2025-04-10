@@ -6,6 +6,8 @@ import (
 	"mime/multipart"
 
 	"github.com/jackc/pgx/v5"
+	"main/internal/models"
+	"google.golang.org/protobuf/proto"
 )
 
 
@@ -20,7 +22,7 @@ type StorageClient interface {
 }
 
 type MessageClient interface {
-	SendMessage(ctx context.Context, taskType int32, key string, msg string) error
+	SendMessage(ctx context.Context, taskType models.TaskType, key string, message proto.Message) error
 }
 
 type ServiceStruct struct {
@@ -31,13 +33,15 @@ type ServiceStruct struct {
 func New(
 	repo *repositories.RepositoryStruct, 
 	storage StorageClient, 
-	messenger MessageClient, 
+	messenger MessageClient,
 	txManager TxManager,
 	taskFlow bool,
+	host string,
+	port int,
 ) *ServiceStruct {
 	return &ServiceStruct{
 		Conversations: NewConversationsService(repo, storage, txManager),
-		Tasks: NewTaskDispatcher(repo, messenger, storage, txManager, taskFlow),
+		Tasks: NewTaskDispatcher(repo, messenger, storage, txManager, taskFlow, host, port),
 	}
 }
 

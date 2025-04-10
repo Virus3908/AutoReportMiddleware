@@ -45,7 +45,7 @@ func (r *RepositoryStruct) GetConversationFileURL(ctx context.Context, conversat
 	return r.queries.GetConversationFileURL(ctx, conversationID)
 }
 
-func (r *RepositoryStruct) CreateTask(ctx context.Context, tx pgx.Tx, taskType int32) (uuid.UUID, error) {
+func (r *RepositoryStruct) CreateTask(ctx context.Context, tx pgx.Tx, taskType models.TaskType) (uuid.UUID, error) {
 	query := r.queries.WithTx(tx)
 	return query.CreateTask(ctx, taskType)
 }

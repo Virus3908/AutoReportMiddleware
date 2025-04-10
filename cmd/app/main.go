@@ -39,13 +39,13 @@ func main() {
 		log.Fatalf("Storage connection error: %s", err)
 	}
 
-	kafkaProducer, err := kafka.NewProducer(cfg.Kafka, cfg.Server.Host, cfg.Server.Port)
+	kafkaProducer, err := kafka.NewProducer(cfg.Kafka)
 	if err != nil {
 		log.Fatalf("Kafka connection error: %s", err)
 	}
 	defer kafkaProducer.Close()
 
-	service := services.New(repo, storage, kafkaProducer, db, true)
+	service := services.New(repo, storage, kafkaProducer, db, true, cfg.Server.Host, cfg.Server.Port)
 
 	middlewares := []mux.MiddlewareFunc{
 		logging.LoggingMidleware,
