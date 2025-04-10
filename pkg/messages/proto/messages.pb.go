@@ -331,7 +331,8 @@ func (x *Segment) GetEndTime() float64 {
 
 type SegmentsTaskResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Segments      []*Segment             `protobuf:"bytes,1,rep,name=segments,proto3" json:"segments,omitempty"`
+	NumOfSpeakers int32                  `protobuf:"varint,1,opt,name=num_of_speakers,json=numOfSpeakers,proto3" json:"num_of_speakers,omitempty"`
+	Segments      []*Segment             `protobuf:"bytes,2,rep,name=segments,proto3" json:"segments,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -364,6 +365,13 @@ func (x *SegmentsTaskResponse) ProtoReflect() protoreflect.Message {
 // Deprecated: Use SegmentsTaskResponse.ProtoReflect.Descriptor instead.
 func (*SegmentsTaskResponse) Descriptor() ([]byte, []int) {
 	return file_proto_messages_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *SegmentsTaskResponse) GetNumOfSpeakers() int32 {
+	if x != nil {
+		return x.NumOfSpeakers
+	}
+	return 0
 }
 
 func (x *SegmentsTaskResponse) GetSegments() []*Segment {
@@ -491,9 +499,10 @@ const file_proto_messages_proto_rawDesc = "" +
 	"\aspeaker\x18\x01 \x01(\x05R\aspeaker\x12\x1d\n" +
 	"\n" +
 	"start_time\x18\x02 \x01(\x01R\tstartTime\x12\x19\n" +
-	"\bend_time\x18\x03 \x01(\x01R\aendTime\"E\n" +
-	"\x14SegmentsTaskResponse\x12-\n" +
-	"\bsegments\x18\x01 \x03(\v2\x11.messages.SegmentR\bsegments\"A\n" +
+	"\bend_time\x18\x03 \x01(\x01R\aendTime\"m\n" +
+	"\x14SegmentsTaskResponse\x12&\n" +
+	"\x0fnum_of_speakers\x18\x01 \x01(\x05R\rnumOfSpeakers\x12-\n" +
+	"\bsegments\x18\x02 \x03(\v2\x11.messages.SegmentR\bsegments\"A\n" +
 	"\x19TranscriptionTaskResponse\x12$\n" +
 	"\rtranscription\x18\x01 \x01(\tR\rtranscription\")\n" +
 	"\x11ErrorTaskResponse\x12\x14\n" +

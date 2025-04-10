@@ -190,8 +190,16 @@ func (s *TaskDispatcher) HandleDiarizeCallback(
 		if err != nil {
 			return err
 		}
+		speakerMap := make(map[int32]uuid.UUID)
+		for speaker := 0; speaker < int(segments.GetNumOfSpeakers()); speaker++ {
+			speakerID, err := s.Repo.CreateSpeakerWithConversationsID(ctx, tx, conversationID, int32(speaker))
+			if err != nil {
+				return err
+			}
+			speakerMap[int32(speaker)] = speakerID
+		}
 		for _, segment := range segments.GetSegments() {
-			err := s.Repo.CreateSegment(ctx, tx, diarizeID, segment.GetStartTime(), segment.GetEndTime(), segment.GetSpeaker())
+			err := s.Repo.CreateSegment(ctx, tx, diarizeID, segment.GetStartTime(), segment.GetEndTime(), speakerMap[segment.GetSpeaker()])
 			if err != nil {
 				return err
 			}

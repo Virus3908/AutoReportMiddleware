@@ -20,13 +20,13 @@ type Conversation struct {
 	UpdatedAt        time.Time                 `json:"updated_at"`
 }
 
-type ConversationsParticipant struct {
-	ID             uuid.UUID `json:"id"`
-	UserID         uuid.UUID `json:"user_id"`
-	Speaker        *int32    `json:"speaker"`
-	ConversationID uuid.UUID `json:"conversation_id"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
+type ConversationSpeaker struct {
+	ID             uuid.UUID  `json:"id"`
+	UserID         *uuid.UUID `json:"user_id"`
+	Speaker        int32      `json:"speaker"`
+	ConversationID uuid.UUID  `json:"conversation_id"`
+	CreatedAt      time.Time  `json:"created_at"`
+	UpdatedAt      time.Time  `json:"updated_at"`
 }
 
 type Convert struct {
@@ -77,7 +77,7 @@ type Segment struct {
 	DiarizeID uuid.UUID `json:"diarize_id"`
 	StartTime float64   `json:"start_time"`
 	EndTime   float64   `json:"end_time"`
-	Speaker   int32     `json:"speaker"`
+	SpeakerID uuid.UUID `json:"speaker_id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

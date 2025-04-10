@@ -107,14 +107,14 @@ func (r *RepositoryStruct) CreateSegment(
 	tx pgx.Tx,
 	diarizeID uuid.UUID,
 	startTime, endTime float64,
-	speaker int32,
+	speakerID uuid.UUID,
 ) error {
 	query := r.queries.WithTx(tx)
 	return query.CreateSegment(ctx, db.CreateSegmentParams{
 		DiarizeID: diarizeID,
 		StartTime: startTime,
 		EndTime:   endTime,
-		Speaker:   speaker,
+		SpeakerID: speakerID,
 	})
 }
 
@@ -204,4 +204,18 @@ func (r *RepositoryStruct) GetSegmentsWithTranscriptionByConversationID(
 	conversationID uuid.UUID,
 ) ([]db.GetSegmentsWithTranscriptionByConversationIDRow, error) {
 	return r.queries.GetSegmentsWithTranscriptionByConversationID(ctx, conversationID)
+}
+
+func (r *RepositoryStruct) CreateSpeakerWithConversationsID(
+	ctx context.Context,
+	tx pgx.Tx,
+	conversationID uuid.UUID,
+	speaker int32,
+) (uuid.UUID, error) {
+	query := r.queries.WithTx(tx)
+	return query.CreateSpeakerWithConversationsID(ctx,
+		db.CreateSpeakerWithConversationsIDParams{
+			ConversationID: conversationID,
+			Speaker:        speaker,
+		})
 }

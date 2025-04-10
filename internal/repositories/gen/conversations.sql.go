@@ -155,13 +155,14 @@ SELECT
   s.id AS segment_id,
   s.start_time,
   s.end_time,
-  s.speaker,
+  cs.speaker,
   t.id AS transcription_id,
   t.transcription
 FROM segments AS s
 JOIN diarize AS d ON s.diarize_id = d.id
 JOIN convert AS c ON d.convert_id = c.id
 JOIN conversations AS conv ON c.conversations_id = conv.id
+JOIN conversation_speakers AS cs ON s.speaker_id = cs.id
 LEFT JOIN transcriptions AS t ON s.id = t.segment_id
 WHERE conv.id = $1
 ORDER BY s.start_time

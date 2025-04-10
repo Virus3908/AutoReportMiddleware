@@ -4,7 +4,7 @@ INSERT INTO
         diarize_id,
         start_time,
         end_time,
-        speaker
+        speaker_id
     )
 VALUES ($1, $2, $3, $4);
 

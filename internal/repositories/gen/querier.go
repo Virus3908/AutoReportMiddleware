@@ -18,6 +18,7 @@ type Querier interface {
 	CreateParticipant(ctx context.Context, arg CreateParticipantParams) error
 	CreatePrompt(ctx context.Context, prompt string) error
 	CreateSegment(ctx context.Context, arg CreateSegmentParams) error
+	CreateSpeakerWithConversationsID(ctx context.Context, arg CreateSpeakerWithConversationsIDParams) (uuid.UUID, error)
 	CreateTask(ctx context.Context, taskType models.TaskType) (uuid.UUID, error)
 	CreateTranscriptionWithTaskAndSegmentID(ctx context.Context, arg CreateTranscriptionWithTaskAndSegmentIDParams) error
 	DeleteConversationByID(ctx context.Context, id uuid.UUID) (string, error)
