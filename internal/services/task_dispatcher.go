@@ -64,10 +64,10 @@ func (s *TaskDispatcher) CreateConvertTask(ctx context.Context, conversationID u
 			return err
 		}
 		convertMessage := &messages.MessageConvertTask{
-			TaskId:      taskID.String(),
-			FileUrl:     fileURL,
-			CallbackUrl: s.CallbackURL,
-			CallbackPostfix: ConvertCallbackPostfix,
+			TaskId:               taskID.String(),
+			FileUrl:              fileURL,
+			CallbackUrl:          s.CallbackURL,
+			CallbackPostfix:      ConvertCallbackPostfix,
 			ErrorCallbackPostfix: ErrorCallbackPostfix,
 		}
 		return s.Messenger.SendMessage(ctx, models.ConvertTask, conversationID.String(), convertMessage)
@@ -92,10 +92,10 @@ func (s *TaskDispatcher) CreateDiarizeTask(ctx context.Context, conversationID u
 			return err
 		}
 		diarizeMessage := &messages.MessageDiarizeTask{
-			TaskId:           taskID.String(),
-			ConvertedFileUrl: *response.FileUrl,
-			CallbackUrl: s.CallbackURL,
-			CallbackPostfix: DiarizeCallbackPostfix,
+			TaskId:               taskID.String(),
+			ConvertedFileUrl:     *response.FileUrl,
+			CallbackUrl:          s.CallbackURL,
+			CallbackPostfix:      DiarizeCallbackPostfix,
 			ErrorCallbackPostfix: ErrorCallbackPostfix,
 		}
 
@@ -122,12 +122,12 @@ func (s *TaskDispatcher) CreateTranscribeTask(ctx context.Context, conversationI
 				return err
 			}
 			transcribeMessage := &messages.MessageTranscriptionTask{
-				TaskId:          taskID.String(),
-				FileUrl:         *segment.FileUrl,
-				StartTime:       segment.StartTime,
-				EndTime:         segment.EndTime,
-				CallbackUrl: s.CallbackURL,
-				CallbackPostfix: TranscribeCallbackPostfix,
+				TaskId:               taskID.String(),
+				FileUrl:              *segment.FileUrl,
+				StartTime:            segment.StartTime,
+				EndTime:              segment.EndTime,
+				CallbackUrl:          s.CallbackURL,
+				CallbackPostfix:      TranscribeCallbackPostfix,
 				ErrorCallbackPostfix: ErrorCallbackPostfix,
 			}
 			err = s.Messenger.SendMessage(ctx, models.TranscribeTask, segment.ConversationID.String(), transcribeMessage)
@@ -227,7 +227,7 @@ func (s *TaskDispatcher) HandleTransctiprionCallback(
 		if err != nil {
 			return err
 		}
-		err = s.Repo.UpdateTransctiptionTextByID(ctx, tx, taskID, transcription.GetTranscription())
+		err = s.Repo.UpdateTranscriptionTextByTaskID(ctx, tx, taskID, transcription.GetTranscription())
 		if err != nil {
 			return err
 		}
@@ -263,7 +263,7 @@ func (s *TaskDispatcher) dispatchNext(taskType int, conversationID uuid.UUID) {
 }
 
 func (s *TaskDispatcher) HandleErrorCallback(
-	ctx context.Context, 
+	ctx context.Context,
 	taskID uuid.UUID,
 	_ *messages.ErrorTaskResponse,
 ) error {
@@ -271,3 +271,5 @@ func (s *TaskDispatcher) HandleErrorCallback(
 		return s.Repo.UpdateTaskStatus(ctx, tx, taskID, models.StatusTaskError)
 	})
 }
+
+

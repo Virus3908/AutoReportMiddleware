@@ -100,3 +100,13 @@ func (s *ConversationsService) GetConversationDetails(ctx context.Context, conve
 
 	return result, nil
 }
+
+func (s *ConversationsService) UpdateTranscriptionTextByID(
+	ctx context.Context,
+	id uuid.UUID,
+	transcription models.Transcription,
+) error {
+	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
+		return s.Repo.UpdateTransctiptionTextByID(ctx, tx, id, transcription.Transcription)
+	})
+}

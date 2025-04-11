@@ -45,16 +45,30 @@ func (q *Queries) GetCountOfUntranscribedSegments(ctx context.Context, id uuid.U
 	return count, err
 }
 
-const updateTransctiptionTextByID = `-- name: UpdateTransctiptionTextByID :exec
+const updateTranscriptionTextByID = `-- name: UpdateTranscriptionTextByID :exec
+UPDATE transcriptions SET transcription = $1 WHERE id = $2
+`
+
+type UpdateTranscriptionTextByIDParams struct {
+	Transcription *string   `json:"transcription"`
+	ID            uuid.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateTranscriptionTextByID(ctx context.Context, arg UpdateTranscriptionTextByIDParams) error {
+	_, err := q.db.Exec(ctx, updateTranscriptionTextByID, arg.Transcription, arg.ID)
+	return err
+}
+
+const updateTranscriptionTextByTaskID = `-- name: UpdateTranscriptionTextByTaskID :exec
 UPDATE transcriptions SET transcription = $1 WHERE task_id = $2
 `
 
-type UpdateTransctiptionTextByIDParams struct {
+type UpdateTranscriptionTextByTaskIDParams struct {
 	Transcription *string   `json:"transcription"`
 	TaskID        uuid.UUID `json:"task_id"`
 }
 
-func (q *Queries) UpdateTransctiptionTextByID(ctx context.Context, arg UpdateTransctiptionTextByIDParams) error {
-	_, err := q.db.Exec(ctx, updateTransctiptionTextByID, arg.Transcription, arg.TaskID)
+func (q *Queries) UpdateTranscriptionTextByTaskID(ctx context.Context, arg UpdateTranscriptionTextByTaskIDParams) error {
+	_, err := q.db.Exec(ctx, updateTranscriptionTextByTaskID, arg.Transcription, arg.TaskID)
 	return err
 }

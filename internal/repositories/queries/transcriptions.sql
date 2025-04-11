@@ -1,4 +1,4 @@
--- name: UpdateTransctiptionTextByID :exec
+-- name: UpdateTranscriptionTextByTaskID :exec
 UPDATE transcriptions SET transcription = $1 WHERE task_id = $2;
 
 -- name: CreateTranscriptionWithTaskAndSegmentID :exec
@@ -15,3 +15,6 @@ FROM
 WHERE
     c.id = $1
     AND t.transcription IS NULL;
+
+-- name: UpdateTranscriptionTextByID :exec
+UPDATE transcriptions SET transcription = $1 WHERE id = $2;

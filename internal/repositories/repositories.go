@@ -140,14 +140,14 @@ func (r *RepositoryStruct) CreateTranscriptionWithTaskAndSegmentID(
 	)
 }
 
-func (r *RepositoryStruct) UpdateTransctiptionTextByID(
+func (r *RepositoryStruct) UpdateTranscriptionTextByTaskID(
 	ctx context.Context,
 	tx pgx.Tx,
 	taskID uuid.UUID,
 	text string,
 ) error {
 	query := r.queries.WithTx(tx)
-	return query.UpdateTransctiptionTextByID(ctx, db.UpdateTransctiptionTextByIDParams{
+	return query.UpdateTranscriptionTextByTaskID(ctx, db.UpdateTranscriptionTextByTaskIDParams{
 		TaskID:        taskID,
 		Transcription: &text,
 	})
@@ -218,4 +218,17 @@ func (r *RepositoryStruct) CreateSpeakerWithConversationsID(
 			ConversationID: conversationID,
 			Speaker:        speaker,
 		})
+}
+
+func (r *RepositoryStruct) UpdateTransctiptionTextByID(
+	ctx context.Context,
+	tx pgx.Tx,
+	taskID uuid.UUID,
+	text string,
+) error {
+	query := r.queries.WithTx(tx)
+	return query.UpdateTranscriptionTextByID(ctx, db.UpdateTranscriptionTextByIDParams{
+		ID:        taskID,
+		Transcription: &text,
+	})
 }

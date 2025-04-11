@@ -58,7 +58,7 @@ CREATE TABLE segments (
     diarize_id UUID REFERENCES diarize(id) ON DELETE CASCADE NOT NULL,
     start_time FLOAT NOT NULL,
     end_time FLOAT NOT NULL,
-    speaker_id UUID REFERENCES conversation_speakers(id) NOT NULL,
+    speaker_id UUID REFERENCES conversation_speakers(id) ON DELETE CASCADE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
