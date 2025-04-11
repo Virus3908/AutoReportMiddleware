@@ -20,6 +20,10 @@ type SegmentDetail struct {
 	Transcription   string    `json:"transcription,omitempty"`
 }
 
+type Transcription struct {
+	Transcription string `json:"transcription"`
+}
+
 type TaskStatus int
 
 const (

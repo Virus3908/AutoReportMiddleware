@@ -53,7 +53,8 @@ type Querier interface {
 	UpdateParticipantByID(ctx context.Context, arg UpdateParticipantByIDParams) error
 	UpdatePromptByID(ctx context.Context, arg UpdatePromptByIDParams) error
 	UpdateTaskStatus(ctx context.Context, arg UpdateTaskStatusParams) error
-	UpdateTransctiptionTextByID(ctx context.Context, arg UpdateTransctiptionTextByIDParams) error
+	UpdateTranscriptionTextByID(ctx context.Context, arg UpdateTranscriptionTextByIDParams) error
+	UpdateTranscriptionTextByTaskID(ctx context.Context, arg UpdateTranscriptionTextByTaskIDParams) error
 }
 
 var _ Querier = (*Queries)(nil)

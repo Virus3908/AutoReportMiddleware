@@ -60,6 +60,9 @@ func (r *RouterStruct) conversationsHandlers() {
 	r.Router.HandleFunc("/api/conversations/{id}",
 		wrapperWithID(r.Service.Conversations.DeleteConversation),
 	).Methods(http.MethodDelete)
+	r.Router.HandleFunc("/api/transcription/update/{id}",
+		wrapperWithIDAndPayload(r.Service.Conversations.UpdateTranscriptionTextByID),	
+	).Methods(http.MethodPatch)
 }
 func (r *RouterStruct) taskHandlers() {
 	r.Router.HandleFunc("/api/task/create/convert/{id}",
