@@ -40,7 +40,12 @@ func (r *RouterStruct) createHandlers() {
 }
 
 func (r *RouterStruct) participantsHandlers() {
-
+	r.Router.HandleFunc("/api/participants",
+		wrapperWithPayload(r.Service.Conversations.CreateParticipant),
+	).Methods(http.MethodPost)
+	r.Router.HandleFunc("/api/participants",
+		wrapperReturningData(r.Service.Conversations.GetParticipants),
+	).Methods(http.MethodGet)
 }
 
 func (r *RouterStruct) promptsHandlers() {

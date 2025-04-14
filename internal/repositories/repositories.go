@@ -232,3 +232,19 @@ func (r *RepositoryStruct) UpdateTransctiptionTextByID(
 		Transcription: &text,
 	})
 }
+
+func (r *RepositoryStruct) CreateParticipant(
+	ctx context.Context,
+	tx pgx.Tx,
+	participant models.ParticipantData,
+) (error) {
+	query := r.queries.WithTx(tx)
+	return query.CreateParticipant(ctx, db.CreateParticipantParams{
+		Name:           &participant.Name,
+		Email:          participant.Email,
+	})
+}
+
+func (r *RepositoryStruct) GetParticipants(ctx context.Context) ([]db.Participant, error) {
+	return r.queries.GetParticipants(ctx)
+}

@@ -110,3 +110,29 @@ func (s *ConversationsService) UpdateTranscriptionTextByID(
 		return s.Repo.UpdateTransctiptionTextByID(ctx, tx, id, transcription.Transcription)
 	})
 }
+
+func (s *ConversationsService) CreateParticipant(
+	ctx context.Context,
+	participantPayload models.ParticipantData,
+) (error) {
+	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
+		return s.Repo.CreateParticipant(ctx, tx, participantPayload)
+	})
+}
+
+func (s *ConversationsService) GetParticipants(
+	ctx context.Context,
+) ([]models.ParticipantData, error) {
+	participants, err := s.Repo.GetParticipants(ctx)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]models.ParticipantData, 0, len(participants))
+	for _, participant := range participants {
+		result = append(result, models.ParticipantData{
+			Name:  *participant.Name,
+			Email: participant.Email,
+		})
+	}
+	return result, nil
+}

@@ -24,6 +24,11 @@ type Transcription struct {
 	Transcription string `json:"transcription"`
 }
 
+type ParticipantData struct {
+	Name string `json:"name"`
+	Email string `json:"email"`
+}
+
 type TaskStatus int
 
 const (
