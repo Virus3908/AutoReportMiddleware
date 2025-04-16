@@ -236,15 +236,25 @@ func (r *RepositoryStruct) UpdateTransctiptionTextByID(
 func (r *RepositoryStruct) CreateParticipant(
 	ctx context.Context,
 	tx pgx.Tx,
-	participant models.ParticipantData,
+	participantName *string, 
+	participantEmail string,
 ) (error) {
 	query := r.queries.WithTx(tx)
 	return query.CreateParticipant(ctx, db.CreateParticipantParams{
-		Name:           &participant.Name,
-		Email:          participant.Email,
+		Name:           participantName,
+		Email:          participantEmail,
 	})
 }
 
 func (r *RepositoryStruct) GetParticipants(ctx context.Context) ([]db.Participant, error) {
 	return r.queries.GetParticipants(ctx)
+}
+
+func (r *RepositoryStruct) DeleteParticipantByID(
+	ctx context.Context,
+	tx pgx.Tx,
+	participantID uuid.UUID,
+) (error) {
+	query := r.queries.WithTx(tx)
+	return query.DeleteParticipantByID(ctx, participantID)
 }

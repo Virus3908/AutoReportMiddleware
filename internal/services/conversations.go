@@ -39,7 +39,7 @@ func (s *ConversationsService) GetConversations(ctx context.Context) ([]db.Conve
 	return s.Repo.GetConversations(ctx)
 }
 
-func (s *ConversationsService) DeleteConversation(ctx context.Context, conversationID uuid.UUID) error {
+func (s *ConversationsService) DeleteConversationByID(ctx context.Context, conversationID uuid.UUID) error {
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
 		fileURL, err := s.Repo.DeleteConversation(ctx, tx, conversationID)
 		if err != nil {
@@ -113,26 +113,24 @@ func (s *ConversationsService) UpdateTranscriptionTextByID(
 
 func (s *ConversationsService) CreateParticipant(
 	ctx context.Context,
-	participantPayload models.ParticipantData,
+	participantPayload db.CreateParticipantParams,
 ) (error) {
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
-		return s.Repo.CreateParticipant(ctx, tx, participantPayload)
+		return s.Repo.CreateParticipant(ctx, tx, participantPayload.Name, participantPayload.Email)
 	})
 }
 
 func (s *ConversationsService) GetParticipants(
 	ctx context.Context,
-) ([]models.ParticipantData, error) {
-	participants, err := s.Repo.GetParticipants(ctx)
-	if err != nil {
-		return nil, err
-	}
-	result := make([]models.ParticipantData, 0, len(participants))
-	for _, participant := range participants {
-		result = append(result, models.ParticipantData{
-			Name:  *participant.Name,
-			Email: participant.Email,
-		})
-	}
-	return result, nil
+) ([]db.Participant, error) {
+	return s.Repo.GetParticipants(ctx)
+}
+
+func (s *ConversationsService) DeleteParticipantByID(
+	ctx context.Context,
+	participantID uuid.UUID,
+) (error) {
+	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
+		return s.Repo.DeleteParticipantByID(ctx, tx, participantID)
+	})
 }
