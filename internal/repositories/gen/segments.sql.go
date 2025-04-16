@@ -11,6 +11,24 @@ import (
 	"github.com/google/uuid"
 )
 
+const assignNewSpeakerToSegment = `-- name: AssignNewSpeakerToSegment :exec
+UPDATE segments
+SET
+    speaker_id = $1
+WHERE
+    id = $2
+`
+
+type AssignNewSpeakerToSegmentParams struct {
+	SpeakerID uuid.UUID `json:"speaker_id"`
+	ID        uuid.UUID `json:"id"`
+}
+
+func (q *Queries) AssignNewSpeakerToSegment(ctx context.Context, arg AssignNewSpeakerToSegmentParams) error {
+	_, err := q.db.Exec(ctx, assignNewSpeakerToSegment, arg.SpeakerID, arg.ID)
+	return err
+}
+
 const createSegment = `-- name: CreateSegment :exec
 INSERT INTO
     segments (
@@ -37,6 +55,19 @@ func (q *Queries) CreateSegment(ctx context.Context, arg CreateSegmentParams) er
 		arg.SpeakerID,
 	)
 	return err
+}
+
+const getCountSegmentsWithParticipantID = `-- name: GetCountSegmentsWithParticipantID :one
+SELECT COUNT(*)
+FROM segments
+WHERE speaker_id = $1
+`
+
+func (q *Queries) GetCountSegmentsWithParticipantID(ctx context.Context, speakerID uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, getCountSegmentsWithParticipantID, speakerID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
 }
 
 const getSegmentsByConversationsID = `-- name: GetSegmentsByConversationsID :many

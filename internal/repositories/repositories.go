@@ -228,7 +228,108 @@ func (r *RepositoryStruct) UpdateTransctiptionTextByID(
 ) error {
 	query := r.queries.WithTx(tx)
 	return query.UpdateTranscriptionTextByID(ctx, db.UpdateTranscriptionTextByIDParams{
-		ID:        taskID,
+		ID:            taskID,
 		Transcription: &text,
 	})
 }
+
+func (r *RepositoryStruct) CreateParticipant(
+	ctx context.Context,
+	tx pgx.Tx,
+	participantName *string,
+	participantEmail string,
+) error {
+	query := r.queries.WithTx(tx)
+	return query.CreateParticipant(ctx, db.CreateParticipantParams{
+		Name:  participantName,
+		Email: participantEmail,
+	})
+}
+
+func (r *RepositoryStruct) GetParticipants(ctx context.Context) ([]db.Participant, error) {
+	return r.queries.GetParticipants(ctx)
+}
+
+func (r *RepositoryStruct) DeleteParticipantByID(
+	ctx context.Context,
+	tx pgx.Tx,
+	participantID uuid.UUID,
+) error {
+	query := r.queries.WithTx(tx)
+	return query.DeleteParticipantByID(ctx, participantID)
+}
+
+func (r *RepositoryStruct) AssignParticipantToSpeaker(
+	ctx context.Context,
+	tx pgx.Tx,
+	speakerID, participantID uuid.UUID,
+) error {
+	query := r.queries.WithTx(tx)
+	return query.AssignParticipantToSpeaker(ctx, db.AssignParticipantToSpeakerParams{
+		ID:            speakerID,
+		ParticipantID: &participantID,
+	})
+}
+
+func (r *RepositoryStruct) CreateNewSpeakerForSegment(
+	ctx context.Context,
+	tx pgx.Tx,
+	speaker int32,
+	participantID uuid.UUID,
+	conversationID uuid.UUID,
+) (uuid.UUID, error) {
+	query := r.queries.WithTx(tx)
+	return query.CreateNewSpeakerForSegment(ctx, db.CreateNewSpeakerForSegmentParams{
+		ParticipantID:  &participantID,
+		ConversationID: conversationID,
+		Speaker:        speaker,
+	})
+}
+
+func (r *RepositoryStruct) GetSpeakerParticipantIDBySegmentID(
+	ctx context.Context,
+	tx pgx.Tx,
+	speakerID uuid.UUID,
+) (*uuid.UUID, error) {
+	query := r.queries
+	if tx != nil {
+		query = r.queries.WithTx(tx)
+	}
+	return query.GetSpeakerParticipantIDBySegmentID(ctx, speakerID)
+}
+
+func (r *RepositoryStruct) GetSpeakerCountByConversationID(
+	ctx context.Context,
+	tx pgx.Tx,
+	conversationID uuid.UUID,
+) (int64, error) {
+	query := r.queries
+	if tx != nil {
+		query = r.queries.WithTx(tx)
+	}
+	return query.GetSpeakerCountByConversationID(ctx, conversationID)
+}
+
+func (r *RepositoryStruct) AssignNewSpeakerToSegment(
+	ctx context.Context,
+	tx pgx.Tx,
+	segmentID, speakerID uuid.UUID,
+) error {
+	query := r.queries.WithTx(tx)
+	return query.AssignNewSpeakerToSegment(ctx, db.AssignNewSpeakerToSegmentParams{
+		ID:            segmentID,
+		SpeakerID: speakerID,
+	})
+}
+
+// func (r *RepositoryStruct) CountSegmentsWithParticipantID(
+// 	ctx context.Context,
+// 	tx pgx.Tx,
+// 	speakerID uuid.UUID,
+// ) (int64, error) {
+// 	query := r.queries
+// 	if tx != nil {
+// 		query = r.queries.WithTx(tx)
+// 	}
+// 	return query.GetCountSegmentsWithParticipantID(ctx, speakerID)
+// }

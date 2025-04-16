@@ -36,11 +36,26 @@ func (r *RouterStruct) createHandlers() {
 	r.promptsHandlers()
 	r.conversationsHandlers()
 	r.taskHandlers()
+	r.segmentHandlers()
 	r.callbackHandlers()
 }
 
 func (r *RouterStruct) participantsHandlers() {
+	r.Router.HandleFunc("/api/participants",
+		wrapperWithPayload(r.Service.Conversations.CreateParticipant),
+	).Methods(http.MethodPost)
+	r.Router.HandleFunc("/api/participants",
+		wrapperReturningData(r.Service.Conversations.GetParticipants),
+	).Methods(http.MethodGet)
+	r.Router.HandleFunc("/api/participants/{id}",
+		wrapperWithID(r.Service.Conversations.DeleteParticipantByID),
+	).Methods(http.MethodDelete)
+}
 
+func (r *RouterStruct) segmentHandlers() {
+	r.Router.HandleFunc("/api/segments/{id}",
+		wrapperWithIDAndPayload(r.Service.Conversations.AssignParticipantToSegment),
+	).Methods(http.MethodPatch)
 }
 
 func (r *RouterStruct) promptsHandlers() {
@@ -58,7 +73,7 @@ func (r *RouterStruct) conversationsHandlers() {
 		wrapperWithIDReturningData(r.Service.Conversations.GetConversationDetails),
 	).Methods(http.MethodGet)
 	r.Router.HandleFunc("/api/conversations/{id}",
-		wrapperWithID(r.Service.Conversations.DeleteConversation),
+		wrapperWithID(r.Service.Conversations.DeleteConversationByID),
 	).Methods(http.MethodDelete)
 	r.Router.HandleFunc("/api/transcription/update/{id}",
 		wrapperWithIDAndPayload(r.Service.Conversations.UpdateTranscriptionTextByID),	

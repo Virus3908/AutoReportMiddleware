@@ -22,7 +22,7 @@ type Conversation struct {
 
 type ConversationSpeaker struct {
 	ID             uuid.UUID  `json:"id"`
-	UserID         *uuid.UUID `json:"user_id"`
+	ParticipantID  *uuid.UUID `json:"participant_id"`
 	Speaker        int32      `json:"speaker"`
 	ConversationID uuid.UUID  `json:"conversation_id"`
 	CreatedAt      time.Time  `json:"created_at"`
