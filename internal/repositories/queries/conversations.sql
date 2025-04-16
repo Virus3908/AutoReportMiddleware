@@ -73,6 +73,7 @@ SELECT
   s.start_time,
   s.end_time,
   cs.speaker,
+  p.name AS participant_name,
   t.id AS transcription_id,
   t.transcription
 FROM segments AS s
@@ -81,5 +82,6 @@ JOIN convert AS c ON d.convert_id = c.id
 JOIN conversations AS conv ON c.conversations_id = conv.id
 JOIN conversation_speakers AS cs ON s.speaker_id = cs.id
 LEFT JOIN transcriptions AS t ON s.id = t.segment_id
+LEFT JOIN participants AS p ON p.id = cs.participant_id
 WHERE conv.id = $1
 ORDER BY s.start_time;

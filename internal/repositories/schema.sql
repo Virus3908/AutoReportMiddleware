@@ -20,7 +20,7 @@ CREATE TABLE participants (
 
 CREATE TABLE conversation_speakers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES participants(id),
+    participant_id UUID REFERENCES participants(id),
     speaker INTEGER NOT NULL,
     conversation_id UUID REFERENCES conversations(id) ON DELETE CASCADE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,

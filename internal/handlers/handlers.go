@@ -36,6 +36,7 @@ func (r *RouterStruct) createHandlers() {
 	r.promptsHandlers()
 	r.conversationsHandlers()
 	r.taskHandlers()
+	r.segmentHandlers()
 	r.callbackHandlers()
 }
 
@@ -49,6 +50,12 @@ func (r *RouterStruct) participantsHandlers() {
 	r.Router.HandleFunc("/api/participants/{id}",
 		wrapperWithID(r.Service.Conversations.DeleteParticipantByID),
 	).Methods(http.MethodDelete)
+}
+
+func (r *RouterStruct) segmentHandlers() {
+	r.Router.HandleFunc("/api/segments/{id}",
+		wrapperWithIDAndPayload(r.Service.Conversations.AssignParticipantToSegment),
+	).Methods(http.MethodPatch)
 }
 
 func (r *RouterStruct) promptsHandlers() {

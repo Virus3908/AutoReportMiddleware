@@ -23,3 +23,15 @@ FROM
 WHERE
     c.id = $1
 ORDER BY seg.start_time;
+
+-- name: AssignNewSpeakerToSegment :exec
+UPDATE segments
+SET
+    speaker_id = $1
+WHERE
+    id = $2;
+
+-- name: GetCountSegmentsWithParticipantID :one
+SELECT COUNT(*)
+FROM segments
+WHERE speaker_id = $1;
