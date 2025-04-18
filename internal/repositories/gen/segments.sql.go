@@ -57,14 +57,14 @@ func (q *Queries) CreateSegment(ctx context.Context, arg CreateSegmentParams) er
 	return err
 }
 
-const getCountSegmentsWithParticipantID = `-- name: GetCountSegmentsWithParticipantID :one
+const getCountSegmentsWithSpeakerID = `-- name: GetCountSegmentsWithSpeakerID :one
 SELECT COUNT(*)
 FROM segments
 WHERE speaker_id = $1
 `
 
-func (q *Queries) GetCountSegmentsWithParticipantID(ctx context.Context, speakerID uuid.UUID) (int64, error) {
-	row := q.db.QueryRow(ctx, getCountSegmentsWithParticipantID, speakerID)
+func (q *Queries) GetCountSegmentsWithSpeakerID(ctx context.Context, speakerID uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, getCountSegmentsWithSpeakerID, speakerID)
 	var count int64
 	err := row.Scan(&count)
 	return count, err

@@ -73,6 +73,7 @@ SELECT
   s.start_time,
   s.end_time,
   cs.speaker,
+  p.id AS participant_id,
   p.name AS participant_name,
   t.id AS transcription_id,
   t.transcription

@@ -81,10 +81,10 @@ func (s *ConversationsService) GetConversationDetails(ctx context.Context, conve
 		segments := make([]models.SegmentDetail, 0, len(rows))
 		for _, row := range rows {
 			seg := models.SegmentDetail{
-				SegmentID:       row.SegmentID,
-				StartTime:       row.StartTime,
-				EndTime:         row.EndTime,
-				Speaker:         row.Speaker,
+				SegmentID: row.SegmentID,
+				StartTime: row.StartTime,
+				EndTime:   row.EndTime,
+				Speaker:   row.Speaker,
 				// Transcription:   "",
 			}
 			if row.TranscriptionID != nil {
@@ -95,6 +95,9 @@ func (s *ConversationsService) GetConversationDetails(ctx context.Context, conve
 			}
 			if row.ParticipantName != nil {
 				seg.ParticipantName = *row.ParticipantName
+			}
+			if row.ParticipantID != nil {
+				seg.ParticipantID = *row.ParticipantID
 			}
 			segments = append(segments, seg)
 		}
@@ -134,6 +137,10 @@ func (s *ConversationsService) DeleteParticipantByID(
 	participantID uuid.UUID,
 ) error {
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
+		err := s.Repo.NullifySpeakerParticipantID(ctx, tx, &participantID)
+		if err != nil {
+			return err
+		}
 		return s.Repo.DeleteParticipantByID(ctx, tx, participantID)
 	})
 }
@@ -143,25 +150,44 @@ func (s *ConversationsService) AssignParticipantToSegment(
 	segmentID uuid.UUID,
 	idPair models.ConnectParticipantToConversationType,
 ) error {
-	participantID, err := s.Repo.GetSpeakerParticipantIDBySegmentID(ctx, nil, segmentID)
+	conversationID, err := uuid.Parse(idPair.ConversationID)
 	if err != nil {
 		return err
 	}
-	if participantID != nil {
-		return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
-			speakerCount, err := s.Repo.GetSpeakerCountByConversationID(ctx, tx, idPair.ConversationID)
-			if err != nil {
-				return err
-			}
-			newSpeakerID, err := s.Repo.CreateNewSpeakerForSegment(ctx, tx, int32(speakerCount), idPair.ParticipantID, idPair.ConversationID)
-			if err != nil {
-				return err
-			}
-			return s.Repo.AssignNewSpeakerToSegment(ctx, tx, segmentID, newSpeakerID)
-		})
-
+	var participantID *uuid.UUID
+	if idPair.ParticipantID != "" {
+		tempID, err := uuid.Parse(idPair.ParticipantID)
+		if err != nil {
+			return err
+		}
+		participantID = &tempID
+	} else {
+		participantID = nil
+	}
+	speakerIDs, err := s.Repo.GetSpeakerParticipantIDBySegmentID(ctx, nil, segmentID)
+	if err != nil {
+		return err
+	}
+	if speakerIDs.ParticipantID != nil {
+		countSegmentsWithSpeaker, err := s.Repo.CountSegmentsWithSpeakerID(ctx, nil, speakerIDs.SpeakerID)
+		if err != nil {
+			return err
+		}
+		if countSegmentsWithSpeaker > 1 {
+			return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
+				speakerCount, err := s.Repo.GetSpeakerCountByConversationID(ctx, tx, conversationID)
+				if err != nil {
+					return err
+				}
+				newSpeakerID, err := s.Repo.CreateNewSpeakerForSegment(ctx, tx, int32(speakerCount), participantID, conversationID)
+				if err != nil {
+					return err
+				}
+				return s.Repo.AssignNewSpeakerToSegment(ctx, tx, segmentID, newSpeakerID)
+			})
+		}
 	}
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
-		return s.Repo.AssignParticipantToSpeaker(ctx, tx, segmentID, idPair.ParticipantID)
+		return s.Repo.AssignParticipantToSpeaker(ctx, tx, participantID, speakerIDs.SpeakerID)
 	})
 }
