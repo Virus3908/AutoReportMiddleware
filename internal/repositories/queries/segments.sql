@@ -31,7 +31,7 @@ SET
 WHERE
     id = $2;
 
--- name: GetCountSegmentsWithParticipantID :one
+-- name: GetCountSegmentsWithSpeakerID :one
 SELECT COUNT(*)
 FROM segments
 WHERE speaker_id = $1;

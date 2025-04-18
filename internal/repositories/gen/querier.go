@@ -13,7 +13,7 @@ import (
 
 type Querier interface {
 	AssignNewSpeakerToSegment(ctx context.Context, arg AssignNewSpeakerToSegmentParams) error
-	AssignParticipantToSpeaker(ctx context.Context, arg AssignParticipantToSpeakerParams) error
+	AssignParticipantToSpeakerByID(ctx context.Context, arg AssignParticipantToSpeakerByIDParams) error
 	CreateConversation(ctx context.Context, arg CreateConversationParams) error
 	CreateConvert(ctx context.Context, arg CreateConvertParams) error
 	CreateDiarize(ctx context.Context, arg CreateDiarizeParams) error
@@ -40,7 +40,7 @@ type Querier interface {
 	GetConvertByID(ctx context.Context, id uuid.UUID) (Convert, error)
 	GetConvertFileURLByConversationID(ctx context.Context, conversationsID uuid.UUID) (GetConvertFileURLByConversationIDRow, error)
 	GetCountOfUntranscribedSegments(ctx context.Context, id uuid.UUID) (int64, error)
-	GetCountSegmentsWithParticipantID(ctx context.Context, speakerID uuid.UUID) (int64, error)
+	GetCountSegmentsWithSpeakerID(ctx context.Context, speakerID uuid.UUID) (int64, error)
 	GetDiarizeIDByTaskID(ctx context.Context, taskID uuid.UUID) (uuid.UUID, error)
 	GetParticipantByID(ctx context.Context, id uuid.UUID) (Participant, error)
 	GetParticipants(ctx context.Context) ([]Participant, error)
@@ -49,9 +49,10 @@ type Querier interface {
 	GetSegmentsByConversationsID(ctx context.Context, id uuid.UUID) ([]GetSegmentsByConversationsIDRow, error)
 	GetSegmentsWithTranscriptionByConversationID(ctx context.Context, id uuid.UUID) ([]GetSegmentsWithTranscriptionByConversationIDRow, error)
 	GetSpeakerCountByConversationID(ctx context.Context, conversationID uuid.UUID) (int64, error)
-	GetSpeakerParticipantIDBySegmentID(ctx context.Context, id uuid.UUID) (*uuid.UUID, error)
+	GetSpeakerIDAndParticipantIDBySegmentID(ctx context.Context, id uuid.UUID) (GetSpeakerIDAndParticipantIDBySegmentIDRow, error)
 	GetTaskByID(ctx context.Context, id uuid.UUID) (Task, error)
 	GetTasks(ctx context.Context) ([]Task, error)
+	NullifySpeakerParticipantID(ctx context.Context, participantID *uuid.UUID) error
 	UpdateConversationStatusByConvertID(ctx context.Context, arg UpdateConversationStatusByConvertIDParams) error
 	UpdateConversationStatusByDiarizeID(ctx context.Context, arg UpdateConversationStatusByDiarizeIDParams) error
 	UpdateConversationStatusByID(ctx context.Context, arg UpdateConversationStatusByIDParams) error

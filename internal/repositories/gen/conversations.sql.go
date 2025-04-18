@@ -156,6 +156,7 @@ SELECT
   s.start_time,
   s.end_time,
   cs.speaker,
+  p.id AS participant_id,
   p.name AS participant_name,
   t.id AS transcription_id,
   t.transcription
@@ -175,6 +176,7 @@ type GetSegmentsWithTranscriptionByConversationIDRow struct {
 	StartTime       float64    `json:"start_time"`
 	EndTime         float64    `json:"end_time"`
 	Speaker         int32      `json:"speaker"`
+	ParticipantID   *uuid.UUID `json:"participant_id"`
 	ParticipantName *string    `json:"participant_name"`
 	TranscriptionID *uuid.UUID `json:"transcription_id"`
 	Transcription   *string    `json:"transcription"`
@@ -194,6 +196,7 @@ func (q *Queries) GetSegmentsWithTranscriptionByConversationID(ctx context.Conte
 			&i.StartTime,
 			&i.EndTime,
 			&i.Speaker,
+			&i.ParticipantID,
 			&i.ParticipantName,
 			&i.TranscriptionID,
 			&i.Transcription,

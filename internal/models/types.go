@@ -16,7 +16,8 @@ type SegmentDetail struct {
 	StartTime       float64   `json:"start_time"`
 	EndTime         float64   `json:"end_time"`
 	Speaker         int32     `json:"speaker"`
-	ParticipantName string	  `json:"participant_name,omitempty"`
+	ParticipantID   uuid.UUID `json:"participant_id,omitempty"`
+	ParticipantName string    `json:"participant_name,omitempty"`
 	TranscriptionID uuid.UUID `json:"transcription_id,omitempty"`
 	Transcription   string    `json:"transcription,omitempty"`
 }
@@ -26,8 +27,8 @@ type Transcription struct {
 }
 
 type ConnectParticipantToConversationType struct {
-	ParticipantID uuid.UUID `json:"participant_id"`
-	ConversationID uuid.UUID `json:"conversation_id"`
+	ParticipantID  string `json:"participant_id"`
+	ConversationID string `json:"conversation_id"`
 }
 
 type TaskStatus int
