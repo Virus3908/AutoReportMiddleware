@@ -42,14 +42,20 @@ func (r *RouterStruct) createHandlers() {
 
 func (r *RouterStruct) participantsHandlers() {
 	r.Router.HandleFunc("/api/participants",
-		wrapperWithPayload(r.Service.Conversations.CreateParticipant),
+		wrapperWithPayload(r.Service.Participants.CreateParticipant),
 	).Methods(http.MethodPost)
 	r.Router.HandleFunc("/api/participants",
-		wrapperReturningData(r.Service.Conversations.GetParticipants),
+		wrapperReturningData(r.Service.Participants.GetParticipants),
 	).Methods(http.MethodGet)
 	r.Router.HandleFunc("/api/participants/{id}",
-		wrapperWithID(r.Service.Conversations.DeleteParticipantByID),
+		wrapperWithID(r.Service.Participants.DeleteParticipantByID),
 	).Methods(http.MethodDelete)
+	r.Router.HandleFunc("/api/participants/{id}",
+		wrapperWithIDAndPayload(r.Service.Participants.UpdateParticipantByID),
+	).Methods(http.MethodPatch)
+	r.Router.HandleFunc("/api/participants/{id}",
+		wrapperWithIDReturningData(r.Service.Participants.GetParticipantByID),
+	).Methods(http.MethodGet)
 }
 
 func (r *RouterStruct) segmentHandlers() {
@@ -88,6 +94,9 @@ func (r *RouterStruct) taskHandlers() {
 	).Methods(http.MethodPost)
 	r.Router.HandleFunc("/api/task/create/transcription/{id}",
 		wrapperWithID(r.Service.Tasks.CreateTranscribeTask),
+	).Methods(http.MethodPost)
+	r.Router.HandleFunc("/api/task/create/semireport/{id}",
+		wrapperWithID(r.Service.Tasks.CreateSemiReportTask),
 	).Methods(http.MethodPost)
 }
 

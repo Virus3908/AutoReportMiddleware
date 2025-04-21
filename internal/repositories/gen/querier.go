@@ -42,6 +42,7 @@ type Querier interface {
 	GetCountOfUntranscribedSegments(ctx context.Context, id uuid.UUID) (int64, error)
 	GetCountSegmentsWithSpeakerID(ctx context.Context, speakerID uuid.UUID) (int64, error)
 	GetDiarizeIDByTaskID(ctx context.Context, taskID uuid.UUID) (uuid.UUID, error)
+	GetFullTranscriptionByConversationID(ctx context.Context, id uuid.UUID) ([]GetFullTranscriptionByConversationIDRow, error)
 	GetParticipantByID(ctx context.Context, id uuid.UUID) (Participant, error)
 	GetParticipants(ctx context.Context) ([]Participant, error)
 	GetPromptByID(ctx context.Context, id uuid.UUID) (Prompt, error)

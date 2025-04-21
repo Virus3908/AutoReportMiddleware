@@ -344,3 +344,76 @@ func (r *RepositoryStruct) NullifySpeakerParticipantID(
 	query := r.queries.WithTx(tx)
 	return query.NullifySpeakerParticipantID(ctx, participantID)
 }
+
+func (r *RepositoryStruct) GetFullTranscriptionByConversationID(
+	ctx context.Context,
+	conversationID uuid.UUID,
+) ([]db.GetFullTranscriptionByConversationIDRow, error) {
+	return r.queries.GetFullTranscriptionByConversationID(ctx, conversationID)
+}
+
+func (r *RepositoryStruct) CreatePrompt(
+	ctx context.Context,
+	tx pgx.Tx,
+	prompt string,
+) error {
+	query := r.queries.WithTx(tx)
+	return query.CreatePrompt(ctx, prompt)
+}
+
+func (r *RepositoryStruct) GetPrompts(
+	ctx context.Context,
+) ([]db.Prompt, error) {
+	return r.queries.GetPrompts(ctx)
+}
+
+func (r *RepositoryStruct) DeletePromptByID(
+	ctx context.Context,
+	tx pgx.Tx,
+	promptID uuid.UUID,
+) error {
+	query := r.queries.WithTx(tx)
+	return query.DeletePromptByID(ctx, promptID)
+}
+
+func (r *RepositoryStruct) UpdatePromptByID(
+	ctx context.Context,
+	tx pgx.Tx,
+	promptID uuid.UUID,
+	prompt string,
+) error {
+	query := r.queries.WithTx(tx)
+	return query.UpdatePromptByID(ctx, db.UpdatePromptByIDParams{
+		ID:     promptID,
+		Prompt: prompt,
+	})
+}
+
+func (r *RepositoryStruct) GetPromptByID(
+	ctx context.Context,
+	promptID uuid.UUID,
+) (db.Prompt, error) {
+	return r.queries.GetPromptByID(ctx, promptID)
+}
+
+func (r *RepositoryStruct) UpdateParticipantByID(
+	ctx context.Context,
+	tx pgx.Tx,
+	participantID uuid.UUID,
+	participantName *string,
+	participantEmail string,
+) error {
+	query := r.queries.WithTx(tx)
+	return query.UpdateParticipantByID(ctx, db.UpdateParticipantByIDParams{
+		ID:    participantID,
+		Name:  participantName,
+		Email: participantEmail,
+	})
+}
+
+func (r *RepositoryStruct) GetParticipantByID(
+	ctx context.Context,
+	participantID uuid.UUID,
+) (db.Participant, error) {
+	return r.queries.GetParticipantByID(ctx, participantID)
+}
