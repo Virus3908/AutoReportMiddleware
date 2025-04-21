@@ -31,6 +31,11 @@ type ConnectParticipantToConversationType struct {
 	ConversationID string `json:"conversation_id"`
 }
 
+type Participant struct {
+	Name string `json:"name"`
+	Email string `json:"email"`
+}
+
 type TaskStatus int
 
 const (

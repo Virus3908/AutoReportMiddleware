@@ -272,4 +272,28 @@ func (s *TaskDispatcher) HandleErrorCallback(
 	})
 }
 
+func (s *TaskDispatcher) CreateSemiReportTask(
+	ctx context.Context,
+	conversationID uuid.UUID,
+) error {
+	transcriptionWithSpeaker, err := s.Repo.GetFullTranscriptionByConversationID(ctx, conversationID)
+	if err != nil {
+		return err
+	}
+	transcriptionWithSpeakerText := ""
+	for _, transcription := range transcriptionWithSpeaker {
+		if (transcription.Transcription == nil) {
+			continue
+		}
+		if *transcription.Transcription != "" {
+			if transcription.ParticipantName != nil {
+				transcriptionWithSpeakerText += *transcription.ParticipantName + ": "
+			} else {
+				transcriptionWithSpeakerText += fmt.Sprintf("Speaker %d: ", transcription.Speaker)
+			}
+			transcriptionWithSpeakerText += *transcription.Transcription + "\n"
+		}
+	}
 
+	return nil
+}

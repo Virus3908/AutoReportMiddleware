@@ -117,34 +117,6 @@ func (s *ConversationsService) UpdateTranscriptionTextByID(
 	})
 }
 
-func (s *ConversationsService) CreateParticipant(
-	ctx context.Context,
-	participantPayload db.CreateParticipantParams,
-) error {
-	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
-		return s.Repo.CreateParticipant(ctx, tx, participantPayload.Name, participantPayload.Email)
-	})
-}
-
-func (s *ConversationsService) GetParticipants(
-	ctx context.Context,
-) ([]db.Participant, error) {
-	return s.Repo.GetParticipants(ctx)
-}
-
-func (s *ConversationsService) DeleteParticipantByID(
-	ctx context.Context,
-	participantID uuid.UUID,
-) error {
-	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
-		err := s.Repo.NullifySpeakerParticipantID(ctx, tx, &participantID)
-		if err != nil {
-			return err
-		}
-		return s.Repo.DeleteParticipantByID(ctx, tx, participantID)
-	})
-}
-
 func (s *ConversationsService) AssignParticipantToSegment(
 	ctx context.Context,
 	segmentID uuid.UUID,

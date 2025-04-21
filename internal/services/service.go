@@ -28,6 +28,8 @@ type MessageClient interface {
 type ServiceStruct struct {
 	Conversations *ConversationsService
 	Tasks *TaskDispatcher
+	Prompts *PromptService
+	Participants *ParticipantService
 }
 
 func New(
@@ -42,6 +44,8 @@ func New(
 	return &ServiceStruct{
 		Conversations: NewConversationsService(repo, storage, txManager),
 		Tasks: NewTaskDispatcher(repo, messenger, storage, txManager, taskFlow, host, port),
+		Prompts: NewPromptService(repo, txManager),
+		Participants: NewParticipantService(repo, txManager),
 	}
 }
 
