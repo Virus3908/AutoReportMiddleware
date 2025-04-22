@@ -66,7 +66,18 @@ func (r *RouterStruct) segmentHandlers() {
 }
 
 func (r *RouterStruct) promptsHandlers() {
-
+	r.Router.HandleFunc("/api/prompts",
+		wrapperReturningData(r.Service.Prompts.GetPrompts),
+	).Methods(http.MethodGet)
+	r.Router.HandleFunc("/api/prompts",
+		wrapperWithPayload(r.Service.Prompts.CreatePrompt),
+	).Methods(http.MethodPost)
+	r.Router.HandleFunc("/api/prompts/{id}",
+		wrapperWithID(r.Service.Prompts.DeletePromptByID),
+	).Methods(http.MethodDelete)
+	r.Router.HandleFunc("/api/prompts/{id}",
+		wrapperWithIDAndPayload(r.Service.Prompts.UpdatePromptByID),
+	).Methods(http.MethodPatch)
 }
 
 func (r *RouterStruct) conversationsHandlers() {

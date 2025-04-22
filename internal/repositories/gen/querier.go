@@ -19,7 +19,7 @@ type Querier interface {
 	CreateDiarize(ctx context.Context, arg CreateDiarizeParams) error
 	CreateNewSpeakerForSegment(ctx context.Context, arg CreateNewSpeakerForSegmentParams) (uuid.UUID, error)
 	CreateParticipant(ctx context.Context, arg CreateParticipantParams) error
-	CreatePrompt(ctx context.Context, prompt string) error
+	CreatePrompt(ctx context.Context, arg CreatePromptParams) error
 	CreateSegment(ctx context.Context, arg CreateSegmentParams) error
 	CreateSpeakerWithConversationsID(ctx context.Context, arg CreateSpeakerWithConversationsIDParams) (uuid.UUID, error)
 	CreateTask(ctx context.Context, taskType models.TaskType) (uuid.UUID, error)
