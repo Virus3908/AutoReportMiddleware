@@ -74,15 +74,16 @@ CREATE TABLE transcriptions (
 
 CREATE TABLE prompts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    prompt_name VARCHAR(255) NOT NULL,
     prompt TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-CREATE TABLE report (
+CREATE TABLE semi_report (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     conversation_id UUID REFERENCES Conversations(id) ON DELETE CASCADE NOT NULL,
-    report TEXT,
+    semi_report TEXT,
     prompt_id UUID REFERENCES Prompts(id),
     tasks_id UUID REFERENCES tasks(id) ON DELETE CASCADE UNIQUE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,

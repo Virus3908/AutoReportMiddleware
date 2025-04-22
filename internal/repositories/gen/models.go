@@ -56,20 +56,11 @@ type Participant struct {
 }
 
 type Prompt struct {
-	ID        uuid.UUID `json:"id"`
-	Prompt    string    `json:"prompt"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
-type Report struct {
-	ID             uuid.UUID  `json:"id"`
-	ConversationID uuid.UUID  `json:"conversation_id"`
-	Report         *string    `json:"report"`
-	PromptID       *uuid.UUID `json:"prompt_id"`
-	TasksID        uuid.UUID  `json:"tasks_id"`
-	CreatedAt      time.Time  `json:"created_at"`
-	UpdatedAt      time.Time  `json:"updated_at"`
+	ID         uuid.UUID `json:"id"`
+	PromptName string    `json:"prompt_name"`
+	Prompt     string    `json:"prompt"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 type Segment struct {
@@ -80,6 +71,16 @@ type Segment struct {
 	SpeakerID uuid.UUID `json:"speaker_id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type SemiReport struct {
+	ID             uuid.UUID  `json:"id"`
+	ConversationID uuid.UUID  `json:"conversation_id"`
+	SemiReport     *string    `json:"semi_report"`
+	PromptID       *uuid.UUID `json:"prompt_id"`
+	TasksID        uuid.UUID  `json:"tasks_id"`
+	CreatedAt      time.Time  `json:"created_at"`
+	UpdatedAt      time.Time  `json:"updated_at"`
 }
 
 type Task struct {

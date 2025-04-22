@@ -30,6 +30,11 @@ type Transcription struct {
 	Transcription string `json:"transcription"`
 }
 
+type Prompt struct {
+	PromptName string `json:"prompt_name"`
+	Prompt string `json:"prompt"`
+}
+
 type ConnectParticipantToConversationType struct {
 	ParticipantID  string `json:"participant_id"`
 	ConversationID string `json:"conversation_id"`

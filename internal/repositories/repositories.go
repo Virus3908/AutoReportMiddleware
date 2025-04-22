@@ -355,10 +355,15 @@ func (r *RepositoryStruct) GetFullTranscriptionByConversationID(
 func (r *RepositoryStruct) CreatePrompt(
 	ctx context.Context,
 	tx pgx.Tx,
+	pormptName, 
 	prompt string,
 ) error {
 	query := r.queries.WithTx(tx)
-	return query.CreatePrompt(ctx, prompt)
+	return query.CreatePrompt(ctx, 
+	db.CreatePromptParams{
+		PromptName:   pormptName,
+		Prompt: prompt,
+	})
 }
 
 func (r *RepositoryStruct) GetPrompts(
@@ -380,12 +385,14 @@ func (r *RepositoryStruct) UpdatePromptByID(
 	ctx context.Context,
 	tx pgx.Tx,
 	promptID uuid.UUID,
+	promptName,
 	prompt string,
 ) error {
 	query := r.queries.WithTx(tx)
 	return query.UpdatePromptByID(ctx, db.UpdatePromptByIDParams{
 		ID:     promptID,
 		Prompt: prompt,
+		PromptName: promptName,
 	})
 }
 

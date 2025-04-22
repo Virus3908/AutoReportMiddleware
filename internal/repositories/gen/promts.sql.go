@@ -12,11 +12,16 @@ import (
 )
 
 const createPrompt = `-- name: CreatePrompt :exec
-INSERT INTO Prompts (prompt) VALUES ($1)
+INSERT INTO Prompts (prompt_name, prompt) VALUES ($1, $2)
 `
 
-func (q *Queries) CreatePrompt(ctx context.Context, prompt string) error {
-	_, err := q.db.Exec(ctx, createPrompt, prompt)
+type CreatePromptParams struct {
+	PromptName string `json:"prompt_name"`
+	Prompt     string `json:"prompt"`
+}
+
+func (q *Queries) CreatePrompt(ctx context.Context, arg CreatePromptParams) error {
+	_, err := q.db.Exec(ctx, createPrompt, arg.PromptName, arg.Prompt)
 	return err
 }
 
@@ -30,7 +35,7 @@ func (q *Queries) DeletePromptByID(ctx context.Context, id uuid.UUID) error {
 }
 
 const getPromptByID = `-- name: GetPromptByID :one
-SELECT id, prompt, created_at, updated_at FROM Prompts WHERE id = $1
+SELECT id, prompt_name, prompt, created_at, updated_at FROM Prompts WHERE id = $1
 `
 
 func (q *Queries) GetPromptByID(ctx context.Context, id uuid.UUID) (Prompt, error) {
@@ -38,6 +43,7 @@ func (q *Queries) GetPromptByID(ctx context.Context, id uuid.UUID) (Prompt, erro
 	var i Prompt
 	err := row.Scan(
 		&i.ID,
+		&i.PromptName,
 		&i.Prompt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -46,7 +52,8 @@ func (q *Queries) GetPromptByID(ctx context.Context, id uuid.UUID) (Prompt, erro
 }
 
 const getPrompts = `-- name: GetPrompts :many
-SELECT id, prompt, created_at, updated_at FROM Prompts
+SELECT id, prompt_name, prompt, created_at, updated_at FROM Prompts
+ORDER BY created_at DESC
 `
 
 func (q *Queries) GetPrompts(ctx context.Context) ([]Prompt, error) {
@@ -60,6 +67,7 @@ func (q *Queries) GetPrompts(ctx context.Context) ([]Prompt, error) {
 		var i Prompt
 		if err := rows.Scan(
 			&i.ID,
+			&i.PromptName,
 			&i.Prompt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -75,15 +83,16 @@ func (q *Queries) GetPrompts(ctx context.Context) ([]Prompt, error) {
 }
 
 const updatePromptByID = `-- name: UpdatePromptByID :exec
-UPDATE Prompts SET prompt = $1 WHERE id = $2
+UPDATE Prompts SET prompt = $1, prompt_name = $2 WHERE id = $3
 `
 
 type UpdatePromptByIDParams struct {
-	Prompt string    `json:"prompt"`
-	ID     uuid.UUID `json:"id"`
+	Prompt     string    `json:"prompt"`
+	PromptName string    `json:"prompt_name"`
+	ID         uuid.UUID `json:"id"`
 }
 
 func (q *Queries) UpdatePromptByID(ctx context.Context, arg UpdatePromptByIDParams) error {
-	_, err := q.db.Exec(ctx, updatePromptByID, arg.Prompt, arg.ID)
+	_, err := q.db.Exec(ctx, updatePromptByID, arg.Prompt, arg.PromptName, arg.ID)
 	return err
 }
