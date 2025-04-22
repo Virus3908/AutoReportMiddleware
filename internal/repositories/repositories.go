@@ -417,3 +417,16 @@ func (r *RepositoryStruct) GetParticipantByID(
 ) (db.Participant, error) {
 	return r.queries.GetParticipantByID(ctx, participantID)
 }
+
+func (r *RepositoryStruct) UpdateConversationNameByID(
+	ctx context.Context,
+	tx pgx.Tx,
+	conversationID uuid.UUID,
+	conversationName string,
+) error {
+	query := r.queries.WithTx(tx)
+	return query.UpdateConversationNameByID(ctx, db.UpdateConversationNameByIDParams{
+		ID:               conversationID,
+		ConversationName: conversationName,
+	})
+}

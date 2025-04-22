@@ -211,6 +211,24 @@ func (q *Queries) GetSegmentsWithTranscriptionByConversationID(ctx context.Conte
 	return items, nil
 }
 
+const updateConversationNameByID = `-- name: UpdateConversationNameByID :exec
+UPDATE conversations
+SET
+    conversation_name = $1
+WHERE
+    id = $2
+`
+
+type UpdateConversationNameByIDParams struct {
+	ConversationName string    `json:"conversation_name"`
+	ID               uuid.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateConversationNameByID(ctx context.Context, arg UpdateConversationNameByIDParams) error {
+	_, err := q.db.Exec(ctx, updateConversationNameByID, arg.ConversationName, arg.ID)
+	return err
+}
+
 const updateConversationStatusByConvertID = `-- name: UpdateConversationStatusByConvertID :exec
 UPDATE conversations
 SET
