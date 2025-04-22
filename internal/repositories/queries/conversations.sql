@@ -15,6 +15,13 @@ INSERT INTO
     Conversations (conversation_name, file_url)
 VALUES ($1, $2);
 
+-- name: UpdateConversationNameByID :exec
+UPDATE conversations
+SET
+    conversation_name = $1
+WHERE
+    id = $2;
+
 -- name: UpdateConversationStatusByConvertID :exec
 UPDATE conversations
 SET

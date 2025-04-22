@@ -54,6 +54,7 @@ type Querier interface {
 	GetTaskByID(ctx context.Context, id uuid.UUID) (Task, error)
 	GetTasks(ctx context.Context) ([]Task, error)
 	NullifySpeakerParticipantID(ctx context.Context, participantID *uuid.UUID) error
+	UpdateConversationNameByID(ctx context.Context, arg UpdateConversationNameByIDParams) error
 	UpdateConversationStatusByConvertID(ctx context.Context, arg UpdateConversationStatusByConvertIDParams) error
 	UpdateConversationStatusByDiarizeID(ctx context.Context, arg UpdateConversationStatusByDiarizeIDParams) error
 	UpdateConversationStatusByID(ctx context.Context, arg UpdateConversationStatusByIDParams) error

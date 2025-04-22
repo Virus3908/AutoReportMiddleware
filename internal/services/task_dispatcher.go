@@ -294,6 +294,6 @@ func (s *TaskDispatcher) CreateSemiReportTask(
 			transcriptionWithSpeakerText += *transcription.Transcription + "\n"
 		}
 	}
-
+	log.Printf("Transcription with speaker: %s\n", transcriptionWithSpeakerText)
 	return nil
 }

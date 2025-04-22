@@ -37,6 +37,7 @@ func (r *RouterStruct) createHandlers() {
 	r.conversationsHandlers()
 	r.taskHandlers()
 	r.segmentHandlers()
+	r.transcriptionHandlers()
 	r.callbackHandlers()
 }
 
@@ -81,10 +82,11 @@ func (r *RouterStruct) conversationsHandlers() {
 	r.Router.HandleFunc("/api/conversations/{id}",
 		wrapperWithID(r.Service.Conversations.DeleteConversationByID),
 	).Methods(http.MethodDelete)
-	r.Router.HandleFunc("/api/transcription/update/{id}",
-		wrapperWithIDAndPayload(r.Service.Conversations.UpdateTranscriptionTextByID),	
+	r.Router.HandleFunc("/api/conversations/{id}",
+		wrapperWithIDAndPayload(r.Service.Conversations.UpdateConversationNameByID),
 	).Methods(http.MethodPatch)
 }
+
 func (r *RouterStruct) taskHandlers() {
 	r.Router.HandleFunc("/api/task/create/convert/{id}",
 		wrapperWithID(r.Service.Tasks.CreateConvertTask),
@@ -112,6 +114,12 @@ func (r *RouterStruct) callbackHandlers() {
 	).Methods(http.MethodPatch)
 	r.Router.HandleFunc("/api/task/update/error/{id}",
 		r.handleErrorCallback,
+	).Methods(http.MethodPatch)
+}
+
+func (r *RouterStruct) transcriptionHandlers() {
+	r.Router.HandleFunc("/api/transcription/update/{id}",
+		wrapperWithIDAndPayload(r.Service.Conversations.UpdateTranscriptionTextByID),
 	).Methods(http.MethodPatch)
 }
 

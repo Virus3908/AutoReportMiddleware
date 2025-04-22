@@ -11,6 +11,10 @@ type ConversationDetail struct {
 	Segments         []SegmentDetail    `json:"segments,omitempty"`
 }
 
+type ConversationName struct {
+	ConversationName string `json:"conversation_name"`
+}
+
 type SegmentDetail struct {
 	SegmentID       uuid.UUID `json:"segment_id"`
 	StartTime       float64   `json:"start_time"`

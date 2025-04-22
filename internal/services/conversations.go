@@ -163,3 +163,13 @@ func (s *ConversationsService) AssignParticipantToSegment(
 		return s.Repo.AssignParticipantToSpeaker(ctx, tx, participantID, speakerIDs.SpeakerID)
 	})
 }
+
+func (s *ConversationsService) UpdateConversationNameByID(
+	ctx context.Context,
+	id uuid.UUID,
+	conversationName models.ConversationName,
+) error {
+	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
+		return s.Repo.UpdateConversationNameByID(ctx, tx, id, conversationName.ConversationName)
+	})
+}
