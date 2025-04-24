@@ -2,8 +2,8 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"fmt"
 	"main/internal/models"
 	"main/internal/repositories"
 	"main/pkg/messages/proto"
@@ -12,19 +12,11 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-const (
-	ConvertCallbackPostfix    = "/api/task/update/convert/"
-	DiarizeCallbackPostfix    = "/api/task/update/diarize/"
-	TranscribeCallbackPostfix = "/api/task/update/transcription/"
-	ErrorCallbackPostfix      = "/api/task/update/error/"
-)
-
 type TaskDispatcher struct {
 	Repo        *repositories.RepositoryStruct
 	Messenger   MessageClient
 	Storage     StorageClient
 	TxManager   TxManager
-	CallbackURL string
 	TaskFlow    bool
 }
 
@@ -34,8 +26,6 @@ func NewTaskDispatcher(
 	storage StorageClient,
 	txManager TxManager,
 	taskFlow bool,
-	host string,
-	port int,
 ) *TaskDispatcher {
 
 	return &TaskDispatcher{
@@ -44,7 +34,6 @@ func NewTaskDispatcher(
 		Storage:     storage,
 		TxManager:   txManager,
 		TaskFlow:    taskFlow,
-		CallbackURL: fmt.Sprintf("http://%s:%d", host, port),
 	}
 }
 
@@ -62,14 +51,15 @@ func (s *TaskDispatcher) CreateConvertTask(ctx context.Context, conversationID u
 		if err != nil {
 			return err
 		}
-		convertMessage := &messages.MessageConvertTask{
-			TaskId:               taskID.String(),
-			FileUrl:              fileURL,
-			CallbackUrl:          s.CallbackURL,
-			CallbackPostfix:      ConvertCallbackPostfix,
-			ErrorCallbackPostfix: ErrorCallbackPostfix,
+		convertMessage := &messages.WrapperTask{
+			TaskId: taskID.String(),
+			Task: &messages.WrapperTask_Convert{
+				Convert: &messages.MessageConvertTask{
+					FileUrl: fileURL,
+				},
+			},
 		}
-		return s.Messenger.SendMessage(ctx, models.ConvertTask, conversationID.String(), convertMessage)
+		return s.Messenger.SendMessage(ctx, conversationID.String(), convertMessage)
 	})
 }
 
@@ -90,15 +80,16 @@ func (s *TaskDispatcher) CreateDiarizeTask(ctx context.Context, conversationID u
 		if err != nil {
 			return err
 		}
-		diarizeMessage := &messages.MessageDiarizeTask{
-			TaskId:               taskID.String(),
-			ConvertedFileUrl:     *response.FileUrl,
-			CallbackUrl:          s.CallbackURL,
-			CallbackPostfix:      DiarizeCallbackPostfix,
-			ErrorCallbackPostfix: ErrorCallbackPostfix,
+		diarizeMessage := &messages.WrapperTask{
+			TaskId: taskID.String(),
+			Task: &messages.WrapperTask_Diarize{
+				Diarize: &messages.MessageDiarizeTask{
+					ConvertedFileUrl: *response.FileUrl,
+				},
+			},
 		}
 
-		return s.Messenger.SendMessage(ctx, models.DiarizeTask, conversationID.String(), diarizeMessage)
+		return s.Messenger.SendMessage(ctx, conversationID.String(), diarizeMessage)
 	})
 }
 
@@ -120,16 +111,21 @@ func (s *TaskDispatcher) CreateTranscribeTask(ctx context.Context, conversationI
 			if err != nil {
 				return err
 			}
-			transcribeMessage := &messages.MessageTranscriptionTask{
-				TaskId:               taskID.String(),
-				FileUrl:              *segment.FileUrl,
-				StartTime:            segment.StartTime,
-				EndTime:              segment.EndTime,
-				CallbackUrl:          s.CallbackURL,
-				CallbackPostfix:      TranscribeCallbackPostfix,
-				ErrorCallbackPostfix: ErrorCallbackPostfix,
+			transcribeMessage := &messages.WrapperTask{
+				TaskId: taskID.String(),
+				Task: &messages.WrapperTask_Transcription{
+					Transcription: &messages.MessageTranscriptionTask{
+						FileUrl:   *segment.FileUrl,
+						StartTime: segment.StartTime,
+						EndTime:   segment.EndTime,
+					},
+				},
 			}
-			err = s.Messenger.SendMessage(ctx, models.TranscribeTask, segment.ConversationID.String(), transcribeMessage)
+
+			err = s.Messenger.SendMessage(
+				ctx,
+				segment.ConversationID.String(),
+				transcribeMessage)
 			if err != nil {
 				return fmt.Errorf("failed to send message: %s", err)
 			}
@@ -138,7 +134,53 @@ func (s *TaskDispatcher) CreateTranscribeTask(ctx context.Context, conversationI
 	})
 }
 
-func (s *TaskDispatcher) HandleConvertCallback(
+func (s *TaskDispatcher) CreateSemiReportTask(
+	ctx context.Context,
+	conversationID uuid.UUID,
+) error {
+	transcriptionWithSpeaker, err := s.Repo.GetFullTranscriptionByConversationID(ctx, conversationID)
+	if err != nil {
+		return err
+	}
+	transcriptionWithSpeakerText := ""
+	for _, transcription := range transcriptionWithSpeaker {
+		if transcription.Transcription == nil {
+			continue
+		}
+		if *transcription.Transcription != "" {
+			if transcription.ParticipantName != nil {
+				transcriptionWithSpeakerText += *transcription.ParticipantName + ": "
+			} else {
+				transcriptionWithSpeakerText += fmt.Sprintf("Speaker %d: ", transcription.Speaker)
+			}
+			transcriptionWithSpeakerText += *transcription.Transcription + "\n"
+		}
+	}
+	log.Printf("Transcription with speaker: %s\n", transcriptionWithSpeakerText)
+	return nil
+}
+
+func (s *TaskDispatcher) HandleTask(
+	ctx context.Context,
+	task *messages.WrapperResponse,
+) error {
+	taskID, err := uuid.Parse(task.TaskId)
+	if err != nil {
+		return err
+	}
+	switch t := task.Payload.(type) {
+	case *messages.WrapperResponse_Convert:
+		return s.handleConvertTask(ctx, taskID, t.Convert)
+	case *messages.WrapperResponse_Diarize:
+		return s.handleDiarizeTask(ctx, taskID, t.Diarize)
+	case *messages.WrapperResponse_Transcription:
+		return s.handleTransctiprionTask(ctx, taskID, t.Transcription)
+	default:
+		return fmt.Errorf("unknown task type")
+	}
+}
+
+func (s *TaskDispatcher) handleConvertTask(
 	ctx context.Context,
 	taskID uuid.UUID,
 	converted *messages.ConvertTaskResponse,
@@ -165,10 +207,10 @@ func (s *TaskDispatcher) HandleConvertCallback(
 	return nil
 }
 
-func (s *TaskDispatcher) HandleDiarizeCallback(
+func (s *TaskDispatcher) handleDiarizeTask(
 	ctx context.Context,
 	taskID uuid.UUID,
-	segments *messages.SegmentsTaskResponse,
+	segments *messages.DiarizeTaskResponse,
 ) error {
 	diarizeID, err := s.Repo.GetDiarizeIDByTaskID(ctx, taskID)
 	if err != nil {
@@ -206,7 +248,7 @@ func (s *TaskDispatcher) HandleDiarizeCallback(
 	return nil
 }
 
-func (s *TaskDispatcher) HandleTransctiprionCallback(
+func (s *TaskDispatcher) handleTransctiprionTask(
 	ctx context.Context,
 	taskID uuid.UUID,
 	transcription *messages.TranscriptionTaskResponse,
@@ -250,12 +292,12 @@ func (s *TaskDispatcher) dispatchNext(taskType int, conversationID uuid.UUID) {
 		}
 
 		if err != nil {
-			log.Printf("Failed to dispatch next task after type %d: %v\n", taskType, err)
+			// log.Printf("Failed to dispatch next task after type %d: %v\n", taskType, err)
 		}
 	}()
 }
 
-func (s *TaskDispatcher) HandleErrorCallback(
+func (s *TaskDispatcher) handleErrorTask(
 	ctx context.Context,
 	taskID uuid.UUID,
 	_ *messages.ErrorTaskResponse,
@@ -265,28 +307,3 @@ func (s *TaskDispatcher) HandleErrorCallback(
 	})
 }
 
-func (s *TaskDispatcher) CreateSemiReportTask(
-	ctx context.Context,
-	conversationID uuid.UUID,
-) error {
-	transcriptionWithSpeaker, err := s.Repo.GetFullTranscriptionByConversationID(ctx, conversationID)
-	if err != nil {
-		return err
-	}
-	transcriptionWithSpeakerText := ""
-	for _, transcription := range transcriptionWithSpeaker {
-		if (transcription.Transcription == nil) {
-			continue
-		}
-		if *transcription.Transcription != "" {
-			if transcription.ParticipantName != nil {
-				transcriptionWithSpeakerText += *transcription.ParticipantName + ": "
-			} else {
-				transcriptionWithSpeakerText += fmt.Sprintf("Speaker %d: ", transcription.Speaker)
-			}
-			transcriptionWithSpeakerText += *transcription.Transcription + "\n"
-		}
-	}
-	log.Printf("Transcription with speaker: %s\n", transcriptionWithSpeakerText)
-	return nil
-}

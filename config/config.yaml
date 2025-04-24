@@ -17,6 +17,13 @@ s3:
   region: ru-central1
   minio: true
 
-kafka:
+producer:
   brokers:
     - "localhost:9092"
+  topic: "task"
+
+consumer:
+  brokers:
+    - "localhost:9092"
+  topic: "callback"
+  group_id: "go_consumer"
