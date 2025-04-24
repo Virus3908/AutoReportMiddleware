@@ -1,24 +1,24 @@
-package kafka
+package producer
 
 import (
 	"context"
 	"fmt"
-	"main/internal/models"
 
 	"github.com/segmentio/kafka-go"
 	"google.golang.org/protobuf/proto"
 )
 
-type KafkaConfig struct {
+type KafkaProducerConfig struct {
 	Brokers []string `yaml:"brokers"`
+	Topic string `yaml:"topic"`
 }
 
 type Producer struct {
 	writer *kafka.Writer
-	topics map[models.TaskType]string
+	topic string
 }
 
-func NewProducer(cfg KafkaConfig) (*Producer, error) {
+func NewProducer(cfg KafkaProducerConfig) (*Producer, error) {
 	if err := checkKafkaConnection(cfg.Brokers); err != nil {
 		return nil, fmt.Errorf("error connect to kafka: %s", err)
 	}
@@ -27,15 +27,11 @@ func NewProducer(cfg KafkaConfig) (*Producer, error) {
 		Balancer: &kafka.LeastBytes{},
 	}
 
-	topics := map[models.TaskType]string{
-		models.ConvertTask:    "convert",
-		models.DiarizeTask:    "diarize",
-		models.TranscribeTask: "transcribe",
-	}
+	topics := cfg.Topic
 
 	return &Producer{
 		writer: writer,
-		topics: topics,
+		topic: topics,
 	}, nil
 }
 
@@ -56,19 +52,14 @@ func (p *Producer) Close() error {
 	return p.writer.Close()
 }
 
-func (p *Producer) SendMessage(ctx context.Context, taskType models.TaskType, key string, message proto.Message) error {
-	topic, ok := p.topics[taskType]
-	if !ok {
-		return fmt.Errorf("topic not found for task type: %d", taskType)
-	}
-
+func (p *Producer) SendMessage(ctx context.Context, key string, message proto.Message) error {
 	value, err := proto.Marshal(message)
 	if err != nil {
 		return fmt.Errorf("failed to marshal message: %w", err)
 	}
 
 	return p.writer.WriteMessages(ctx, kafka.Message{
-		Topic: topic,
+		Topic: p.topic,
 		Key:   []byte(key),
 		Value: value,
 	})
