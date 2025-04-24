@@ -7,7 +7,6 @@ import (
 	"main/internal/models"
 	"main/internal/repositories"
 	"main/pkg/messages/proto"
-	"mime/multipart"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -142,20 +141,14 @@ func (s *TaskDispatcher) CreateTranscribeTask(ctx context.Context, conversationI
 func (s *TaskDispatcher) HandleConvertCallback(
 	ctx context.Context,
 	taskID uuid.UUID,
-	file multipart.File,
-	fileName string,
-	audioLen float64,
+	converted *messages.ConvertTaskResponse,
 ) error {
-	fileURL, err := s.Storage.UploadFileAndGetURL(ctx, file, fileName)
-	if err != nil {
-		return err
-	}
 	conversationID, err := s.Repo.GetConversationIDByConvertTaskID(ctx, taskID)
 	if err != nil {
 		return err
 	}
 	err = s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
-		err := s.Repo.UpdateConvertByTaskID(ctx, tx, taskID, fileURL, audioLen)
+		err := s.Repo.UpdateConvertByTaskID(ctx, tx, taskID, converted.GetConvertedFileUrl(), converted.GetAudioLen())
 		if err != nil {
 			return err
 		}
