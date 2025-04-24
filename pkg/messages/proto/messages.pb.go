@@ -329,6 +329,58 @@ func (x *Segment) GetEndTime() float64 {
 	return 0
 }
 
+type ConvertTaskResponse struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	ConvertedFileUrl string                 `protobuf:"bytes,1,opt,name=converted_file_url,json=convertedFileUrl,proto3" json:"converted_file_url,omitempty"`
+	AudioLen         float64                `protobuf:"fixed64,2,opt,name=audio_len,json=audioLen,proto3" json:"audio_len,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *ConvertTaskResponse) Reset() {
+	*x = ConvertTaskResponse{}
+	mi := &file_proto_messages_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConvertTaskResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConvertTaskResponse) ProtoMessage() {}
+
+func (x *ConvertTaskResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_messages_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConvertTaskResponse.ProtoReflect.Descriptor instead.
+func (*ConvertTaskResponse) Descriptor() ([]byte, []int) {
+	return file_proto_messages_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *ConvertTaskResponse) GetConvertedFileUrl() string {
+	if x != nil {
+		return x.ConvertedFileUrl
+	}
+	return ""
+}
+
+func (x *ConvertTaskResponse) GetAudioLen() float64 {
+	if x != nil {
+		return x.AudioLen
+	}
+	return 0
+}
+
 type SegmentsTaskResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	NumOfSpeakers int32                  `protobuf:"varint,1,opt,name=num_of_speakers,json=numOfSpeakers,proto3" json:"num_of_speakers,omitempty"`
@@ -339,7 +391,7 @@ type SegmentsTaskResponse struct {
 
 func (x *SegmentsTaskResponse) Reset() {
 	*x = SegmentsTaskResponse{}
-	mi := &file_proto_messages_proto_msgTypes[4]
+	mi := &file_proto_messages_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -351,7 +403,7 @@ func (x *SegmentsTaskResponse) String() string {
 func (*SegmentsTaskResponse) ProtoMessage() {}
 
 func (x *SegmentsTaskResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_messages_proto_msgTypes[4]
+	mi := &file_proto_messages_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -364,7 +416,7 @@ func (x *SegmentsTaskResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SegmentsTaskResponse.ProtoReflect.Descriptor instead.
 func (*SegmentsTaskResponse) Descriptor() ([]byte, []int) {
-	return file_proto_messages_proto_rawDescGZIP(), []int{4}
+	return file_proto_messages_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *SegmentsTaskResponse) GetNumOfSpeakers() int32 {
@@ -390,7 +442,7 @@ type TranscriptionTaskResponse struct {
 
 func (x *TranscriptionTaskResponse) Reset() {
 	*x = TranscriptionTaskResponse{}
-	mi := &file_proto_messages_proto_msgTypes[5]
+	mi := &file_proto_messages_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -402,7 +454,7 @@ func (x *TranscriptionTaskResponse) String() string {
 func (*TranscriptionTaskResponse) ProtoMessage() {}
 
 func (x *TranscriptionTaskResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_messages_proto_msgTypes[5]
+	mi := &file_proto_messages_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -415,7 +467,7 @@ func (x *TranscriptionTaskResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TranscriptionTaskResponse.ProtoReflect.Descriptor instead.
 func (*TranscriptionTaskResponse) Descriptor() ([]byte, []int) {
-	return file_proto_messages_proto_rawDescGZIP(), []int{5}
+	return file_proto_messages_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *TranscriptionTaskResponse) GetTranscription() string {
@@ -434,7 +486,7 @@ type ErrorTaskResponse struct {
 
 func (x *ErrorTaskResponse) Reset() {
 	*x = ErrorTaskResponse{}
-	mi := &file_proto_messages_proto_msgTypes[6]
+	mi := &file_proto_messages_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -446,7 +498,7 @@ func (x *ErrorTaskResponse) String() string {
 func (*ErrorTaskResponse) ProtoMessage() {}
 
 func (x *ErrorTaskResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_messages_proto_msgTypes[6]
+	mi := &file_proto_messages_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -459,7 +511,7 @@ func (x *ErrorTaskResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ErrorTaskResponse.ProtoReflect.Descriptor instead.
 func (*ErrorTaskResponse) Descriptor() ([]byte, []int) {
-	return file_proto_messages_proto_rawDescGZIP(), []int{6}
+	return file_proto_messages_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ErrorTaskResponse) GetError() string {
@@ -499,7 +551,10 @@ const file_proto_messages_proto_rawDesc = "" +
 	"\aspeaker\x18\x01 \x01(\x05R\aspeaker\x12\x1d\n" +
 	"\n" +
 	"start_time\x18\x02 \x01(\x01R\tstartTime\x12\x19\n" +
-	"\bend_time\x18\x03 \x01(\x01R\aendTime\"m\n" +
+	"\bend_time\x18\x03 \x01(\x01R\aendTime\"`\n" +
+	"\x13ConvertTaskResponse\x12,\n" +
+	"\x12converted_file_url\x18\x01 \x01(\tR\x10convertedFileUrl\x12\x1b\n" +
+	"\taudio_len\x18\x02 \x01(\x01R\baudioLen\"m\n" +
 	"\x14SegmentsTaskResponse\x12&\n" +
 	"\x0fnum_of_speakers\x18\x01 \x01(\x05R\rnumOfSpeakers\x12-\n" +
 	"\bsegments\x18\x02 \x03(\v2\x11.messages.SegmentR\bsegments\"A\n" +
@@ -520,15 +575,16 @@ func file_proto_messages_proto_rawDescGZIP() []byte {
 	return file_proto_messages_proto_rawDescData
 }
 
-var file_proto_messages_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_proto_messages_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_proto_messages_proto_goTypes = []any{
 	(*MessageTranscriptionTask)(nil),  // 0: messages.MessageTranscriptionTask
 	(*MessageConvertTask)(nil),        // 1: messages.MessageConvertTask
 	(*MessageDiarizeTask)(nil),        // 2: messages.MessageDiarizeTask
 	(*Segment)(nil),                   // 3: messages.Segment
-	(*SegmentsTaskResponse)(nil),      // 4: messages.SegmentsTaskResponse
-	(*TranscriptionTaskResponse)(nil), // 5: messages.TranscriptionTaskResponse
-	(*ErrorTaskResponse)(nil),         // 6: messages.ErrorTaskResponse
+	(*ConvertTaskResponse)(nil),       // 4: messages.ConvertTaskResponse
+	(*SegmentsTaskResponse)(nil),      // 5: messages.SegmentsTaskResponse
+	(*TranscriptionTaskResponse)(nil), // 6: messages.TranscriptionTaskResponse
+	(*ErrorTaskResponse)(nil),         // 7: messages.ErrorTaskResponse
 }
 var file_proto_messages_proto_depIdxs = []int32{
 	3, // 0: messages.SegmentsTaskResponse.segments:type_name -> messages.Segment
@@ -550,7 +606,7 @@ func file_proto_messages_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_messages_proto_rawDesc), len(file_proto_messages_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
