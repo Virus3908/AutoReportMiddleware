@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"time"
+    "fmt"
 
 	"main/pkg/messages/proto"
 
@@ -26,7 +27,11 @@ type Consumer struct {
 	handler TaskHandler
 }
 
-func NewConsumer(cfg KafkaConsumerConfig, taskHandler TaskHandler) *Consumer {
+func NewConsumer(cfg KafkaConsumerConfig, taskHandler TaskHandler) (*Consumer, error) {
+    if err := checkKafkaConnection(cfg.Brokers); err != nil {
+        return nil, fmt.Errorf("kafka consumer connection error: %w", err)
+    }
+
 	r := kafka.NewReader(kafka.ReaderConfig{
         Brokers:     cfg.Brokers,
         Topic:       cfg.Topic,
@@ -37,7 +42,20 @@ func NewConsumer(cfg KafkaConsumerConfig, taskHandler TaskHandler) *Consumer {
 	return &Consumer{
 		reader: r,
 		handler: taskHandler,
+	}, nil
+}
+
+func checkKafkaConnection(brokers []string) error {
+	var lastErr error
+	for _, broker := range brokers {
+		conn, err := kafka.Dial("tcp", broker)
+		if err == nil {
+			_ = conn.Close()
+			return nil
+		}
+		lastErr = err
 	}
+	return fmt.Errorf("no Kafka brokers available: %v, last error: %w", brokers, lastErr)
 }
 
 func (c *Consumer) Start(ctx context.Context) {
@@ -59,4 +77,11 @@ func (c *Consumer) Start(ctx context.Context) {
             }
         }
     }()
+}
+
+func (c *Consumer) Close() error {
+	if err := c.reader.Close(); err != nil {
+		return fmt.Errorf("failed to close Kafka consumer: %w", err)
+	}
+	return nil
 }

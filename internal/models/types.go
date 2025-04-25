@@ -32,7 +32,7 @@ type Transcription struct {
 
 type Prompt struct {
 	PromptName string `json:"prompt_name"`
-	Prompt string `json:"prompt"`
+	Prompt     string `json:"prompt"`
 }
 
 type ConnectParticipantToConversationType struct {
@@ -41,7 +41,7 @@ type ConnectParticipantToConversationType struct {
 }
 
 type Participant struct {
-	Name string `json:"name"`
+	Name  string `json:"name"`
 	Email string `json:"email"`
 }
 
@@ -56,12 +56,13 @@ const (
 type ConversationStatus int
 
 const (
-	StatusError       ConversationStatus = iota - 1
-	StatusCreated                        = 0
-	StatusConverted                      = 1
-	StatusDiarized                       = 2
-	StatusTranscribed                    = 3
-	StatusReported                       = 4
+	StatusError        ConversationStatus = iota - 1
+	StatusCreated                         = 0
+	StatusConverted                       = 1
+	StatusDiarized                        = 2
+	StatusTranscribed                     = 3
+	StatusSemiReported                    = 4
+	StatusReported                        = 5
 )
 
 type TaskType int
@@ -71,6 +72,6 @@ const (
 	ConvertTask             = 1
 	DiarizeTask             = 2
 	TranscribeTask          = 3
-	SummarizeTask           = 4
+	SemiReportTask          = 4
 	ReportTask              = 5
 )

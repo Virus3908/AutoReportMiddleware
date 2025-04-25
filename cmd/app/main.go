@@ -40,24 +40,28 @@ func main() {
 		log.Fatalf("Storage connection error: %s", err)
 	}
 
-	kafkaProducer, err := producer.NewProducer(cfg.Producer)
+	producer, err := producer.NewProducer(cfg.Producer)
 	if err != nil {
-		log.Fatalf("Kafka connection error: %s", err)
+		log.Fatalf("Producer connection error: %s", err)
 	}
-	defer kafkaProducer.Close()
+	defer producer.Close()
 
-	service := services.New(repo, storage, kafkaProducer, db, true)
+	service := services.New(repo, storage, producer, db, true)
 
 	middlewares := []mux.MiddlewareFunc{
 		logging.LoggingMidleware,
 	}
 
 	router := handlers.New(service, middlewares)
-	kafkaConsumer := consumer.NewConsumer(cfg.Consumer, service.Tasks)
+	consumer, err := consumer.NewConsumer(cfg.Consumer, service.Tasks)
+	if err != nil {
+		log.Fatalf("Consumer connection error: %s", err)
+	}
+	defer consumer.Close()
 
 	log.Printf("Server is ready: %s", serverSettings)
 	
-	go kafkaConsumer.Start(context.Background()) 
+	go consumer.Start(context.Background()) 
 	err = http.ListenAndServe(serverSettings, router.GetRouter())
 	if err != nil {
 		log.Fatalf("Server stating error: %s", err)

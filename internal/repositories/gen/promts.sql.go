@@ -51,6 +51,23 @@ func (q *Queries) GetPromptByID(ctx context.Context, id uuid.UUID) (Prompt, erro
 	return i, err
 }
 
+const getPromptByName = `-- name: GetPromptByName :one
+SELECT id, prompt_name, prompt, created_at, updated_at FROM prompts WHERE prompt_name = $1
+`
+
+func (q *Queries) GetPromptByName(ctx context.Context, promptName string) (Prompt, error) {
+	row := q.db.QueryRow(ctx, getPromptByName, promptName)
+	var i Prompt
+	err := row.Scan(
+		&i.ID,
+		&i.PromptName,
+		&i.Prompt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getPrompts = `-- name: GetPrompts :many
 SELECT id, prompt_name, prompt, created_at, updated_at FROM Prompts
 ORDER BY created_at DESC
