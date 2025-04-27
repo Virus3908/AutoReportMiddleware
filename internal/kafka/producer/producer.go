@@ -49,7 +49,10 @@ func checkKafkaConnection(brokers []string) error {
 }
 
 func (p *Producer) Close() error {
-	return p.writer.Close()
+	if err := p.writer.Close(); err != nil {
+		return fmt.Errorf("failed to close Kafka producer: %w", err)
+	}
+	return nil
 }
 
 func (p *Producer) SendMessage(ctx context.Context, key string, message proto.Message) error {

@@ -21,6 +21,7 @@ type Querier interface {
 	CreateParticipant(ctx context.Context, arg CreateParticipantParams) error
 	CreatePrompt(ctx context.Context, arg CreatePromptParams) error
 	CreateSegment(ctx context.Context, arg CreateSegmentParams) error
+	CreateSemiReport(ctx context.Context, arg CreateSemiReportParams) error
 	CreateSpeakerWithConversationsID(ctx context.Context, arg CreateSpeakerWithConversationsIDParams) (uuid.UUID, error)
 	CreateTask(ctx context.Context, taskType models.TaskType) (uuid.UUID, error)
 	CreateTranscriptionWithTaskAndSegmentID(ctx context.Context, arg CreateTranscriptionWithTaskAndSegmentIDParams) error
@@ -34,11 +35,13 @@ type Querier interface {
 	GetConversationFileURL(ctx context.Context, id uuid.UUID) (string, error)
 	GetConversationIDByConvertTaskID(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 	GetConversationIDByDiarizeTaskID(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
+	GetConversationIDBySemiReportTaskID(ctx context.Context, taskID uuid.UUID) (uuid.UUID, error)
 	GetConversationIDByTranscriptionTaskID(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 	GetConversations(ctx context.Context) ([]Conversation, error)
 	GetConvert(ctx context.Context) ([]Convert, error)
 	GetConvertByID(ctx context.Context, id uuid.UUID) (Convert, error)
 	GetConvertFileURLByConversationID(ctx context.Context, conversationsID uuid.UUID) (GetConvertFileURLByConversationIDRow, error)
+	GetCountOfUnSemiReportedParts(ctx context.Context, conversationID uuid.UUID) (int64, error)
 	GetCountOfUntranscribedSegments(ctx context.Context, id uuid.UUID) (int64, error)
 	GetCountSegmentsWithSpeakerID(ctx context.Context, speakerID uuid.UUID) (int64, error)
 	GetDiarizeIDByTaskID(ctx context.Context, taskID uuid.UUID) (uuid.UUID, error)
@@ -46,6 +49,7 @@ type Querier interface {
 	GetParticipantByID(ctx context.Context, id uuid.UUID) (Participant, error)
 	GetParticipants(ctx context.Context) ([]Participant, error)
 	GetPromptByID(ctx context.Context, id uuid.UUID) (Prompt, error)
+	GetPromptByName(ctx context.Context, promptName string) (Prompt, error)
 	GetPrompts(ctx context.Context) ([]Prompt, error)
 	GetSegmentsByConversationsID(ctx context.Context, id uuid.UUID) ([]GetSegmentsByConversationsIDRow, error)
 	GetSegmentsWithTranscriptionByConversationID(ctx context.Context, id uuid.UUID) ([]GetSegmentsWithTranscriptionByConversationIDRow, error)
@@ -61,6 +65,7 @@ type Querier interface {
 	UpdateConvertByTaskID(ctx context.Context, arg UpdateConvertByTaskIDParams) error
 	UpdateParticipantByID(ctx context.Context, arg UpdateParticipantByIDParams) error
 	UpdatePromptByID(ctx context.Context, arg UpdatePromptByIDParams) error
+	UpdateSemiReportByTaskID(ctx context.Context, arg UpdateSemiReportByTaskIDParams) error
 	UpdateTaskStatus(ctx context.Context, arg UpdateTaskStatusParams) error
 	UpdateTranscriptionTextByID(ctx context.Context, arg UpdateTranscriptionTextByIDParams) error
 	UpdateTranscriptionTextByTaskID(ctx context.Context, arg UpdateTranscriptionTextByTaskIDParams) error

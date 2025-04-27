@@ -74,13 +74,14 @@ type Segment struct {
 }
 
 type SemiReport struct {
-	ID             uuid.UUID  `json:"id"`
-	ConversationID uuid.UUID  `json:"conversation_id"`
-	SemiReport     *string    `json:"semi_report"`
-	PromptID       *uuid.UUID `json:"prompt_id"`
-	TasksID        uuid.UUID  `json:"tasks_id"`
-	CreatedAt      time.Time  `json:"created_at"`
-	UpdatedAt      time.Time  `json:"updated_at"`
+	ID             uuid.UUID `json:"id"`
+	ConversationID uuid.UUID `json:"conversation_id"`
+	SemiReport     *string   `json:"semi_report"`
+	PartNum        int32     `json:"part_num"`
+	PromptID       uuid.UUID `json:"prompt_id"`
+	TaskID         uuid.UUID `json:"task_id"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }
 
 type Task struct {

@@ -33,7 +33,6 @@ func (r *RouterStruct) createHandlers() {
 	r.taskHandlers()
 	r.segmentHandlers()
 	r.transcriptionHandlers()
-	// r.callbackHandlers()
 }
 
 func (r *RouterStruct) participantsHandlers() {
@@ -104,24 +103,9 @@ func (r *RouterStruct) taskHandlers() {
 		wrapperWithID(r.Service.Tasks.CreateTranscribeTask),
 	).Methods(http.MethodPost)
 	r.Router.HandleFunc("/api/task/create/semireport/{id}",
-		wrapperWithID(r.Service.Tasks.CreateSemiReportTask),
+		wrapperWithIDAndPayload(r.Service.Tasks.CreateSemiReportTask),
 	).Methods(http.MethodPost)
 }
-
-// func (r *RouterStruct) callbackHandlers() {
-// 	r.Router.HandleFunc("/api/task/update/convert/{id}",
-// 		r.handleConvertCallback,
-// 	).Methods(http.MethodPatch)
-// 	r.Router.HandleFunc("/api/task/update/diarize/{id}",
-// 		r.handleDiarizeCallback,
-// 	).Methods(http.MethodPatch)
-// 	r.Router.HandleFunc("/api/task/update/transcription/{id}",
-// 		r.handleTranscriptionCallback,
-// 	).Methods(http.MethodPatch)
-// 	r.Router.HandleFunc("/api/task/update/error/{id}",
-// 		r.handleErrorCallback,
-// 	).Methods(http.MethodPatch)
-// }
 
 func (r *RouterStruct) transcriptionHandlers() {
 	r.Router.HandleFunc("/api/transcription/update/{id}",
@@ -158,19 +142,3 @@ func (h *RouterStruct) CreateConversation(w http.ResponseWriter, r *http.Request
 
 	w.WriteHeader(http.StatusCreated)
 }
-
-// func (r *RouterStruct) handleConvertCallback(w http.ResponseWriter, req *http.Request) {
-// 	handleProtoRequest(w, req, &messages.ConvertTaskResponse{}, r.Service.Tasks.HandleConvertCallback)
-// }
-
-// func (r *RouterStruct) handleDiarizeCallback(w http.ResponseWriter, req *http.Request) {
-// 	handleProtoRequest(w, req, &messages.SegmentsTaskResponse{}, r.Service.Tasks.HandleDiarizeCallback)
-// }
-
-// func (r *RouterStruct) handleTranscriptionCallback(w http.ResponseWriter, req *http.Request) {
-// 	handleProtoRequest(w, req, &messages.TranscriptionTaskResponse{}, r.Service.Tasks.HandleTransctiprionCallback)
-// }
-
-// func (r *RouterStruct) handleErrorCallback(w http.ResponseWriter, req *http.Request) {
-// 	handleProtoRequest(w, req, &messages.ErrorTaskResponse{}, r.Service.Tasks.HandleErrorCallback)
-// }

@@ -319,7 +319,7 @@ func (r *RepositoryStruct) AssignNewSpeakerToSegment(
 ) error {
 	query := r.queries.WithTx(tx)
 	return query.AssignNewSpeakerToSegment(ctx, db.AssignNewSpeakerToSegmentParams{
-		ID:            segmentID,
+		ID:        segmentID,
 		SpeakerID: speakerID,
 	})
 }
@@ -355,15 +355,15 @@ func (r *RepositoryStruct) GetFullTranscriptionByConversationID(
 func (r *RepositoryStruct) CreatePrompt(
 	ctx context.Context,
 	tx pgx.Tx,
-	pormptName, 
+	pormptName,
 	prompt string,
 ) error {
 	query := r.queries.WithTx(tx)
-	return query.CreatePrompt(ctx, 
-	db.CreatePromptParams{
-		PromptName:   pormptName,
-		Prompt: prompt,
-	})
+	return query.CreatePrompt(ctx,
+		db.CreatePromptParams{
+			PromptName: pormptName,
+			Prompt:     prompt,
+		})
 }
 
 func (r *RepositoryStruct) GetPrompts(
@@ -390,8 +390,8 @@ func (r *RepositoryStruct) UpdatePromptByID(
 ) error {
 	query := r.queries.WithTx(tx)
 	return query.UpdatePromptByID(ctx, db.UpdatePromptByIDParams{
-		ID:     promptID,
-		Prompt: prompt,
+		ID:         promptID,
+		Prompt:     prompt,
 		PromptName: promptName,
 	})
 }
@@ -436,4 +436,74 @@ func (r *RepositoryStruct) UpdateConversationNameByID(
 		ID:               conversationID,
 		ConversationName: conversationName,
 	})
+}
+
+func (r *RepositoryStruct) GetPromptByName(
+	ctx context.Context,
+	tx pgx.Tx,
+	promptName string,
+) (db.Prompt, error) {
+	query := r.queries
+	if tx != nil {
+		query = r.queries.WithTx(tx)
+	}
+	return query.GetPromptByName(ctx, promptName)
+}
+
+func (r *RepositoryStruct) CreateSemiReport(
+	ctx context.Context,
+	tx pgx.Tx,
+	conversationID,
+	taskID,
+	promptID uuid.UUID,
+	partNum int,
+) error {
+	query := r.queries.WithTx(tx)
+	return query.CreateSemiReport(
+		ctx,
+		db.CreateSemiReportParams{
+			ConversationID: conversationID,
+			TaskID:         taskID,
+			PromptID:       promptID,
+			PartNum: int32(partNum),
+		},
+	)
+}
+
+func (r *RepositoryStruct) GetConversationIDBySemiReportTaskID(
+	ctx context.Context,
+	taskID uuid.UUID,
+) (uuid.UUID, error) {
+	return r.queries.GetConversationIDBySemiReportTaskID(
+		ctx,
+		taskID,
+	)
+}
+
+func (r *RepositoryStruct) GetCountOfUnSemiReportedParts(
+	ctx context.Context,
+	tx pgx.Tx,
+	conversationID uuid.UUID,
+) (int64, error) {
+	query := r.queries
+	if tx != nil {
+		query = r.queries.WithTx(tx)
+	}
+	return query.GetCountOfUnSemiReportedParts(ctx, conversationID)
+}
+
+func (r *RepositoryStruct) UpdateSemiReportByTaskID(
+	ctx context.Context,
+	tx pgx.Tx,
+	taskID uuid.UUID,
+	semiReport string,
+) error {
+	query := r.queries.WithTx(tx)
+	return query.UpdateSemiReportByTaskID(
+		ctx,
+		db.UpdateSemiReportByTaskIDParams{
+			TaskID: taskID,
+			SemiReport: &semiReport,
+		},
+	)
 }

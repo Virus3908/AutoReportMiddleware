@@ -74,7 +74,7 @@ CREATE TABLE transcriptions (
 
 CREATE TABLE prompts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    prompt_name VARCHAR(255) NOT NULL,
+    prompt_name VARCHAR(255) UNIQUE NOT NULL,
     prompt TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
@@ -84,8 +84,9 @@ CREATE TABLE semi_report (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     conversation_id UUID REFERENCES Conversations(id) ON DELETE CASCADE NOT NULL,
     semi_report TEXT,
-    prompt_id UUID REFERENCES Prompts(id),
-    tasks_id UUID REFERENCES tasks(id) ON DELETE CASCADE UNIQUE NOT NULL,
+    part_num INTEGER NOT NULL,
+    prompt_id UUID REFERENCES Prompts(id) NOT NULL,
+    task_id UUID REFERENCES tasks(id) ON DELETE CASCADE UNIQUE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
@@ -128,8 +129,8 @@ BEFORE UPDATE ON transcriptions
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER trigger_update_report
-BEFORE UPDATE ON report
+CREATE TRIGGER trigger_update_semi_report
+BEFORE UPDATE ON semi_report
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 

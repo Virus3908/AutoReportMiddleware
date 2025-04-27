@@ -172,6 +172,59 @@ func (x *MessageDiarizeTask) GetConvertedFileUrl() string {
 	return ""
 }
 
+// ===== REPORT TASK =====
+type MessageReportTask struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	Prompt        string                 `protobuf:"bytes,2,opt,name=prompt,proto3" json:"prompt,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MessageReportTask) Reset() {
+	*x = MessageReportTask{}
+	mi := &file_proto_messages_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MessageReportTask) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MessageReportTask) ProtoMessage() {}
+
+func (x *MessageReportTask) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_messages_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MessageReportTask.ProtoReflect.Descriptor instead.
+func (*MessageReportTask) Descriptor() ([]byte, []int) {
+	return file_proto_messages_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *MessageReportTask) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *MessageReportTask) GetPrompt() string {
+	if x != nil {
+		return x.Prompt
+	}
+	return ""
+}
+
 // ===== SEGMENT STRUCTURE =====
 type Segment struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -184,7 +237,7 @@ type Segment struct {
 
 func (x *Segment) Reset() {
 	*x = Segment{}
-	mi := &file_proto_messages_proto_msgTypes[3]
+	mi := &file_proto_messages_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -196,7 +249,7 @@ func (x *Segment) String() string {
 func (*Segment) ProtoMessage() {}
 
 func (x *Segment) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_messages_proto_msgTypes[3]
+	mi := &file_proto_messages_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -209,7 +262,7 @@ func (x *Segment) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Segment.ProtoReflect.Descriptor instead.
 func (*Segment) Descriptor() ([]byte, []int) {
-	return file_proto_messages_proto_rawDescGZIP(), []int{3}
+	return file_proto_messages_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *Segment) GetSpeaker() int32 {
@@ -243,7 +296,7 @@ type ConvertTaskResponse struct {
 
 func (x *ConvertTaskResponse) Reset() {
 	*x = ConvertTaskResponse{}
-	mi := &file_proto_messages_proto_msgTypes[4]
+	mi := &file_proto_messages_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -255,7 +308,7 @@ func (x *ConvertTaskResponse) String() string {
 func (*ConvertTaskResponse) ProtoMessage() {}
 
 func (x *ConvertTaskResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_messages_proto_msgTypes[4]
+	mi := &file_proto_messages_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -268,7 +321,7 @@ func (x *ConvertTaskResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConvertTaskResponse.ProtoReflect.Descriptor instead.
 func (*ConvertTaskResponse) Descriptor() ([]byte, []int) {
-	return file_proto_messages_proto_rawDescGZIP(), []int{4}
+	return file_proto_messages_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ConvertTaskResponse) GetConvertedFileUrl() string {
@@ -295,7 +348,7 @@ type DiarizeTaskResponse struct {
 
 func (x *DiarizeTaskResponse) Reset() {
 	*x = DiarizeTaskResponse{}
-	mi := &file_proto_messages_proto_msgTypes[5]
+	mi := &file_proto_messages_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -307,7 +360,7 @@ func (x *DiarizeTaskResponse) String() string {
 func (*DiarizeTaskResponse) ProtoMessage() {}
 
 func (x *DiarizeTaskResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_messages_proto_msgTypes[5]
+	mi := &file_proto_messages_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -320,7 +373,7 @@ func (x *DiarizeTaskResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DiarizeTaskResponse.ProtoReflect.Descriptor instead.
 func (*DiarizeTaskResponse) Descriptor() ([]byte, []int) {
-	return file_proto_messages_proto_rawDescGZIP(), []int{5}
+	return file_proto_messages_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *DiarizeTaskResponse) GetNumOfSpeakers() int32 {
@@ -346,7 +399,7 @@ type TranscriptionTaskResponse struct {
 
 func (x *TranscriptionTaskResponse) Reset() {
 	*x = TranscriptionTaskResponse{}
-	mi := &file_proto_messages_proto_msgTypes[6]
+	mi := &file_proto_messages_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -358,7 +411,7 @@ func (x *TranscriptionTaskResponse) String() string {
 func (*TranscriptionTaskResponse) ProtoMessage() {}
 
 func (x *TranscriptionTaskResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_messages_proto_msgTypes[6]
+	mi := &file_proto_messages_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -371,12 +424,56 @@ func (x *TranscriptionTaskResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TranscriptionTaskResponse.ProtoReflect.Descriptor instead.
 func (*TranscriptionTaskResponse) Descriptor() ([]byte, []int) {
-	return file_proto_messages_proto_rawDescGZIP(), []int{6}
+	return file_proto_messages_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *TranscriptionTaskResponse) GetTranscription() string {
 	if x != nil {
 		return x.Transcription
+	}
+	return ""
+}
+
+type ReportTaskResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Text          string                 `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReportTaskResponse) Reset() {
+	*x = ReportTaskResponse{}
+	mi := &file_proto_messages_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReportTaskResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReportTaskResponse) ProtoMessage() {}
+
+func (x *ReportTaskResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_messages_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReportTaskResponse.ProtoReflect.Descriptor instead.
+func (*ReportTaskResponse) Descriptor() ([]byte, []int) {
+	return file_proto_messages_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *ReportTaskResponse) GetText() string {
+	if x != nil {
+		return x.Text
 	}
 	return ""
 }
@@ -390,7 +487,7 @@ type ErrorTaskResponse struct {
 
 func (x *ErrorTaskResponse) Reset() {
 	*x = ErrorTaskResponse{}
-	mi := &file_proto_messages_proto_msgTypes[7]
+	mi := &file_proto_messages_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -402,7 +499,7 @@ func (x *ErrorTaskResponse) String() string {
 func (*ErrorTaskResponse) ProtoMessage() {}
 
 func (x *ErrorTaskResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_messages_proto_msgTypes[7]
+	mi := &file_proto_messages_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -415,7 +512,7 @@ func (x *ErrorTaskResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ErrorTaskResponse.ProtoReflect.Descriptor instead.
 func (*ErrorTaskResponse) Descriptor() ([]byte, []int) {
-	return file_proto_messages_proto_rawDescGZIP(), []int{7}
+	return file_proto_messages_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ErrorTaskResponse) GetError() string {
@@ -433,6 +530,8 @@ type WrapperTask struct {
 	//	*WrapperTask_Convert
 	//	*WrapperTask_Diarize
 	//	*WrapperTask_Transcription
+	//	*WrapperTask_SemiReport
+	//	*WrapperTask_Report
 	Task          isWrapperTask_Task `protobuf_oneof:"task"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -440,7 +539,7 @@ type WrapperTask struct {
 
 func (x *WrapperTask) Reset() {
 	*x = WrapperTask{}
-	mi := &file_proto_messages_proto_msgTypes[8]
+	mi := &file_proto_messages_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -452,7 +551,7 @@ func (x *WrapperTask) String() string {
 func (*WrapperTask) ProtoMessage() {}
 
 func (x *WrapperTask) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_messages_proto_msgTypes[8]
+	mi := &file_proto_messages_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -465,7 +564,7 @@ func (x *WrapperTask) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WrapperTask.ProtoReflect.Descriptor instead.
 func (*WrapperTask) Descriptor() ([]byte, []int) {
-	return file_proto_messages_proto_rawDescGZIP(), []int{8}
+	return file_proto_messages_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *WrapperTask) GetTaskId() string {
@@ -509,6 +608,24 @@ func (x *WrapperTask) GetTranscription() *MessageTranscriptionTask {
 	return nil
 }
 
+func (x *WrapperTask) GetSemiReport() *MessageReportTask {
+	if x != nil {
+		if x, ok := x.Task.(*WrapperTask_SemiReport); ok {
+			return x.SemiReport
+		}
+	}
+	return nil
+}
+
+func (x *WrapperTask) GetReport() *MessageReportTask {
+	if x != nil {
+		if x, ok := x.Task.(*WrapperTask_Report); ok {
+			return x.Report
+		}
+	}
+	return nil
+}
+
 type isWrapperTask_Task interface {
 	isWrapperTask_Task()
 }
@@ -525,11 +642,23 @@ type WrapperTask_Transcription struct {
 	Transcription *MessageTranscriptionTask `protobuf:"bytes,4,opt,name=transcription,proto3,oneof"`
 }
 
+type WrapperTask_SemiReport struct {
+	SemiReport *MessageReportTask `protobuf:"bytes,5,opt,name=semi_report,json=semiReport,proto3,oneof"`
+}
+
+type WrapperTask_Report struct {
+	Report *MessageReportTask `protobuf:"bytes,6,opt,name=report,proto3,oneof"`
+}
+
 func (*WrapperTask_Convert) isWrapperTask_Task() {}
 
 func (*WrapperTask_Diarize) isWrapperTask_Task() {}
 
 func (*WrapperTask_Transcription) isWrapperTask_Task() {}
+
+func (*WrapperTask_SemiReport) isWrapperTask_Task() {}
+
+func (*WrapperTask_Report) isWrapperTask_Task() {}
 
 type WrapperResponse struct {
 	state  protoimpl.MessageState `protogen:"open.v1"`
@@ -539,6 +668,8 @@ type WrapperResponse struct {
 	//	*WrapperResponse_Convert
 	//	*WrapperResponse_Diarize
 	//	*WrapperResponse_Transcription
+	//	*WrapperResponse_SemiReport
+	//	*WrapperResponse_Report
 	//	*WrapperResponse_Error
 	Payload       isWrapperResponse_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
@@ -547,7 +678,7 @@ type WrapperResponse struct {
 
 func (x *WrapperResponse) Reset() {
 	*x = WrapperResponse{}
-	mi := &file_proto_messages_proto_msgTypes[9]
+	mi := &file_proto_messages_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -559,7 +690,7 @@ func (x *WrapperResponse) String() string {
 func (*WrapperResponse) ProtoMessage() {}
 
 func (x *WrapperResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_messages_proto_msgTypes[9]
+	mi := &file_proto_messages_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -572,7 +703,7 @@ func (x *WrapperResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WrapperResponse.ProtoReflect.Descriptor instead.
 func (*WrapperResponse) Descriptor() ([]byte, []int) {
-	return file_proto_messages_proto_rawDescGZIP(), []int{9}
+	return file_proto_messages_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *WrapperResponse) GetTaskId() string {
@@ -616,6 +747,24 @@ func (x *WrapperResponse) GetTranscription() *TranscriptionTaskResponse {
 	return nil
 }
 
+func (x *WrapperResponse) GetSemiReport() *ReportTaskResponse {
+	if x != nil {
+		if x, ok := x.Payload.(*WrapperResponse_SemiReport); ok {
+			return x.SemiReport
+		}
+	}
+	return nil
+}
+
+func (x *WrapperResponse) GetReport() *ReportTaskResponse {
+	if x != nil {
+		if x, ok := x.Payload.(*WrapperResponse_Report); ok {
+			return x.Report
+		}
+	}
+	return nil
+}
+
 func (x *WrapperResponse) GetError() *ErrorTaskResponse {
 	if x != nil {
 		if x, ok := x.Payload.(*WrapperResponse_Error); ok {
@@ -641,8 +790,16 @@ type WrapperResponse_Transcription struct {
 	Transcription *TranscriptionTaskResponse `protobuf:"bytes,4,opt,name=transcription,proto3,oneof"`
 }
 
+type WrapperResponse_SemiReport struct {
+	SemiReport *ReportTaskResponse `protobuf:"bytes,5,opt,name=semi_report,json=semiReport,proto3,oneof"`
+}
+
+type WrapperResponse_Report struct {
+	Report *ReportTaskResponse `protobuf:"bytes,6,opt,name=report,proto3,oneof"`
+}
+
 type WrapperResponse_Error struct {
-	Error *ErrorTaskResponse `protobuf:"bytes,5,opt,name=error,proto3,oneof"`
+	Error *ErrorTaskResponse `protobuf:"bytes,7,opt,name=error,proto3,oneof"`
 }
 
 func (*WrapperResponse_Convert) isWrapperResponse_Payload() {}
@@ -650,6 +807,10 @@ func (*WrapperResponse_Convert) isWrapperResponse_Payload() {}
 func (*WrapperResponse_Diarize) isWrapperResponse_Payload() {}
 
 func (*WrapperResponse_Transcription) isWrapperResponse_Payload() {}
+
+func (*WrapperResponse_SemiReport) isWrapperResponse_Payload() {}
+
+func (*WrapperResponse_Report) isWrapperResponse_Payload() {}
 
 func (*WrapperResponse_Error) isWrapperResponse_Payload() {}
 
@@ -666,7 +827,10 @@ const file_proto_messages_proto_rawDesc = "" +
 	"\x12MessageConvertTask\x12\x19\n" +
 	"\bfile_url\x18\x01 \x01(\tR\afileUrl\"B\n" +
 	"\x12MessageDiarizeTask\x12,\n" +
-	"\x12converted_file_url\x18\x01 \x01(\tR\x10convertedFileUrl\"]\n" +
+	"\x12converted_file_url\x18\x01 \x01(\tR\x10convertedFileUrl\"E\n" +
+	"\x11MessageReportTask\x12\x18\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\x12\x16\n" +
+	"\x06prompt\x18\x02 \x01(\tR\x06prompt\"]\n" +
 	"\aSegment\x12\x18\n" +
 	"\aspeaker\x18\x01 \x01(\x05R\aspeaker\x12\x1d\n" +
 	"\n" +
@@ -679,21 +843,29 @@ const file_proto_messages_proto_rawDesc = "" +
 	"\x0fnum_of_speakers\x18\x01 \x01(\x05R\rnumOfSpeakers\x12-\n" +
 	"\bsegments\x18\x02 \x03(\v2\x11.messages.SegmentR\bsegments\"A\n" +
 	"\x19TranscriptionTaskResponse\x12$\n" +
-	"\rtranscription\x18\x01 \x01(\tR\rtranscription\")\n" +
+	"\rtranscription\x18\x01 \x01(\tR\rtranscription\"(\n" +
+	"\x12ReportTaskResponse\x12\x12\n" +
+	"\x04text\x18\x01 \x01(\tR\x04text\")\n" +
 	"\x11ErrorTaskResponse\x12\x14\n" +
-	"\x05error\x18\x01 \x01(\tR\x05error\"\xee\x01\n" +
+	"\x05error\x18\x01 \x01(\tR\x05error\"\xe5\x02\n" +
 	"\vWrapperTask\x12\x17\n" +
 	"\atask_id\x18\x01 \x01(\tR\x06taskId\x128\n" +
 	"\aconvert\x18\x02 \x01(\v2\x1c.messages.MessageConvertTaskH\x00R\aconvert\x128\n" +
 	"\adiarize\x18\x03 \x01(\v2\x1c.messages.MessageDiarizeTaskH\x00R\adiarize\x12J\n" +
-	"\rtranscription\x18\x04 \x01(\v2\".messages.MessageTranscriptionTaskH\x00R\rtranscriptionB\x06\n" +
-	"\x04task\"\xad\x02\n" +
+	"\rtranscription\x18\x04 \x01(\v2\".messages.MessageTranscriptionTaskH\x00R\rtranscription\x12>\n" +
+	"\vsemi_report\x18\x05 \x01(\v2\x1b.messages.MessageReportTaskH\x00R\n" +
+	"semiReport\x125\n" +
+	"\x06report\x18\x06 \x01(\v2\x1b.messages.MessageReportTaskH\x00R\x06reportB\x06\n" +
+	"\x04task\"\xa6\x03\n" +
 	"\x0fWrapperResponse\x12\x17\n" +
 	"\atask_id\x18\x01 \x01(\tR\x06taskId\x129\n" +
 	"\aconvert\x18\x02 \x01(\v2\x1d.messages.ConvertTaskResponseH\x00R\aconvert\x129\n" +
 	"\adiarize\x18\x03 \x01(\v2\x1d.messages.DiarizeTaskResponseH\x00R\adiarize\x12K\n" +
-	"\rtranscription\x18\x04 \x01(\v2#.messages.TranscriptionTaskResponseH\x00R\rtranscription\x123\n" +
-	"\x05error\x18\x05 \x01(\v2\x1b.messages.ErrorTaskResponseH\x00R\x05errorB\t\n" +
+	"\rtranscription\x18\x04 \x01(\v2#.messages.TranscriptionTaskResponseH\x00R\rtranscription\x12?\n" +
+	"\vsemi_report\x18\x05 \x01(\v2\x1c.messages.ReportTaskResponseH\x00R\n" +
+	"semiReport\x126\n" +
+	"\x06report\x18\x06 \x01(\v2\x1c.messages.ReportTaskResponseH\x00R\x06report\x123\n" +
+	"\x05error\x18\a \x01(\v2\x1b.messages.ErrorTaskResponseH\x00R\x05errorB\t\n" +
 	"\apayloadB\x13Z\x11main/pkg/messagesb\x06proto3"
 
 var (
@@ -708,33 +880,39 @@ func file_proto_messages_proto_rawDescGZIP() []byte {
 	return file_proto_messages_proto_rawDescData
 }
 
-var file_proto_messages_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_proto_messages_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_proto_messages_proto_goTypes = []any{
 	(*MessageTranscriptionTask)(nil),  // 0: messages.MessageTranscriptionTask
 	(*MessageConvertTask)(nil),        // 1: messages.MessageConvertTask
 	(*MessageDiarizeTask)(nil),        // 2: messages.MessageDiarizeTask
-	(*Segment)(nil),                   // 3: messages.Segment
-	(*ConvertTaskResponse)(nil),       // 4: messages.ConvertTaskResponse
-	(*DiarizeTaskResponse)(nil),       // 5: messages.DiarizeTaskResponse
-	(*TranscriptionTaskResponse)(nil), // 6: messages.TranscriptionTaskResponse
-	(*ErrorTaskResponse)(nil),         // 7: messages.ErrorTaskResponse
-	(*WrapperTask)(nil),               // 8: messages.WrapperTask
-	(*WrapperResponse)(nil),           // 9: messages.WrapperResponse
+	(*MessageReportTask)(nil),         // 3: messages.MessageReportTask
+	(*Segment)(nil),                   // 4: messages.Segment
+	(*ConvertTaskResponse)(nil),       // 5: messages.ConvertTaskResponse
+	(*DiarizeTaskResponse)(nil),       // 6: messages.DiarizeTaskResponse
+	(*TranscriptionTaskResponse)(nil), // 7: messages.TranscriptionTaskResponse
+	(*ReportTaskResponse)(nil),        // 8: messages.ReportTaskResponse
+	(*ErrorTaskResponse)(nil),         // 9: messages.ErrorTaskResponse
+	(*WrapperTask)(nil),               // 10: messages.WrapperTask
+	(*WrapperResponse)(nil),           // 11: messages.WrapperResponse
 }
 var file_proto_messages_proto_depIdxs = []int32{
-	3, // 0: messages.DiarizeTaskResponse.segments:type_name -> messages.Segment
-	1, // 1: messages.WrapperTask.convert:type_name -> messages.MessageConvertTask
-	2, // 2: messages.WrapperTask.diarize:type_name -> messages.MessageDiarizeTask
-	0, // 3: messages.WrapperTask.transcription:type_name -> messages.MessageTranscriptionTask
-	4, // 4: messages.WrapperResponse.convert:type_name -> messages.ConvertTaskResponse
-	5, // 5: messages.WrapperResponse.diarize:type_name -> messages.DiarizeTaskResponse
-	6, // 6: messages.WrapperResponse.transcription:type_name -> messages.TranscriptionTaskResponse
-	7, // 7: messages.WrapperResponse.error:type_name -> messages.ErrorTaskResponse
-	8, // [8:8] is the sub-list for method output_type
-	8, // [8:8] is the sub-list for method input_type
-	8, // [8:8] is the sub-list for extension type_name
-	8, // [8:8] is the sub-list for extension extendee
-	0, // [0:8] is the sub-list for field type_name
+	4,  // 0: messages.DiarizeTaskResponse.segments:type_name -> messages.Segment
+	1,  // 1: messages.WrapperTask.convert:type_name -> messages.MessageConvertTask
+	2,  // 2: messages.WrapperTask.diarize:type_name -> messages.MessageDiarizeTask
+	0,  // 3: messages.WrapperTask.transcription:type_name -> messages.MessageTranscriptionTask
+	3,  // 4: messages.WrapperTask.semi_report:type_name -> messages.MessageReportTask
+	3,  // 5: messages.WrapperTask.report:type_name -> messages.MessageReportTask
+	5,  // 6: messages.WrapperResponse.convert:type_name -> messages.ConvertTaskResponse
+	6,  // 7: messages.WrapperResponse.diarize:type_name -> messages.DiarizeTaskResponse
+	7,  // 8: messages.WrapperResponse.transcription:type_name -> messages.TranscriptionTaskResponse
+	8,  // 9: messages.WrapperResponse.semi_report:type_name -> messages.ReportTaskResponse
+	8,  // 10: messages.WrapperResponse.report:type_name -> messages.ReportTaskResponse
+	9,  // 11: messages.WrapperResponse.error:type_name -> messages.ErrorTaskResponse
+	12, // [12:12] is the sub-list for method output_type
+	12, // [12:12] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_proto_messages_proto_init() }
@@ -742,15 +920,19 @@ func file_proto_messages_proto_init() {
 	if File_proto_messages_proto != nil {
 		return
 	}
-	file_proto_messages_proto_msgTypes[8].OneofWrappers = []any{
+	file_proto_messages_proto_msgTypes[10].OneofWrappers = []any{
 		(*WrapperTask_Convert)(nil),
 		(*WrapperTask_Diarize)(nil),
 		(*WrapperTask_Transcription)(nil),
+		(*WrapperTask_SemiReport)(nil),
+		(*WrapperTask_Report)(nil),
 	}
-	file_proto_messages_proto_msgTypes[9].OneofWrappers = []any{
+	file_proto_messages_proto_msgTypes[11].OneofWrappers = []any{
 		(*WrapperResponse_Convert)(nil),
 		(*WrapperResponse_Diarize)(nil),
 		(*WrapperResponse_Transcription)(nil),
+		(*WrapperResponse_SemiReport)(nil),
+		(*WrapperResponse_Report)(nil),
 		(*WrapperResponse_Error)(nil),
 	}
 	type x struct{}
@@ -759,7 +941,7 @@ func file_proto_messages_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_messages_proto_rawDesc), len(file_proto_messages_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

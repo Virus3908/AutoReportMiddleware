@@ -2,8 +2,10 @@ package services
 
 import (
 	"context"
-	"log"
 	"fmt"
+	"strings"
+
+	// "log"
 	"main/internal/models"
 	"main/internal/repositories"
 	"main/pkg/messages/proto"
@@ -13,11 +15,11 @@ import (
 )
 
 type TaskDispatcher struct {
-	Repo        *repositories.RepositoryStruct
-	Messenger   MessageClient
-	Storage     StorageClient
-	TxManager   TxManager
-	TaskFlow    bool
+	Repo      *repositories.RepositoryStruct
+	Messenger MessageClient
+	Storage   StorageClient
+	TxManager TxManager
+	TaskFlow  bool
 }
 
 func NewTaskDispatcher(
@@ -29,11 +31,11 @@ func NewTaskDispatcher(
 ) *TaskDispatcher {
 
 	return &TaskDispatcher{
-		Repo:        repo,
-		Messenger:   messenger,
-		Storage:     storage,
-		TxManager:   txManager,
-		TaskFlow:    taskFlow,
+		Repo:      repo,
+		Messenger: messenger,
+		Storage:   storage,
+		TxManager: txManager,
+		TaskFlow:  taskFlow,
 	}
 }
 
@@ -137,10 +139,70 @@ func (s *TaskDispatcher) CreateTranscribeTask(ctx context.Context, conversationI
 func (s *TaskDispatcher) CreateSemiReportTask(
 	ctx context.Context,
 	conversationID uuid.UUID,
+	prompt models.Prompt,
 ) error {
-	transcriptionWithSpeaker, err := s.Repo.GetFullTranscriptionByConversationID(ctx, conversationID)
+	promptFromDB, err := s.Repo.GetPromptByName(ctx, nil, prompt.PromptName)
+	if err != nil {
+		return fmt.Errorf("prompt find error: %s", err)
+	}
+	transcriptionWithSpeakerText, audioLen, err := s.getTranscriptionWithSpeakerAndAudioLen(ctx, conversationID)
 	if err != nil {
 		return err
+	}
+	textParts, err := s.splitTextByAudioLen(*transcriptionWithSpeakerText, audioLen)
+	if err != nil {
+		return err
+	}
+	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
+		taskID, err := s.Repo.CreateTask(ctx, tx, models.SemiReportTask)
+		if err != nil {
+			return err
+		}
+		for partIndex, part := range textParts {
+			err := s.Repo.CreateSemiReport(
+				ctx, 
+				tx, 
+				conversationID, 
+				taskID, 
+				promptFromDB.ID,
+				partIndex,
+			)
+			if err != nil {
+				return err
+			}
+			semiReportMessage := &messages.WrapperTask{
+				TaskId: taskID.String(),
+				Task: &messages.WrapperTask_SemiReport{
+					SemiReport: &messages.MessageReportTask{
+						Message: part,
+						Prompt:  promptFromDB.Prompt,
+					},
+				},
+			}
+			err = s.Messenger.SendMessage(
+				ctx,
+				conversationID.String(),
+				semiReportMessage,
+			)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
+func (s *TaskDispatcher) getTranscriptionWithSpeakerAndAudioLen(
+	ctx context.Context,
+	conversationID uuid.UUID,
+) (*string, *float64, error) {
+	transcriptionWithSpeaker, err := s.Repo.GetFullTranscriptionByConversationID(ctx, conversationID)
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(transcriptionWithSpeaker) == 0 {
+		return nil, nil, fmt.Errorf("not found transcriptions")
 	}
 	transcriptionWithSpeakerText := ""
 	for _, transcription := range transcriptionWithSpeaker {
@@ -156,8 +218,46 @@ func (s *TaskDispatcher) CreateSemiReportTask(
 			transcriptionWithSpeakerText += *transcription.Transcription + "\n"
 		}
 	}
-	log.Printf("Transcription with speaker: %s\n", transcriptionWithSpeakerText)
-	return nil
+	return &transcriptionWithSpeakerText, transcriptionWithSpeaker[0].AudioLen, nil
+}
+
+func (s *TaskDispatcher) splitTextByAudioLen(
+	text string,
+	audioLen *float64,
+) (map[int]string, error) {
+	if audioLen == nil || *audioLen <= 0 {
+		return nil, fmt.Errorf("wrong audio len")
+	}
+	if strings.TrimSpace(text) == "" {
+		return nil, fmt.Errorf("empty transcription text")
+	}
+
+	numChunks := int(*audioLen / 600)
+	if numChunks < 1 {
+		numChunks = 1
+	}
+	partLength := float64(len(text)) / float64(numChunks)
+
+	parts := make(map[int]string)
+	var current strings.Builder
+	partIndex := 1
+
+	for _, line := range strings.Split(text, "\n") {
+		current.WriteString(line)
+		current.WriteString("\n")
+
+		if float64(current.Len()) >= partLength {
+			parts[partIndex] = strings.TrimSpace(current.String())
+			current.Reset()
+			partIndex++
+		}
+	}
+
+	if strings.TrimSpace(current.String()) != "" {
+		parts[partIndex] = strings.TrimSpace(current.String())
+	}
+
+	return parts, nil
 }
 
 func (s *TaskDispatcher) HandleTask(
@@ -175,6 +275,10 @@ func (s *TaskDispatcher) HandleTask(
 		return s.handleDiarizeTask(ctx, taskID, t.Diarize)
 	case *messages.WrapperResponse_Transcription:
 		return s.handleTransctiprionTask(ctx, taskID, t.Transcription)
+	case *messages.WrapperResponse_SemiReport:
+		return s.handleSemiReportTask(ctx, taskID, t.SemiReport)
+	case *messages.WrapperResponse_Error:
+		return s.handleErrorTask(ctx, taskID, t.Error)
 	default:
 		return fmt.Errorf("unknown task type")
 	}
@@ -266,12 +370,41 @@ func (s *TaskDispatcher) handleTransctiprionTask(
 		if err != nil {
 			return err
 		}
-		count_of_untranscribed, err := s.Repo.GetCountOfUntranscribedSegments(ctx, tx, conversationID)
+		countOfUntranscribed, err := s.Repo.GetCountOfUntranscribedSegments(ctx, tx, conversationID)
 		if err != nil {
 			return err
 		}
-		if count_of_untranscribed == 0 {
+		if countOfUntranscribed == 0 {
 			return s.Repo.UpdateConversationStatusByID(ctx, tx, conversationID, models.StatusTranscribed)
+		}
+		return nil
+	})
+}
+
+func (s *TaskDispatcher) handleSemiReportTask(
+	ctx context.Context,
+	taskID uuid.UUID,
+	semiReport *messages.ReportTaskResponse,
+) error {
+	conversationID, err := s.Repo.GetConversationIDBySemiReportTaskID(ctx, taskID)
+	if err != nil {
+		return err
+	}
+	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
+		err := s.Repo.UpdateTaskStatus(ctx, tx, taskID, models.StatusTaskOK)
+		if err != nil {
+			return err
+		}
+		err = s.Repo.UpdateSemiReportByTaskID(ctx, tx, taskID, semiReport.GetText())
+		if err != nil {
+			return err
+		}
+		countOfUnReported, err := s.Repo.GetCountOfUnSemiReportedParts(ctx, tx, conversationID)
+		if err != nil {
+			return err
+		}
+		if countOfUnReported == 0 {
+			return s.Repo.UpdateConversationStatusByID(ctx, tx, conversationID, models.StatusSemiReported)
 		}
 		return nil
 	})
@@ -306,4 +439,3 @@ func (s *TaskDispatcher) handleErrorTask(
 		return s.Repo.UpdateTaskStatus(ctx, tx, taskID, models.StatusTaskError)
 	})
 }
-
