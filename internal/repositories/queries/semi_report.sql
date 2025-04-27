@@ -19,4 +19,4 @@ WHERE
 SELECT COUNT(*)
 FROM
     semi_report
-WHERE conversation_id = $1;
+WHERE conversation_id = $1 AND semi_report IS NULL;

@@ -43,7 +43,7 @@ const getCountOfUnSemiReportedParts = `-- name: GetCountOfUnSemiReportedParts :o
 SELECT COUNT(*)
 FROM
     semi_report
-WHERE conversation_id = $1
+WHERE conversation_id = $1 AND semi_report IS NULL
 `
 
 func (q *Queries) GetCountOfUnSemiReportedParts(ctx context.Context, conversationID uuid.UUID) (int64, error) {

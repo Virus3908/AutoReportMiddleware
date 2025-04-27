@@ -143,7 +143,7 @@ func (s *TaskDispatcher) CreateSemiReportTask(
 ) error {
 	promptFromDB, err := s.Repo.GetPromptByName(ctx, nil, prompt.PromptName)
 	if err != nil {
-		return err
+		return fmt.Errorf("prompt find error: %s", err)
 	}
 	transcriptionWithSpeakerText, audioLen, err := s.getTranscriptionWithSpeakerAndAudioLen(ctx, conversationID)
 	if err != nil {

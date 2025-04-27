@@ -129,8 +129,8 @@ BEFORE UPDATE ON transcriptions
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER trigger_update_report
-BEFORE UPDATE ON report
+CREATE TRIGGER trigger_update_semi_report
+BEFORE UPDATE ON semi_report
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
