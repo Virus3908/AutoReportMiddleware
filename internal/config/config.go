@@ -10,6 +10,7 @@ import (
 type ServerConfig struct {
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
+	LogLevel string `yaml:"log_level"`
 }
 
 type ConfigStuct struct {

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	// "log"
 	"main/internal/models"
 	"main/internal/repositories"
 	"main/pkg/messages/proto"
@@ -29,7 +28,6 @@ func NewTaskDispatcher(
 	txManager TxManager,
 	taskFlow bool,
 ) *TaskDispatcher {
-
 	return &TaskDispatcher{
 		Repo:      repo,
 		Messenger: messenger,
@@ -277,6 +275,9 @@ func (s *TaskDispatcher) HandleTask(
 		return s.handleTransctiprionTask(ctx, taskID, t.Transcription)
 	case *messages.WrapperResponse_SemiReport:
 		return s.handleSemiReportTask(ctx, taskID, t.SemiReport)
+	case *messages.WrapperResponse_Report:
+		return nil
+		// return s.handleReportTask(ctx, taskID, t.Report)
 	case *messages.WrapperResponse_Error:
 		return s.handleErrorTask(ctx, taskID, t.Error)
 	default:

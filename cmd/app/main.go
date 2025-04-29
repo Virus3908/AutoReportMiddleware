@@ -3,12 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"main/internal/config"
 	"main/internal/handlers"
 	"main/internal/kafka/consumer"
 	"main/internal/kafka/producer"
-	"main/internal/logging"
+	"main/internal/logger"
 	"main/internal/postgres"
 	"main/internal/repositories"
 	"main/internal/services"
@@ -21,15 +20,20 @@ import (
 func main() {
 	cfg, err := config.GetConfig()
 	if err != nil {
-		log.Fatalf("Config file error: %s", err)
+		panic("Config file error: " + err.Error())
 	}
 
 	serverSettings := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 
+	log, err := logger.NewLogger(cfg.Server.LogLevel)
+	if err != nil {
+		panic("failed to init logger: " + err.Error())
+	}
+	defer log.Sync()
 
 	db, err := postgres.New(context.Background(), cfg.DB)
 	if err != nil {
-		log.Fatalf("DB connection error: %s", err)
+		log.Fatal("DB connection error", logger.LogField{Key: "Error", Value: err.Error()})
 	}
 	defer db.Close()
 
@@ -37,33 +41,36 @@ func main() {
 
 	storage, err := storage.New(context.Background(), cfg.S3)
 	if err != nil {
-		log.Fatalf("Storage connection error: %s", err)
+		log.Fatal("Storage connection error", logger.LogField{Key: "Error", Value: err.Error()})
 	}
 
-	producer, err := producer.NewProducer(cfg.Producer)
+	messageProducer, err := producer.NewProducer(cfg.Producer)
 	if err != nil {
-		log.Fatalf("Producer connection error: %s", err)
+		log.Fatal("Producer connection error", logger.LogField{Key: "Error", Value: err.Error()})
 	}
-	defer producer.Close()
+	defer messageProducer.Close()
 
-	service := services.New(repo, storage, producer, db, true)
+	service := services.New(repo, storage, messageProducer, db, true)
 
 	middlewares := []mux.MiddlewareFunc{
-		logging.LoggingMidleware,
+		log.LoggingMidleware,
 	}
 
 	router := handlers.New(service, middlewares)
-	consumer, err := consumer.NewConsumer(cfg.Consumer, service.Tasks)
+	messageConsumer, err := consumer.NewConsumer(cfg.Consumer, service.Tasks)
 	if err != nil {
-		log.Fatalf("Consumer connection error: %s", err)
+		log.Fatal("Consumer connection error", logger.LogField{Key: "Error", Value: err.Error()})
 	}
-	defer consumer.Close()
+	defer messageConsumer.Close()
 
-	log.Printf("Server is ready: %s", serverSettings)
-	
-	go consumer.Start(context.Background()) 
+	log.Info("Server is ready",
+		logger.LogField{Key: "Host", Value: cfg.Server.Host},
+		logger.LogField{Key: "Port", Value: cfg.Server.Port},
+	)
+
+	go messageConsumer.Start(context.Background())
 	err = http.ListenAndServe(serverSettings, router.GetRouter())
 	if err != nil {
-		log.Fatalf("Server stating error: %s", err)
+		log.Fatal("Server stating error", logger.LogField{Key: "Error", Value: err.Error()})
 	}
 }
