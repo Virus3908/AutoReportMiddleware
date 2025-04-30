@@ -8,7 +8,10 @@ pg:
 server:
   host: 0.0.0.0
   port: 8080
+
+logger:
   log_level: "debug"
+  encoding: "console"
 
 s3:
   endpoint: http://localhost:9000

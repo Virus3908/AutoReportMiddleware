@@ -1,7 +1,8 @@
-package services
+package participants
 
 import (
 	"context"
+	"main/internal/common/interfaces"
 	"main/internal/models"
 	"main/internal/repositories"
 	db "main/internal/repositories/gen"
@@ -12,10 +13,10 @@ import (
 
 type ParticipantService struct {
 	Repo      *repositories.RepositoryStruct
-	TxManager TxManager
+	TxManager interfaces.TxManager
 }
 
-func NewParticipantService(repo *repositories.RepositoryStruct, txManager TxManager) *ParticipantService {
+func NewParticipantService(repo *repositories.RepositoryStruct, txManager interfaces.TxManager) *ParticipantService {
 	return &ParticipantService{
 		Repo:      repo,
 		TxManager: txManager,
