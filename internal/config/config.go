@@ -1,16 +1,16 @@
 package config
 
 import (
-	"main/internal/postgres"
-	"main/internal/kafka/producer"
 	"main/internal/kafka/consumer"
+	"main/internal/kafka/producer"
+	"main/internal/logger"
+	"main/internal/postgres"
 	"main/internal/storage"
 )
 
 type ServerConfig struct {
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
-	LogLevel string `yaml:"log_level"`
 }
 
 type ConfigStuct struct {
@@ -19,4 +19,5 @@ type ConfigStuct struct {
 	S3     storage.S3Config  `yaml:"s3"`
 	Producer  producer.KafkaProducerConfig `yaml:"producer"`
 	Consumer  consumer.KafkaConsumerConfig `yaml:"consumer"`
+	Logger logger.LoggerConfig `yaml:"logger"`
 }

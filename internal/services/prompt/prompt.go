@@ -1,7 +1,8 @@
-package services
+package prompt
 
 import (
 	"context"
+	"main/internal/common/interfaces"
 	"main/internal/models"
 	"main/internal/repositories"
 	db "main/internal/repositories/gen"
@@ -12,10 +13,10 @@ import (
 
 type PromptService struct {
 	Repo      *repositories.RepositoryStruct
-	TxManager TxManager
+	TxManager interfaces.TxManager
 }
 
-func NewPromptService(repo *repositories.RepositoryStruct, txManager TxManager) *PromptService {
+func NewPromptService(repo *repositories.RepositoryStruct, txManager interfaces.TxManager) *PromptService {
 	return &PromptService{
 		Repo:      repo,
 		TxManager: txManager,

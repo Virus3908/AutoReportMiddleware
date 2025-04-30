@@ -1,10 +1,11 @@
-package services
+package taskDispatcher
 
 import (
 	"context"
 	"fmt"
 	"strings"
 
+	"main/internal/common/interfaces"
 	"main/internal/models"
 	"main/internal/repositories"
 	"main/pkg/messages/proto"
@@ -15,17 +16,17 @@ import (
 
 type TaskDispatcher struct {
 	Repo      *repositories.RepositoryStruct
-	Messenger MessageClient
-	Storage   StorageClient
-	TxManager TxManager
+	Messenger interfaces.MessageClient
+	Storage   interfaces.StorageClient
+	TxManager interfaces.TxManager
 	TaskFlow  bool
 }
 
 func NewTaskDispatcher(
 	repo *repositories.RepositoryStruct,
-	messenger MessageClient,
-	storage StorageClient,
-	txManager TxManager,
+	messenger interfaces.MessageClient,
+	storage interfaces.StorageClient,
+	txManager interfaces.TxManager,
 	taskFlow bool,
 ) *TaskDispatcher {
 	return &TaskDispatcher{

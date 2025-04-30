@@ -1,7 +1,8 @@
-package services
+package conversations
 
 import (
 	"context"
+	"main/internal/common/interfaces"
 	"main/internal/models"
 	"main/internal/repositories"
 	"main/internal/repositories/gen"
@@ -13,11 +14,15 @@ import (
 
 type ConversationsService struct {
 	Repo      *repositories.RepositoryStruct
-	Storage   StorageClient
-	TxManager TxManager
+	Storage   interfaces.StorageClient
+	TxManager interfaces.TxManager
 }
 
-func NewConversationsService(repo *repositories.RepositoryStruct, storage StorageClient, txManager TxManager) *ConversationsService {
+func NewConversationsService(
+	repo *repositories.RepositoryStruct,
+	storage interfaces.StorageClient,
+	txManager interfaces.TxManager,
+) *ConversationsService {
 	return &ConversationsService{
 		Repo:      repo,
 		Storage:   storage,

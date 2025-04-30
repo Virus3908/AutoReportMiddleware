@@ -5,16 +5,30 @@ import (
 	"go.uber.org/zap/zapcore"
 	"log"
 	"net/http"
+	"main/internal/common/interfaces"
 )
+
+const (
+	DebugLevel = "debug"
+	InfoLevel  = "info"
+	WarnLevel  = "warn"
+	ErrorLevel = "error"
+	PanicLevel = "panic"
+)
+
+type LoggerConfig struct {
+	LogLevel string `yaml:"log_level"`
+	Encoding string `yaml:"encoding"`
+}
 
 type ZapLogger struct {
 	logger *zap.Logger
 }
 
-func NewLogger(logLevel string) (*ZapLogger, error) {
+func NewLogger(cfg LoggerConfig) (*ZapLogger, error) {
 	var level zap.AtomicLevel
 
-	switch logLevel {
+	switch cfg.LogLevel {
 	case DebugLevel:
 		level = zap.NewAtomicLevelAt(zapcore.DebugLevel)
 	case InfoLevel:
@@ -37,7 +51,7 @@ func NewLogger(logLevel string) (*ZapLogger, error) {
 		CallerKey:      "caller",
 		StacktraceKey:  "trace",
 		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.LowercaseLevelEncoder,
+		EncodeLevel:   zapcore.CapitalColorLevelEncoder,
 		EncodeTime:     zapcore.ISO8601TimeEncoder,
 		EncodeDuration: zapcore.SecondsDurationEncoder,
 		EncodeCaller:   zapcore.ShortCallerEncoder,
@@ -47,7 +61,7 @@ func NewLogger(logLevel string) (*ZapLogger, error) {
 		Level:            level,
 		Development:      false,
 		Sampling:         nil,
-		Encoding:         "json",
+		Encoding:         cfg.Encoding,
 		EncoderConfig:    encoderConfig,
 		OutputPaths:      []string{"stderr"},
 		ErrorOutputPaths: []string{"stderr"},
@@ -72,23 +86,23 @@ func (l *ZapLogger) Sync() {
 	}
 }
 
-func (l *ZapLogger) Info(msg string, fields ...LogField) {
+func (l *ZapLogger) Info(msg string, fields ...interfaces.LogField) {
 	l.logger.Info(msg, l.toZapFields(fields)...)
 }
-func (l *ZapLogger) Error(msg string, fields ...LogField) {
+func (l *ZapLogger) Error(msg string, fields ...interfaces.LogField) {
 	l.logger.Error(msg, l.toZapFields(fields)...)
 }
-func (l *ZapLogger) Warn(msg string, fields ...LogField) {
+func (l *ZapLogger) Warn(msg string, fields ...interfaces.LogField) {
 	l.logger.Warn(msg, l.toZapFields(fields)...)
 }
-func (l *ZapLogger) Fatal(msg string, fields ...LogField) {
+func (l *ZapLogger) Fatal(msg string, fields ...interfaces.LogField) {
 	l.logger.Fatal(msg, l.toZapFields(fields)...)
 }
-func (l *ZapLogger) Debug(msg string, fields ...LogField) {
+func (l *ZapLogger) Debug(msg string, fields ...interfaces.LogField) {
 	l.logger.Debug(msg, l.toZapFields(fields)...)
 }
 
-func (l *ZapLogger) toZapFields(fields []LogField) []zap.Field {
+func (l *ZapLogger) toZapFields(fields []interfaces.LogField) []zap.Field {
 	zapFields := make([]zap.Field, len(fields))
 	for i, f := range fields {
 		zapFields[i] = zap.Any(f.Key, f.Value)
@@ -96,11 +110,14 @@ func (l *ZapLogger) toZapFields(fields []LogField) []zap.Field {
 	return zapFields
 }
 
+
+// delete later
+
 func (l *ZapLogger) LoggingMidleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// l.Info("Received request",
-		// 	LogField{Key: "method", Value: r.Method},
-		// 	LogField{Key: "path", Value: r.URL.Path},
+		// 	interfaces.LogField{Key: "method", Value: r.Method},
+		// 	interfaces.LogField{Key: "path", Value: r.URL.Path},
 		// )
 		l.logger.Info("Received request",
 			zap.String("method", r.Method), zap.String("path", r.URL.Path))
