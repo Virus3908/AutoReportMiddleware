@@ -31,6 +31,7 @@ func main() {
 		panic("failed to init logger: " + err.Error())
 	}
 	defer log.Sync()
+	// ctx := context.WithValue(context.Background(), "logger", log)
 
 	db, err := postgres.New(context.Background(), cfg.DB)
 	if err != nil {
@@ -55,6 +56,7 @@ func main() {
 
 	middlewares := []mux.MiddlewareFunc{
 		log.LoggingMidleware,
+		logger.ContextWithLogger(log),
 	}
 
 	router := handlers.New(service, middlewares)

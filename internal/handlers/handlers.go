@@ -119,7 +119,7 @@ func respondWithError(w http.ResponseWriter, msg string, err error, status int) 
 }
 
 func (h *RouterStruct) CreateConversation(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseMultipartForm(200 << 20)
+	err := r.ParseMultipartForm(200 << 20) // swap to var
 	if err != nil {
 		respondWithError(w, "can't parse form", err, http.StatusBadRequest)
 		return

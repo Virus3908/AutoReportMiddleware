@@ -50,12 +50,17 @@ func (s *ConversationsService) DeleteConversationByID(ctx context.Context, conve
 		if err != nil {
 			return err
 		}
-		return s.Storage.DeleteFileByURL(ctx, fileURL)
+		err = s.Storage.DeleteFileByURL(ctx, fileURL)
+		if err != nil {
+			// log here
+		}
+		return nil
 	})
 }
 
 func (s *ConversationsService) GetConversationDetails(ctx context.Context, conversationID uuid.UUID) (*models.ConversationDetail, error) {
-	conv, err := s.Repo.GetConversationDetails(ctx, conversationID)
+
+	conv, err := s.Repo.GetConversationByID(ctx, conversationID)
 	if err != nil {
 		return nil, err
 	}

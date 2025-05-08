@@ -205,17 +205,15 @@ func (s *TaskDispatcher) getTranscriptionWithSpeakerAndAudioLen(
 	}
 	transcriptionWithSpeakerText := ""
 	for _, transcription := range transcriptionWithSpeaker {
-		if transcription.Transcription == nil {
+		if transcription.Transcription == nil || *transcription.Transcription == "" {
 			continue
 		}
-		if *transcription.Transcription != "" {
-			if transcription.ParticipantName != nil {
-				transcriptionWithSpeakerText += *transcription.ParticipantName + ": "
-			} else {
-				transcriptionWithSpeakerText += fmt.Sprintf("Speaker %d: ", transcription.Speaker)
-			}
-			transcriptionWithSpeakerText += *transcription.Transcription + "\n"
+		if transcription.ParticipantName != nil {
+			transcriptionWithSpeakerText += *transcription.ParticipantName + ": "
+		} else {
+			transcriptionWithSpeakerText += fmt.Sprintf("Speaker %d: ", transcription.Speaker)
 		}
+		transcriptionWithSpeakerText += *transcription.Transcription + "\n"
 	}
 	return &transcriptionWithSpeakerText, transcriptionWithSpeaker[0].AudioLen, nil
 }
