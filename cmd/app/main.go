@@ -31,9 +31,9 @@ func main() {
 		panic("failed to init logger: " + err.Error())
 	}
 	defer log.Sync()
-	// ctx := context.WithValue(context.Background(), "logger", log)
+	ctx := context.WithValue(context.Background(), "logger", log)
 
-	db, err := postgres.New(context.Background(), cfg.DB)
+	db, err := postgres.New(ctx, cfg.DB)
 	if err != nil {
 		log.Fatal("DB connection error", interfaces.LogField{Key: "Error", Value: err.Error()})
 	}
@@ -41,7 +41,7 @@ func main() {
 
 	repo := repositories.New(db.GetPool())
 
-	storage, err := storage.New(context.Background(), cfg.S3)
+	storage, err := storage.New(ctx, cfg.S3)
 	if err != nil {
 		log.Fatal("Storage connection error", interfaces.LogField{Key: "Error", Value: err.Error()})
 	}
@@ -71,7 +71,7 @@ func main() {
 		interfaces.LogField{Key: "Port", Value: cfg.Server.Port},
 	)
 
-	go messageConsumer.Start(context.Background())
+	go messageConsumer.Start(ctx)
 	err = http.ListenAndServe(serverSettings, router.GetRouter())
 	if err != nil {
 		log.Fatal("Server stating error", interfaces.LogField{Key: "Error", Value: err.Error()})

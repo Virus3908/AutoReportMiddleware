@@ -136,3 +136,11 @@ func ContextWithLogger(baseLogger interfaces.Logger) mux.MiddlewareFunc {
 		})
 	}
 }
+
+func GetLoggerFromContext(ctx context.Context) interfaces.Logger {
+	logger, ok := ctx.Value("logger").(interfaces.Logger)
+	if !ok {
+		return nil
+	}
+	return logger
+}

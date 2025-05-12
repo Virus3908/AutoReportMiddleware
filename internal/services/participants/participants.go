@@ -2,13 +2,15 @@ package participants
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+
 	"main/internal/common/interfaces"
 	"main/internal/models"
 	"main/internal/repositories"
 	db "main/internal/repositories/gen"
-
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 )
 
 type ParticipantService struct {
@@ -45,7 +47,7 @@ func (s *ParticipantService) DeleteParticipantByID(
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
 		err := s.Repo.NullifySpeakerParticipantID(ctx, tx, &participantID)
 		if err != nil {
-			return err
+			return fmt.Errorf("exec: Delete Participant\nfailed to nullify speaker participant ID: %w", err)
 		}
 		return s.Repo.DeleteParticipantByID(ctx, tx, participantID)
 	})

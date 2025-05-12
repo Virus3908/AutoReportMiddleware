@@ -2,14 +2,17 @@ package conversations
 
 import (
 	"context"
-	"main/internal/common/interfaces"
-	"main/internal/models"
-	"main/internal/repositories"
-	"main/internal/repositories/gen"
+	"fmt"
 	"mime/multipart"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+
+	"main/internal/common/interfaces"
+	"main/internal/logger"
+	"main/internal/models"
+	"main/internal/repositories"
+	"main/internal/repositories/gen"
 )
 
 type ConversationsService struct {
@@ -33,7 +36,7 @@ func NewConversationsService(
 func (s *ConversationsService) CreateConversation(ctx context.Context, conversation_name, fileName string, file multipart.File) error {
 	fileURL, err := s.Storage.UploadFileAndGetURL(ctx, file, fileName)
 	if err != nil {
-		return err
+		return fmt.Errorf("exec: Create Conversation\nfailed to upload file: %w", err)
 	}
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
 		return s.Repo.CreateConversation(ctx, tx, fileURL, conversation_name)
@@ -45,14 +48,19 @@ func (s *ConversationsService) GetConversations(ctx context.Context) ([]db.Conve
 }
 
 func (s *ConversationsService) DeleteConversationByID(ctx context.Context, conversationID uuid.UUID) error {
+
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
 		fileURL, err := s.Repo.DeleteConversation(ctx, tx, conversationID)
 		if err != nil {
-			return err
+			return fmt.Errorf("exec: Delete Conversation\nfailed to delete conversation: %w", err)
 		}
 		err = s.Storage.DeleteFileByURL(ctx, fileURL)
 		if err != nil {
-			// log here
+			logger := logger.GetLoggerFromContext(ctx)
+			logger.Warn("exec: Delete Conversation\nfailed to delete file from storage", interfaces.LogField{
+				Key:   "file_url",
+				Value: fileURL,
+			})
 		}
 		return nil
 	})
@@ -62,7 +70,7 @@ func (s *ConversationsService) GetConversationDetails(ctx context.Context, conve
 
 	conv, err := s.Repo.GetConversationByID(ctx, conversationID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("exec: Get Conversation Details\nfailed to get conversation by ID: %w", err)
 	}
 
 	result := &models.ConversationDetail{
@@ -75,7 +83,7 @@ func (s *ConversationsService) GetConversationDetails(ctx context.Context, conve
 	if conv.Status >= models.StatusConverted {
 		file, err := s.Repo.GetConvertFileURLByConversationID(ctx, conversationID)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("exec: Get Conversation Details\nfailed to get file URL by conversation ID: %w", err)
 		}
 		if file.FileUrl != nil {
 			result.ConvertedFileURL = *file.FileUrl
@@ -85,7 +93,7 @@ func (s *ConversationsService) GetConversationDetails(ctx context.Context, conve
 	if conv.Status >= models.StatusDiarized {
 		rows, err := s.Repo.GetSegmentsWithTranscriptionByConversationID(ctx, conversationID)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("exec: Get Conversation Details\nfailed to get segments with transcription by conversation ID: %w", err)
 		}
 
 		segments := make([]models.SegmentDetail, 0, len(rows))
@@ -95,7 +103,6 @@ func (s *ConversationsService) GetConversationDetails(ctx context.Context, conve
 				StartTime: row.StartTime,
 				EndTime:   row.EndTime,
 				Speaker:   row.Speaker,
-				// Transcription:   "",
 			}
 			if row.TranscriptionID != nil {
 				seg.TranscriptionID = *row.TranscriptionID
@@ -134,36 +141,34 @@ func (s *ConversationsService) AssignParticipantToSegment(
 ) error {
 	conversationID, err := uuid.Parse(idPair.ConversationID)
 	if err != nil {
-		return err
+		return fmt.Errorf("exec: Assign Participant to Segment\nfailed to parse conversation ID: %w", err)
 	}
 	var participantID *uuid.UUID
 	if idPair.ParticipantID != "" {
 		tempID, err := uuid.Parse(idPair.ParticipantID)
 		if err != nil {
-			return err
+			return fmt.Errorf("exec: Assign Participant to Segment\nfailed to parse participant ID: %w", err)
 		}
 		participantID = &tempID
-	} else {
-		participantID = nil
 	}
 	speakerIDs, err := s.Repo.GetSpeakerParticipantIDBySegmentID(ctx, nil, segmentID)
 	if err != nil {
-		return err
+		return fmt.Errorf("exec: Assign Participant to Segment\nfailed to get speaker participant ID by segment ID: %w", err)
 	}
 	if speakerIDs.ParticipantID != nil {
 		countSegmentsWithSpeaker, err := s.Repo.CountSegmentsWithSpeakerID(ctx, nil, speakerIDs.SpeakerID)
 		if err != nil {
-			return err
+			return fmt.Errorf("exec: Assign Participant to Segment\nfailed to count segments with speaker ID: %w", err)
 		}
 		if countSegmentsWithSpeaker > 1 {
 			return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
 				speakerCount, err := s.Repo.GetSpeakerCountByConversationID(ctx, tx, conversationID)
 				if err != nil {
-					return err
+					return fmt.Errorf("exec: Assign Participant to Segment\nfailed to get speaker count by conversation ID: %w", err)
 				}
 				newSpeakerID, err := s.Repo.CreateNewSpeakerForSegment(ctx, tx, int32(speakerCount), participantID, conversationID)
 				if err != nil {
-					return err
+					return fmt.Errorf("exec: Assign Participant to Segment\nfailed to create new speaker for segment: %w", err)
 				}
 				return s.Repo.AssignNewSpeakerToSegment(ctx, tx, segmentID, newSpeakerID)
 			})

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"main/internal/common/interfaces"
+	"main/internal/logger"
 	"main/internal/models"
 	"main/internal/repositories"
 	"main/pkg/messages/proto"
@@ -41,16 +42,16 @@ func NewTaskDispatcher(
 func (s *TaskDispatcher) CreateConvertTask(ctx context.Context, conversationID uuid.UUID) error {
 	fileURL, err := s.Repo.GetConversationFileURL(ctx, conversationID)
 	if err != nil {
-		return err
+		return fmt.Errorf("exec: Create Convert Task\nfailed to get conversation file URL: %w", err)
 	}
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
 		taskID, err := s.Repo.CreateTask(ctx, tx, models.ConvertTask)
 		if err != nil {
-			return err
+			return fmt.Errorf("exec: Create Convert Task\nfailed to create task: %w", err)
 		}
 		err = s.Repo.CreateConvert(ctx, tx, taskID, conversationID)
 		if err != nil {
-			return err
+			return fmt.Errorf("exec: Create Convert Task\nfailed to create convert: %w", err)
 		}
 		convertMessage := &messages.WrapperTask{
 			TaskId: taskID.String(),
@@ -67,7 +68,7 @@ func (s *TaskDispatcher) CreateConvertTask(ctx context.Context, conversationID u
 func (s *TaskDispatcher) CreateDiarizeTask(ctx context.Context, conversationID uuid.UUID) error {
 	response, err := s.Repo.GetConvertFileURLByConversationID(ctx, conversationID)
 	if err != nil {
-		return err
+		return fmt.Errorf("exec: Create Diarize Task\nfailed to get convert file URL: %w", err)
 	}
 	if response.FileUrl == nil {
 		return fmt.Errorf("file is not converted")
@@ -75,11 +76,11 @@ func (s *TaskDispatcher) CreateDiarizeTask(ctx context.Context, conversationID u
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
 		taskID, err := s.Repo.CreateTask(ctx, tx, models.DiarizeTask)
 		if err != nil {
-			return err
+			return fmt.Errorf("exec: Create Diarize Task\nfailed to create task: %w", err)
 		}
 		err = s.Repo.CreateDiarize(ctx, tx, response.ID, taskID)
 		if err != nil {
-			return err
+			return fmt.Errorf("exec: Create Diarize Task\nfailed to create diarize: %w", err)
 		}
 		diarizeMessage := &messages.WrapperTask{
 			TaskId: taskID.String(),
@@ -97,20 +98,20 @@ func (s *TaskDispatcher) CreateDiarizeTask(ctx context.Context, conversationID u
 func (s *TaskDispatcher) CreateTranscribeTask(ctx context.Context, conversationID uuid.UUID) error {
 	response, err := s.Repo.GetSegmentsByConversationsID(ctx, conversationID)
 	if err != nil {
-		return err
+		return fmt.Errorf("exec: Create Transcribe Task\nfailed to get segments: %w", err)
 	}
 	if len(response) == 0 {
-		return fmt.Errorf("no segments")
+		return fmt.Errorf("exec: Create Transcribe Task\nno segments found")
 	}
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
 		for _, segment := range response {
 			taskID, err := s.Repo.CreateTask(ctx, tx, models.TranscribeTask)
 			if err != nil {
-				return err
+				return fmt.Errorf("exec: Create Transcribe Task\nfailed to create task: %w", err)
 			}
 			err = s.Repo.CreateTranscriptionWithTaskAndSegmentID(ctx, tx, taskID, segment.SegmentID)
 			if err != nil {
-				return err
+				return fmt.Errorf("exec: Create Transcribe Task\nfailed to create transcription: %w", err)
 			}
 			transcribeMessage := &messages.WrapperTask{
 				TaskId: taskID.String(),
@@ -128,7 +129,7 @@ func (s *TaskDispatcher) CreateTranscribeTask(ctx context.Context, conversationI
 				segment.ConversationID.String(),
 				transcribeMessage)
 			if err != nil {
-				return fmt.Errorf("failed to send message: %s", err)
+				return fmt.Errorf("exec: Create Transcribe Task\nfailed to send message: %s", err)
 			}
 		}
 		return err
@@ -142,32 +143,32 @@ func (s *TaskDispatcher) CreateSemiReportTask(
 ) error {
 	promptFromDB, err := s.Repo.GetPromptByName(ctx, nil, prompt.PromptName)
 	if err != nil {
-		return fmt.Errorf("prompt find error: %s", err)
+		return fmt.Errorf("exec: Create Semi Report Task\nfailed to get prompt by name: %w", err)
 	}
 	transcriptionWithSpeakerText, audioLen, err := s.getTranscriptionWithSpeakerAndAudioLen(ctx, conversationID)
 	if err != nil {
-		return err
+		return fmt.Errorf("exec: Create Semi Report Task\nfailed to get transcription with speaker and audio length: %w", err)
 	}
 	textParts, err := s.splitTextByAudioLen(*transcriptionWithSpeakerText, audioLen)
 	if err != nil {
-		return err
+		return fmt.Errorf("exec: Create Semi Report Task\nfailed to split text by audio length: %w", err)
 	}
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
 		taskID, err := s.Repo.CreateTask(ctx, tx, models.SemiReportTask)
 		if err != nil {
-			return err
+			return fmt.Errorf("exec: Create Semi Report Task\nfailed to create task: %w", err)
 		}
 		for partIndex, part := range textParts {
 			err := s.Repo.CreateSemiReport(
-				ctx, 
-				tx, 
-				conversationID, 
-				taskID, 
+				ctx,
+				tx,
+				conversationID,
+				taskID,
 				promptFromDB.ID,
 				partIndex,
 			)
 			if err != nil {
-				return err
+				return fmt.Errorf("exec: Create Semi Report Task\nfailed to create semi report: %w", err)
 			}
 			semiReportMessage := &messages.WrapperTask{
 				TaskId: taskID.String(),
@@ -184,10 +185,9 @@ func (s *TaskDispatcher) CreateSemiReportTask(
 				semiReportMessage,
 			)
 			if err != nil {
-				return err
+				return fmt.Errorf("exec: Create Semi Report Task\nfailed to send message: %w", err)
 			}
 		}
-
 		return nil
 	})
 }
@@ -198,10 +198,10 @@ func (s *TaskDispatcher) getTranscriptionWithSpeakerAndAudioLen(
 ) (*string, *float64, error) {
 	transcriptionWithSpeaker, err := s.Repo.GetFullTranscriptionByConversationID(ctx, conversationID)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("exec: Get Transcription With Speaker\nfailed to get transcription with speaker: %w", err)
 	}
 	if len(transcriptionWithSpeaker) == 0 {
-		return nil, nil, fmt.Errorf("not found transcriptions")
+		return nil, nil, fmt.Errorf("exec: Get Transcription With Speaker\nno transcription found")
 	}
 	transcriptionWithSpeakerText := ""
 	for _, transcription := range transcriptionWithSpeaker {
@@ -223,10 +223,10 @@ func (s *TaskDispatcher) splitTextByAudioLen(
 	audioLen *float64,
 ) (map[int]string, error) {
 	if audioLen == nil || *audioLen <= 0 {
-		return nil, fmt.Errorf("wrong audio len")
+		return nil, fmt.Errorf("exec: Split Text By Audio Length\ninvalid audio length")
 	}
 	if strings.TrimSpace(text) == "" {
-		return nil, fmt.Errorf("empty transcription text")
+		return nil, fmt.Errorf("exec: Split Text By Audio Length\nempty text")
 	}
 
 	numChunks := int(*audioLen / 600)
@@ -263,7 +263,7 @@ func (s *TaskDispatcher) HandleTask(
 ) error {
 	taskID, err := uuid.Parse(task.TaskId)
 	if err != nil {
-		return err
+		return fmt.Errorf("exec: Handle Task\nfailed to parse task ID: %w", err)
 	}
 	switch t := task.Payload.(type) {
 	case *messages.WrapperResponse_Convert:
@@ -280,7 +280,7 @@ func (s *TaskDispatcher) HandleTask(
 	case *messages.WrapperResponse_Error:
 		return s.handleErrorTask(ctx, taskID, t.Error)
 	default:
-		return fmt.Errorf("unknown task type")
+		return fmt.Errorf("exec: Handle Task\nunknown task type: %T", t)
 	}
 }
 
@@ -291,23 +291,23 @@ func (s *TaskDispatcher) handleConvertTask(
 ) error {
 	conversationID, err := s.Repo.GetConversationIDByConvertTaskID(ctx, taskID)
 	if err != nil {
-		return err
+		return fmt.Errorf("exec: Handle Convert Task\nfailed to get conversation ID by convert task ID: %w", err)
 	}
 	err = s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
 		err := s.Repo.UpdateConvertByTaskID(ctx, tx, taskID, converted.GetConvertedFileUrl(), converted.GetAudioLen())
 		if err != nil {
-			return err
+			return fmt.Errorf("exec: Handle Convert Task\nfailed to update convert by task ID: %w", err)
 		}
 		err = s.Repo.UpdateTaskStatus(ctx, tx, taskID, models.StatusTaskOK)
 		if err != nil {
-			return err
+			return fmt.Errorf("exec: Handle Convert Task\nfailed to update task status: %w", err)
 		}
 		return s.Repo.UpdateConversationStatusByID(ctx, tx, conversationID, models.StatusConverted)
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("exec: Handle Convert Task\nfailed to update convert: %w", err)
 	}
-	s.dispatchNext(models.ConvertTask, conversationID)
+	s.dispatchNext(ctx, models.ConvertTask, conversationID)
 	return nil
 }
 
@@ -318,37 +318,37 @@ func (s *TaskDispatcher) handleDiarizeTask(
 ) error {
 	diarizeID, err := s.Repo.GetDiarizeIDByTaskID(ctx, taskID)
 	if err != nil {
-		return err
+		return fmt.Errorf("exec: Handle Diarize Task\nfailed to get diarize ID by task ID: %w", err)
 	}
 	conversationID, err := s.Repo.GetConversationIDByDiarizeTaskID(ctx, taskID)
 	if err != nil {
-		return err
+		return fmt.Errorf("exec: Handle Diarize Task\nfailed to get conversation ID by diarize task ID: %w", err)
 	}
 	err = s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
 		err = s.Repo.UpdateTaskStatus(ctx, tx, taskID, models.StatusTaskOK)
 		if err != nil {
-			return err
+			return fmt.Errorf("exec: Handle Diarize Task\nfailed to update task status: %w", err)
 		}
 		speakerMap := make(map[int32]uuid.UUID)
 		for speaker := 0; speaker < int(segments.GetNumOfSpeakers()); speaker++ {
 			speakerID, err := s.Repo.CreateSpeakerWithConversationsID(ctx, tx, conversationID, int32(speaker))
 			if err != nil {
-				return err
+				return fmt.Errorf("exec: Handle Diarize Task\nfailed to create speaker: %w", err)
 			}
 			speakerMap[int32(speaker)] = speakerID
 		}
 		for _, segment := range segments.GetSegments() {
 			err := s.Repo.CreateSegment(ctx, tx, diarizeID, segment.GetStartTime(), segment.GetEndTime(), speakerMap[segment.GetSpeaker()])
 			if err != nil {
-				return err
+				return fmt.Errorf("exec: Handle Diarize Task\nfailed to create segment: %w", err)
 			}
 		}
 		return s.Repo.UpdateConversationStatusByID(ctx, tx, conversationID, models.StatusDiarized)
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("exec: Handle Diarize Task\nfailed to update diarize: %w", err)
 	}
-	s.dispatchNext(models.DiarizeTask, conversationID)
+	s.dispatchNext(ctx, models.DiarizeTask, conversationID)
 	return nil
 }
 
@@ -359,20 +359,20 @@ func (s *TaskDispatcher) handleTransctiprionTask(
 ) error {
 	conversationID, err := s.Repo.GetConversationIDByTranscriptionTaskID(ctx, taskID)
 	if err != nil {
-		return err
+		return fmt.Errorf("exec: Handle Transcription Task\nfailed to get conversation ID by transcription task ID: %w", err)
 	}
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
 		err := s.Repo.UpdateTaskStatus(ctx, tx, taskID, models.StatusTaskOK)
 		if err != nil {
-			return err
+			return fmt.Errorf("exec: Handle Transcription Task\nfailed to update task status: %w", err)
 		}
 		err = s.Repo.UpdateTranscriptionTextByTaskID(ctx, tx, taskID, transcription.GetTranscription())
 		if err != nil {
-			return err
+			return fmt.Errorf("exec: Handle Transcription Task\nfailed to update transcription text by task ID: %w", err)
 		}
 		countOfUntranscribed, err := s.Repo.GetCountOfUntranscribedSegments(ctx, tx, conversationID)
 		if err != nil {
-			return err
+			return fmt.Errorf("exec: Handle Transcription Task\nfailed to get count of untranscribed segments: %w", err)
 		}
 		if countOfUntranscribed == 0 {
 			return s.Repo.UpdateConversationStatusByID(ctx, tx, conversationID, models.StatusTranscribed)
@@ -388,20 +388,20 @@ func (s *TaskDispatcher) handleSemiReportTask(
 ) error {
 	conversationID, err := s.Repo.GetConversationIDBySemiReportTaskID(ctx, taskID)
 	if err != nil {
-		return err
+		return fmt.Errorf("exec: Handle Semi Report Task\nfailed to get conversation ID by semi report task ID: %w", err)
 	}
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
 		err := s.Repo.UpdateTaskStatus(ctx, tx, taskID, models.StatusTaskOK)
 		if err != nil {
-			return err
+			return fmt.Errorf("exec: Handle Semi Report Task\nfailed to update task status: %w", err)
 		}
 		err = s.Repo.UpdateSemiReportByTaskID(ctx, tx, taskID, semiReport.GetText())
 		if err != nil {
-			return err
+			return fmt.Errorf("exec: Handle Semi Report Task\nfailed to update semi report by task ID: %w", err)
 		}
 		countOfUnReported, err := s.Repo.GetCountOfUnSemiReportedParts(ctx, tx, conversationID)
 		if err != nil {
-			return err
+			return fmt.Errorf("exec: Handle Semi Report Task\nfailed to get count of unreported parts: %w", err)
 		}
 		if countOfUnReported == 0 {
 			return s.Repo.UpdateConversationStatusByID(ctx, tx, conversationID, models.StatusSemiReported)
@@ -410,31 +410,35 @@ func (s *TaskDispatcher) handleSemiReportTask(
 	})
 }
 
-func (s *TaskDispatcher) dispatchNext(taskType int, conversationID uuid.UUID) {
+func (s *TaskDispatcher) dispatchNext(ctx context.Context, taskType int, conversationID uuid.UUID) {
 	if !s.TaskFlow {
 		return
 	}
+	logger := logger.GetLoggerFromContext(ctx)
 
-	go func() {
-		var err error
-		switch taskType {
-		case models.ConvertTask:
-			err = s.CreateDiarizeTask(context.Background(), conversationID)
-		case models.DiarizeTask:
-			err = s.CreateTranscribeTask(context.Background(), conversationID)
-		}
+	var err error
+	switch taskType {
+	case models.ConvertTask:
+		logger.Info("dispatching next task: Diarize", interfaces.LogField{Key: "conversation_id", Value: conversationID})
+		err = s.CreateDiarizeTask(ctx, conversationID)
+	case models.DiarizeTask:
+		logger.Info("dispatching next task: Transcribe", interfaces.LogField{Key: "conversation_id", Value: conversationID})
+		err = s.CreateTranscribeTask(ctx, conversationID)
+	}
 
-		if err != nil {
-			// log.Printf("Failed to dispatch next task after type %d: %v\n", taskType, err)
-		}
-	}()
+	if err != nil {
+		logger.Error("failed to dispatch next task", interfaces.LogField{Key: "error", Value: err})
+	}
+
 }
 
 func (s *TaskDispatcher) handleErrorTask(
 	ctx context.Context,
 	taskID uuid.UUID,
-	_ *messages.ErrorTaskResponse,
+	msg *messages.ErrorTaskResponse,
 ) error {
+	logger := logger.GetLoggerFromContext(ctx)
+	logger.Error("task failed", interfaces.LogField{Key: "task_id", Value: taskID}, interfaces.LogField{Key: "error", Value: msg.GetError()})
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
 		return s.Repo.UpdateTaskStatus(ctx, tx, taskID, models.StatusTaskError)
 	})
