@@ -1,9 +1,11 @@
 package handlers
 
 import (
-	"log"
+	"main/internal/common/interfaces"
+	"main/internal/logger"
 	"main/internal/services"
 	"net/http"
+
 	"github.com/gorilla/mux"
 )
 
@@ -113,15 +115,16 @@ func (r *RouterStruct) transcriptionHandlers() {
 	).Methods(http.MethodPatch)
 }
 
-func respondWithError(w http.ResponseWriter, msg string, err error, status int) {
-	log.Printf("[ERROR] %s: %v", msg, err)
-	http.Error(w, msg, status)
+func respondWithError(w http.ResponseWriter, r *http.Request, err error, status int) {
+	logger := logger.GetLoggerFromContext(r.Context())
+	logger.Error("error during request", interfaces.LogField{Key: "error", Value: err.Error()})
+	http.Error(w, err.Error(), status)
 }
 
 func (h *RouterStruct) CreateConversation(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseMultipartForm(200 << 20)
+	err := r.ParseMultipartForm(200 << 20) // swap to var
 	if err != nil {
-		respondWithError(w, "can't parse form", err, http.StatusBadRequest)
+		respondWithError(w, r, err, http.StatusBadRequest)
 		return
 	}
 
@@ -129,14 +132,14 @@ func (h *RouterStruct) CreateConversation(w http.ResponseWriter, r *http.Request
 
 	file, header, err := r.FormFile("file")
 	if err != nil {
-		respondWithError(w, "file not found", err, http.StatusBadRequest)
+		respondWithError(w, r, err, http.StatusBadRequest)
 		return
 	}
 	defer file.Close()
 
 	err = h.Service.Conversations.CreateConversation(r.Context(), conversationsName, header.Filename, file)
 	if err != nil {
-		respondWithError(w, "failed to create conversation", err, http.StatusInternalServerError)
+		respondWithError(w, r, err, http.StatusInternalServerError)
 		return
 	}
 

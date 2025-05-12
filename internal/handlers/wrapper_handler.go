@@ -12,7 +12,7 @@ func wrapperReturningData[T any](fn func(ctx context.Context) ([]T, error)) http
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := fn(r.Context())
 		if err != nil {
-			respondWithError(w, err.Error(), err, http.StatusInternalServerError)
+			respondWithError(w, r, err, http.StatusInternalServerError)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -26,13 +26,13 @@ func wrapperWithIDReturningData[T any](fn func(ctx context.Context, id uuid.UUID
 		strID := params["id"]
 		id, err := uuid.Parse(strID)
 		if err != nil {
-			respondWithError(w, err.Error(), err, http.StatusBadRequest)
+			respondWithError(w, r, err, http.StatusBadRequest)
 			return
 		}
 
 		data, err := fn(r.Context(), id)
 		if err != nil {
-			respondWithError(w, err.Error(), err, http.StatusInternalServerError)
+			respondWithError(w, r, err, http.StatusInternalServerError)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -45,12 +45,12 @@ func wrapperWithPayload[T any](fn func(ctx context.Context, payload T) error) ht
 		var payload T
 
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-			respondWithError(w, "Invalid request body: "+err.Error(), err, http.StatusBadRequest)
+			respondWithError(w, r, err, http.StatusBadRequest)
 			return
 		}
 
 		if err := fn(r.Context(), payload); err != nil {
-			respondWithError(w, "handle error: "+err.Error(), err, http.StatusInternalServerError)
+			respondWithError(w, r, err, http.StatusInternalServerError)
 			return
 		}
 
@@ -64,12 +64,12 @@ func wrapperWithID(fn func(ctx context.Context, id uuid.UUID) error) http.Handle
 		strID := params["id"]
 		id, err := uuid.Parse(strID)
 		if err != nil {
-			respondWithError(w, err.Error(), err, http.StatusBadRequest)
+			respondWithError(w, r, err, http.StatusBadRequest)
 			return
 		}
 
 		if err := fn(r.Context(), id); err != nil {
-			respondWithError(w, "handle error: "+err.Error(), err, http.StatusInternalServerError)
+			respondWithError(w, r, err, http.StatusInternalServerError)
 			return
 		}
 
@@ -83,19 +83,19 @@ func wrapperWithIDAndPayload[T any](fn func(ctx context.Context, id uuid.UUID, p
 		strID := params["id"]
 		id, err := uuid.Parse(strID)
 		if err != nil {
-			respondWithError(w, err.Error(), err, http.StatusBadRequest)
+			respondWithError(w, r, err, http.StatusBadRequest)
 			return
 		}
 
 		var payload T
 
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-			respondWithError(w, "Invalid request body: "+err.Error(), err, http.StatusBadRequest)
+			respondWithError(w, r, err, http.StatusBadRequest)
 			return
 		}
 
 		if err := fn(r.Context(), id, payload); err != nil {
-			respondWithError(w, "Handle error: "+err.Error(), err, http.StatusInternalServerError)
+			respondWithError(w, r, err, http.StatusInternalServerError)
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)

@@ -32,7 +32,7 @@ func (r *RepositoryStruct) CreateConversation(ctx context.Context, tx pgx.Tx, fi
 	})
 }
 
-func (r *RepositoryStruct) GetConversationDetails(ctx context.Context, conversationID uuid.UUID) (*db.Conversation, error) {
+func (r *RepositoryStruct) GetConversationByID(ctx context.Context, conversationID uuid.UUID) (*db.Conversation, error) {
 	conversation, err := r.queries.GetConversationByID(ctx, conversationID)
 	if err != nil {
 		return nil, err

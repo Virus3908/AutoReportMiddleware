@@ -1,11 +1,14 @@
 package logger
 
 import (
+	"context"
+	"log"
+	"main/internal/common/interfaces"
+	"net/http"
+
+	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"log"
-	"net/http"
-	"main/internal/common/interfaces"
 )
 
 const (
@@ -123,4 +126,21 @@ func (l *ZapLogger) LoggingMidleware(next http.Handler) http.Handler {
 			zap.String("method", r.Method), zap.String("path", r.URL.Path))
 		next.ServeHTTP(w, r)
 	})
+}
+
+func ContextWithLogger(baseLogger interfaces.Logger) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := context.WithValue(r.Context(), "logger", baseLogger)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+func GetLoggerFromContext(ctx context.Context) interfaces.Logger {
+	logger, ok := ctx.Value("logger").(interfaces.Logger)
+	if !ok {
+		return nil
+	}
+	return logger
 }
