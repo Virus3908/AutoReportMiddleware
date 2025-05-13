@@ -44,14 +44,23 @@ func (s *TaskDispatcher) CreateConvertTask(ctx context.Context, conversationID u
 	if err != nil {
 		return fmt.Errorf("exec: Create Convert Task\nfailed to get conversation file URL: %w", err)
 	}
+	processed, err := s.Repo.GetConversationProcessedStatusByID(ctx, conversationID)
+	if err != nil {
+		return fmt.Errorf("exec: Create Convert Task\nfailed to get conversation processed status: %w", err)
+	}
+	if processed {
+		return fmt.Errorf("exec: Create Convert Task\nconversation is already processed")
+	}
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
 		taskID, err := s.Repo.CreateTask(ctx, tx, models.ConvertTask)
 		if err != nil {
 			return fmt.Errorf("exec: Create Convert Task\nfailed to create task: %w", err)
 		}
-		err = s.Repo.CreateConvert(ctx, tx, taskID, conversationID)
-		if err != nil {
+		if err = s.Repo.CreateConvert(ctx, tx, taskID, conversationID); err != nil {
 			return fmt.Errorf("exec: Create Convert Task\nfailed to create convert: %w", err)
+		}
+		if err = s.Repo.SetConversationProcessedByID(ctx, tx, conversationID, true); err != nil {
+			return fmt.Errorf("exec: Create Convert Task\nfailed to set conversation processed: %w", err)
 		}
 		convertMessage := &messages.WrapperTask{
 			TaskId: taskID.String(),
@@ -73,14 +82,23 @@ func (s *TaskDispatcher) CreateDiarizeTask(ctx context.Context, conversationID u
 	if response.FileUrl == nil {
 		return fmt.Errorf("file is not converted")
 	}
+	processed, err := s.Repo.GetConversationProcessedStatusByID(ctx, conversationID)
+	if err != nil {
+		return fmt.Errorf("exec: Create Convert Task\nfailed to get conversation processed status: %w", err)
+	}
+	if processed {
+		return fmt.Errorf("exec: Create Convert Task\nconversation is already processed")
+	}
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
 		taskID, err := s.Repo.CreateTask(ctx, tx, models.DiarizeTask)
 		if err != nil {
 			return fmt.Errorf("exec: Create Diarize Task\nfailed to create task: %w", err)
 		}
-		err = s.Repo.CreateDiarize(ctx, tx, response.ID, taskID)
-		if err != nil {
+		if err = s.Repo.CreateDiarize(ctx, tx, response.ID, taskID); err != nil {
 			return fmt.Errorf("exec: Create Diarize Task\nfailed to create diarize: %w", err)
+		}
+		if err = s.Repo.SetConversationProcessedByID(ctx, tx, conversationID, true); err != nil {
+			return fmt.Errorf("exec: Create Convert Task\nfailed to set conversation processed: %w", err)
 		}
 		diarizeMessage := &messages.WrapperTask{
 			TaskId: taskID.String(),
@@ -103,6 +121,13 @@ func (s *TaskDispatcher) CreateTranscribeTask(ctx context.Context, conversationI
 	if len(response) == 0 {
 		return fmt.Errorf("exec: Create Transcribe Task\nno segments found")
 	}
+	processed, err := s.Repo.GetConversationProcessedStatusByID(ctx, conversationID)
+	if err != nil {
+		return fmt.Errorf("exec: Create Convert Task\nfailed to get conversation processed status: %w", err)
+	}
+	if processed {
+		return fmt.Errorf("exec: Create Convert Task\nconversation is already processed")
+	}
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
 		for _, segment := range response {
 			taskID, err := s.Repo.CreateTask(ctx, tx, models.TranscribeTask)
@@ -113,6 +138,7 @@ func (s *TaskDispatcher) CreateTranscribeTask(ctx context.Context, conversationI
 			if err != nil {
 				return fmt.Errorf("exec: Create Transcribe Task\nfailed to create transcription: %w", err)
 			}
+
 			transcribeMessage := &messages.WrapperTask{
 				TaskId: taskID.String(),
 				Task: &messages.WrapperTask_Transcription{
@@ -131,6 +157,9 @@ func (s *TaskDispatcher) CreateTranscribeTask(ctx context.Context, conversationI
 			if err != nil {
 				return fmt.Errorf("exec: Create Transcribe Task\nfailed to send message: %s", err)
 			}
+		}
+		if err = s.Repo.SetConversationProcessedByID(ctx, tx, conversationID, true); err != nil {
+			return fmt.Errorf("exec: Create Convert Task\nfailed to set conversation processed: %w", err)
 		}
 		return err
 	})
@@ -302,6 +331,9 @@ func (s *TaskDispatcher) handleConvertTask(
 		if err != nil {
 			return fmt.Errorf("exec: Handle Convert Task\nfailed to update task status: %w", err)
 		}
+		if err = s.Repo.SetConversationProcessedByID(ctx, tx, conversationID, false); err != nil {
+			return fmt.Errorf("exec: Handle Transcription Task\nfailed to set conversation processed: %w", err)
+		}
 		return s.Repo.UpdateConversationStatusByID(ctx, tx, conversationID, models.StatusConverted)
 	})
 	if err != nil {
@@ -343,6 +375,9 @@ func (s *TaskDispatcher) handleDiarizeTask(
 				return fmt.Errorf("exec: Handle Diarize Task\nfailed to create segment: %w", err)
 			}
 		}
+		if err = s.Repo.SetConversationProcessedByID(ctx, tx, conversationID, false); err != nil {
+			return fmt.Errorf("exec: Handle Transcription Task\nfailed to set conversation processed: %w", err)
+		}
 		return s.Repo.UpdateConversationStatusByID(ctx, tx, conversationID, models.StatusDiarized)
 	})
 	if err != nil {
@@ -362,12 +397,10 @@ func (s *TaskDispatcher) handleTransctiprionTask(
 		return fmt.Errorf("exec: Handle Transcription Task\nfailed to get conversation ID by transcription task ID: %w", err)
 	}
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
-		err := s.Repo.UpdateTaskStatus(ctx, tx, taskID, models.StatusTaskOK)
-		if err != nil {
+		if err = s.Repo.UpdateTaskStatus(ctx, tx, taskID, models.StatusTaskOK); err != nil {
 			return fmt.Errorf("exec: Handle Transcription Task\nfailed to update task status: %w", err)
 		}
-		err = s.Repo.UpdateTranscriptionTextByTaskID(ctx, tx, taskID, transcription.GetTranscription())
-		if err != nil {
+		if err = s.Repo.UpdateTranscriptionTextByTaskID(ctx, tx, taskID, transcription.GetTranscription()); err != nil {
 			return fmt.Errorf("exec: Handle Transcription Task\nfailed to update transcription text by task ID: %w", err)
 		}
 		countOfUntranscribed, err := s.Repo.GetCountOfUntranscribedSegments(ctx, tx, conversationID)
@@ -376,6 +409,9 @@ func (s *TaskDispatcher) handleTransctiprionTask(
 		}
 		if countOfUntranscribed == 0 {
 			return s.Repo.UpdateConversationStatusByID(ctx, tx, conversationID, models.StatusTranscribed)
+		}
+		if err = s.Repo.SetConversationProcessedByID(ctx, tx, conversationID, false); err != nil {
+			return fmt.Errorf("exec: Handle Transcription Task\nfailed to set conversation processed: %w", err)
 		}
 		return nil
 	})

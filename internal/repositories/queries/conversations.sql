@@ -97,3 +97,13 @@ LEFT JOIN transcriptions AS t ON s.id = t.segment_id
 LEFT JOIN participants AS p ON p.id = cs.participant_id
 WHERE conv.id = $1
 ORDER BY s.start_time;
+
+-- name: SetConversationProcessedByID :exec
+UPDATE conversations
+SET
+    processed = $1
+WHERE
+    id = $2;
+
+-- name: GetConversationProcessedStatusByID :one
+SELECT processed FROM conversations WHERE id = $1;

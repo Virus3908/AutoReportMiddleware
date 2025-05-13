@@ -16,6 +16,7 @@ type Conversation struct {
 	ConversationName string                    `json:"conversation_name"`
 	FileUrl          string                    `json:"file_url"`
 	Status           models.ConversationStatus `json:"status"`
+	Processed        bool                      `json:"processed"`
 	CreatedAt        time.Time                 `json:"created_at"`
 	UpdatedAt        time.Time                 `json:"updated_at"`
 }

@@ -507,3 +507,25 @@ func (r *RepositoryStruct) UpdateSemiReportByTaskID(
 		},
 	)
 }
+
+func (r *RepositoryStruct) SetConversationProcessedByID (
+	ctx context.Context,
+	tx pgx.Tx,
+	conversationID uuid.UUID,
+	processed bool,
+) error {
+	query := r.queries.WithTx(tx)
+	return query.SetConversationProcessedByID(ctx, 
+		db.SetConversationProcessedByIDParams{
+			ID: conversationID,
+			Processed: processed,
+		},
+	)
+}
+
+func (r *RepositoryStruct) GetConversationProcessedStatusByID (
+	ctx context.Context,
+	conversationID uuid.UUID,
+) (bool, error) {
+	return r.queries.GetConversationProcessedStatusByID(ctx, conversationID)
+}

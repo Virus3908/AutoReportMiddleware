@@ -40,7 +40,7 @@ func (q *Queries) DeleteConversationByID(ctx context.Context, id uuid.UUID) (str
 }
 
 const getConversationByID = `-- name: GetConversationByID :one
-SELECT id, conversation_name, file_url, status, created_at, updated_at FROM Conversations WHERE id = $1
+SELECT id, conversation_name, file_url, status, processed, created_at, updated_at FROM Conversations WHERE id = $1
 `
 
 func (q *Queries) GetConversationByID(ctx context.Context, id uuid.UUID) (Conversation, error) {
@@ -51,6 +51,7 @@ func (q *Queries) GetConversationByID(ctx context.Context, id uuid.UUID) (Conver
 		&i.ConversationName,
 		&i.FileUrl,
 		&i.Status,
+		&i.Processed,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -131,8 +132,19 @@ func (q *Queries) GetConversationIDByTranscriptionTaskID(ctx context.Context, id
 	return id, err
 }
 
+const getConversationProcessedStatusByID = `-- name: GetConversationProcessedStatusByID :one
+SELECT processed FROM conversations WHERE id = $1
+`
+
+func (q *Queries) GetConversationProcessedStatusByID(ctx context.Context, id uuid.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, getConversationProcessedStatusByID, id)
+	var processed bool
+	err := row.Scan(&processed)
+	return processed, err
+}
+
 const getConversations = `-- name: GetConversations :many
-SELECT id, conversation_name, file_url, status, created_at, updated_at FROM Conversations
+SELECT id, conversation_name, file_url, status, processed, created_at, updated_at FROM Conversations
 `
 
 func (q *Queries) GetConversations(ctx context.Context) ([]Conversation, error) {
@@ -149,6 +161,7 @@ func (q *Queries) GetConversations(ctx context.Context) ([]Conversation, error) 
 			&i.ConversationName,
 			&i.FileUrl,
 			&i.Status,
+			&i.Processed,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -221,6 +234,24 @@ func (q *Queries) GetSegmentsWithTranscriptionByConversationID(ctx context.Conte
 		return nil, err
 	}
 	return items, nil
+}
+
+const setConversationProcessedByID = `-- name: SetConversationProcessedByID :exec
+UPDATE conversations
+SET
+    processed = $1
+WHERE
+    id = $2
+`
+
+type SetConversationProcessedByIDParams struct {
+	Processed bool      `json:"processed"`
+	ID        uuid.UUID `json:"id"`
+}
+
+func (q *Queries) SetConversationProcessedByID(ctx context.Context, arg SetConversationProcessedByIDParams) error {
+	_, err := q.db.Exec(ctx, setConversationProcessedByID, arg.Processed, arg.ID)
+	return err
 }
 
 const updateConversationNameByID = `-- name: UpdateConversationNameByID :exec

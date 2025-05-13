@@ -37,6 +37,7 @@ type Querier interface {
 	GetConversationIDByDiarizeTaskID(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 	GetConversationIDBySemiReportTaskID(ctx context.Context, taskID uuid.UUID) (uuid.UUID, error)
 	GetConversationIDByTranscriptionTaskID(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
+	GetConversationProcessedStatusByID(ctx context.Context, id uuid.UUID) (bool, error)
 	GetConversations(ctx context.Context) ([]Conversation, error)
 	GetConvert(ctx context.Context) ([]Convert, error)
 	GetConvertByID(ctx context.Context, id uuid.UUID) (Convert, error)
@@ -58,6 +59,7 @@ type Querier interface {
 	GetTaskByID(ctx context.Context, id uuid.UUID) (Task, error)
 	GetTasks(ctx context.Context) ([]Task, error)
 	NullifySpeakerParticipantID(ctx context.Context, participantID *uuid.UUID) error
+	SetConversationProcessedByID(ctx context.Context, arg SetConversationProcessedByIDParams) error
 	UpdateConversationNameByID(ctx context.Context, arg UpdateConversationNameByIDParams) error
 	UpdateConversationStatusByConvertID(ctx context.Context, arg UpdateConversationStatusByConvertIDParams) error
 	UpdateConversationStatusByDiarizeID(ctx context.Context, arg UpdateConversationStatusByDiarizeIDParams) error
