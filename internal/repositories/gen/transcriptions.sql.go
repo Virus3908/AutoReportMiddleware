@@ -109,6 +109,22 @@ func (q *Queries) UpdateTranscriptionTextByID(ctx context.Context, arg UpdateTra
 	return err
 }
 
+const updateTranscriptionTextBySegmentID = `-- name: UpdateTranscriptionTextBySegmentID :exec
+UPDATE transcriptions 
+SET transcription = $1 
+WHERE segment_id = $2
+`
+
+type UpdateTranscriptionTextBySegmentIDParams struct {
+	Transcription *string   `json:"transcription"`
+	SegmentID     uuid.UUID `json:"segment_id"`
+}
+
+func (q *Queries) UpdateTranscriptionTextBySegmentID(ctx context.Context, arg UpdateTranscriptionTextBySegmentIDParams) error {
+	_, err := q.db.Exec(ctx, updateTranscriptionTextBySegmentID, arg.Transcription, arg.SegmentID)
+	return err
+}
+
 const updateTranscriptionTextByTaskID = `-- name: UpdateTranscriptionTextByTaskID :exec
 UPDATE transcriptions SET transcription = $1 WHERE task_id = $2
 `

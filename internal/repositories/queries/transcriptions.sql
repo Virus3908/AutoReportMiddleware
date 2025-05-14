@@ -1,6 +1,11 @@
 -- name: UpdateTranscriptionTextByTaskID :exec
 UPDATE transcriptions SET transcription = $1 WHERE task_id = $2;
 
+-- name: UpdateTranscriptionTextBySegmentID :exec
+UPDATE transcriptions 
+SET transcription = $1 
+WHERE segment_id = $2;
+
 -- name: CreateTranscriptionWithTaskAndSegmentID :exec
 INSERT INTO transcriptions (task_id, segment_id) VALUES ($1, $2);
 

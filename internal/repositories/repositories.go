@@ -529,3 +529,23 @@ func (r *RepositoryStruct) GetConversationProcessedStatusByID (
 ) (bool, error) {
 	return r.queries.GetConversationProcessedStatusByID(ctx, conversationID)
 }
+
+func (r *RepositoryStruct) GetSemiReportByConversationID (
+	ctx context.Context,
+	conversationID uuid.UUID,
+) ([]db.SemiReport, error) {
+	return r.queries.GetSemiReportByConversationID(ctx, conversationID)
+}
+
+func (r *RepositoryStruct) UpdateTranscriptionTextBySegmentID (
+	ctx context.Context,
+	tx pgx.Tx,
+	segmentID uuid.UUID,
+	text string,
+) error {
+	query := r.queries.WithTx(tx)
+	return query.UpdateTranscriptionTextBySegmentID(ctx, db.UpdateTranscriptionTextBySegmentIDParams{
+		SegmentID: segmentID,
+		Transcription: &text,
+	})
+}
