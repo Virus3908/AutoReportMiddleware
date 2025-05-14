@@ -20,3 +20,10 @@ SELECT COUNT(*)
 FROM
     semi_report
 WHERE conversation_id = $1 AND semi_report IS NULL;
+
+-- name: GetSemiReportByConversationID :many
+SELECT *
+FROM
+    semi_report
+WHERE conversation_id = $1
+ORDER BY part_num ASC;

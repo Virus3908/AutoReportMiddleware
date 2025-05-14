@@ -121,16 +121,30 @@ func (s *ConversationsService) GetConversationDetails(ctx context.Context, conve
 		result.Segments = segments
 	}
 
+	if conv.Status >= models.StatusSemiReported {
+		rows, err := s.Repo.GetSemiReportByConversationID(ctx, conversationID)
+		if err != nil {
+			return nil, fmt.Errorf("exec: Get Conversation Details\nfailed to get semi report by conversation ID: %w", err)
+		}
+		if len(rows) > 0 {
+			for _, row := range rows {
+				if row.SemiReport != nil {
+					result.SemiReport += *row.SemiReport + "\n"
+				}
+			}
+		}
+	}
+
 	return result, nil
 }
 
 func (s *ConversationsService) UpdateTranscriptionTextByID(
 	ctx context.Context,
-	id uuid.UUID,
+	segmentID uuid.UUID,
 	transcription models.Transcription,
 ) error {
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
-		return s.Repo.UpdateTransctiptionTextByID(ctx, tx, id, transcription.Transcription)
+		return s.Repo.UpdateTranscriptionTextBySegmentID(ctx, tx, segmentID, transcription.Transcription)
 	})
 }
 

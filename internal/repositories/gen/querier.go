@@ -54,6 +54,7 @@ type Querier interface {
 	GetPrompts(ctx context.Context) ([]Prompt, error)
 	GetSegmentsByConversationsID(ctx context.Context, id uuid.UUID) ([]GetSegmentsByConversationsIDRow, error)
 	GetSegmentsWithTranscriptionByConversationID(ctx context.Context, id uuid.UUID) ([]GetSegmentsWithTranscriptionByConversationIDRow, error)
+	GetSemiReportByConversationID(ctx context.Context, conversationID uuid.UUID) ([]SemiReport, error)
 	GetSpeakerCountByConversationID(ctx context.Context, conversationID uuid.UUID) (int64, error)
 	GetSpeakerIDAndParticipantIDBySegmentID(ctx context.Context, id uuid.UUID) (GetSpeakerIDAndParticipantIDBySegmentIDRow, error)
 	GetTaskByID(ctx context.Context, id uuid.UUID) (Task, error)
@@ -70,6 +71,7 @@ type Querier interface {
 	UpdateSemiReportByTaskID(ctx context.Context, arg UpdateSemiReportByTaskIDParams) error
 	UpdateTaskStatus(ctx context.Context, arg UpdateTaskStatusParams) error
 	UpdateTranscriptionTextByID(ctx context.Context, arg UpdateTranscriptionTextByIDParams) error
+	UpdateTranscriptionTextBySegmentID(ctx context.Context, arg UpdateTranscriptionTextBySegmentIDParams) error
 	UpdateTranscriptionTextByTaskID(ctx context.Context, arg UpdateTranscriptionTextByTaskIDParams) error
 }
 

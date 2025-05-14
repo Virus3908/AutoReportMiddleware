@@ -53,6 +53,43 @@ func (q *Queries) GetCountOfUnSemiReportedParts(ctx context.Context, conversatio
 	return count, err
 }
 
+const getSemiReportByConversationID = `-- name: GetSemiReportByConversationID :many
+SELECT id, conversation_id, semi_report, part_num, prompt_id, task_id, created_at, updated_at
+FROM
+    semi_report
+WHERE conversation_id = $1
+ORDER BY part_num ASC
+`
+
+func (q *Queries) GetSemiReportByConversationID(ctx context.Context, conversationID uuid.UUID) ([]SemiReport, error) {
+	rows, err := q.db.Query(ctx, getSemiReportByConversationID, conversationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SemiReport
+	for rows.Next() {
+		var i SemiReport
+		if err := rows.Scan(
+			&i.ID,
+			&i.ConversationID,
+			&i.SemiReport,
+			&i.PartNum,
+			&i.PromptID,
+			&i.TaskID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateSemiReportByTaskID = `-- name: UpdateSemiReportByTaskID :exec
 UPDATE semi_report
 SET

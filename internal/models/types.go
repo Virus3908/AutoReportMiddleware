@@ -9,6 +9,7 @@ type ConversationDetail struct {
 	Status           ConversationStatus `json:"status"`
 	ConvertedFileURL string             `json:"converted_file_url,omitempty"`
 	Segments         []SegmentDetail    `json:"segments,omitempty"`
+	SemiReport       string			 	`json:"semi_report,omitempty"`
 }
 
 type ConversationName struct {
