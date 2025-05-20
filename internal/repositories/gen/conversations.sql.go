@@ -101,6 +101,18 @@ func (q *Queries) GetConversationIDByDiarizeTaskID(ctx context.Context, id uuid.
 	return id, err
 }
 
+const getConversationIDByReportTaskID = `-- name: GetConversationIDByReportTaskID :one
+SELECT conversation_id
+FROM reports WHERE task_id = $1
+`
+
+func (q *Queries) GetConversationIDByReportTaskID(ctx context.Context, taskID uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, getConversationIDByReportTaskID, taskID)
+	var conversation_id uuid.UUID
+	err := row.Scan(&conversation_id)
+	return conversation_id, err
+}
+
 const getConversationIDBySemiReportTaskID = `-- name: GetConversationIDBySemiReportTaskID :one
 SELECT conversation_id
 FROM semi_report WHERE task_id = $1

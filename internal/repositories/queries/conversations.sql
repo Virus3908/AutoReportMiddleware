@@ -78,6 +78,10 @@ WHERE
 SELECT conversation_id
 FROM semi_report WHERE task_id = $1;
 
+-- name: GetConversationIDByReportTaskID :one
+SELECT conversation_id
+FROM reports WHERE task_id = $1;
+
 -- name: GetSegmentsWithTranscriptionByConversationID :many
 SELECT
   s.id AS segment_id,

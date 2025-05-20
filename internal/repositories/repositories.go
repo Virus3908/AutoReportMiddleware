@@ -549,3 +549,51 @@ func (r *RepositoryStruct) UpdateTranscriptionTextBySegmentID (
 		Transcription: &text,
 	})
 }
+
+func (r *RepositoryStruct) CreateReport (
+	ctx context.Context,
+	tx pgx.Tx,
+	conversationID,
+	taskID,
+	promptID uuid.UUID,
+) error {
+	query := r.queries.WithTx(tx)
+	return query.CreateReport(
+		ctx,
+		db.CreateReportParams{
+			ConversationID: conversationID,
+			TaskID:         taskID,
+			PromptID:       promptID,
+		},
+	)
+}
+
+func (r *RepositoryStruct) UpdateReportByTaskID (
+	ctx context.Context,
+	tx pgx.Tx,
+	taskID uuid.UUID,
+	report string,
+) error {
+	query := r.queries.WithTx(tx)
+	return query.UpdateReportByTaskID(
+		ctx,
+		db.UpdateReportByTaskIDParams{
+			TaskID: taskID,
+			Report: &report,
+		},
+	)
+}
+
+func (r *RepositoryStruct) GetConversationIDByReportTaskID (
+	ctx context.Context,
+	taskID uuid.UUID,
+) (uuid.UUID, error) {
+	return r.queries.GetConversationIDByReportTaskID(ctx, taskID)
+}
+
+func (r *RepositoryStruct) GetReportByConversationID (
+	ctx context.Context,
+	conversationID uuid.UUID,
+) (db.Report, error) {
+	return r.queries.GetReportByConversationID(ctx, conversationID)
+}

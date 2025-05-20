@@ -20,6 +20,7 @@ type Querier interface {
 	CreateNewSpeakerForSegment(ctx context.Context, arg CreateNewSpeakerForSegmentParams) (uuid.UUID, error)
 	CreateParticipant(ctx context.Context, arg CreateParticipantParams) error
 	CreatePrompt(ctx context.Context, arg CreatePromptParams) error
+	CreateReport(ctx context.Context, arg CreateReportParams) error
 	CreateSegment(ctx context.Context, arg CreateSegmentParams) error
 	CreateSemiReport(ctx context.Context, arg CreateSemiReportParams) error
 	CreateSpeakerWithConversationsID(ctx context.Context, arg CreateSpeakerWithConversationsIDParams) (uuid.UUID, error)
@@ -35,6 +36,7 @@ type Querier interface {
 	GetConversationFileURL(ctx context.Context, id uuid.UUID) (string, error)
 	GetConversationIDByConvertTaskID(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 	GetConversationIDByDiarizeTaskID(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
+	GetConversationIDByReportTaskID(ctx context.Context, taskID uuid.UUID) (uuid.UUID, error)
 	GetConversationIDBySemiReportTaskID(ctx context.Context, taskID uuid.UUID) (uuid.UUID, error)
 	GetConversationIDByTranscriptionTaskID(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 	GetConversationProcessedStatusByID(ctx context.Context, id uuid.UUID) (bool, error)
@@ -52,6 +54,7 @@ type Querier interface {
 	GetPromptByID(ctx context.Context, id uuid.UUID) (Prompt, error)
 	GetPromptByName(ctx context.Context, promptName string) (Prompt, error)
 	GetPrompts(ctx context.Context) ([]Prompt, error)
+	GetReportByConversationID(ctx context.Context, conversationID uuid.UUID) (Report, error)
 	GetSegmentsByConversationsID(ctx context.Context, id uuid.UUID) ([]GetSegmentsByConversationsIDRow, error)
 	GetSegmentsWithTranscriptionByConversationID(ctx context.Context, id uuid.UUID) ([]GetSegmentsWithTranscriptionByConversationIDRow, error)
 	GetSemiReportByConversationID(ctx context.Context, conversationID uuid.UUID) ([]SemiReport, error)
@@ -68,6 +71,7 @@ type Querier interface {
 	UpdateConvertByTaskID(ctx context.Context, arg UpdateConvertByTaskIDParams) error
 	UpdateParticipantByID(ctx context.Context, arg UpdateParticipantByIDParams) error
 	UpdatePromptByID(ctx context.Context, arg UpdatePromptByIDParams) error
+	UpdateReportByTaskID(ctx context.Context, arg UpdateReportByTaskIDParams) error
 	UpdateSemiReportByTaskID(ctx context.Context, arg UpdateSemiReportByTaskIDParams) error
 	UpdateTaskStatus(ctx context.Context, arg UpdateTaskStatusParams) error
 	UpdateTranscriptionTextByID(ctx context.Context, arg UpdateTranscriptionTextByIDParams) error

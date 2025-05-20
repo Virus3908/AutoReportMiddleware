@@ -107,6 +107,9 @@ func (r *RouterStruct) taskHandlers() {
 	r.Router.HandleFunc("/api/task/create/semireport/{id}",
 		wrapperWithIDAndPayload(r.Service.Tasks.CreateSemiReportTask),
 	).Methods(http.MethodPost)
+	r.Router.HandleFunc("/api/task/create/report/{id}",
+		wrapperWithIDAndPayload(r.Service.Tasks.CreateReportTask),
+	).Methods(http.MethodPost)
 }
 
 func (r *RouterStruct) transcriptionHandlers() {
