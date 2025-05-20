@@ -83,7 +83,20 @@ func (s *ConversationsService) GetConversationDetails(ctx context.Context, conve
 	if conv.Status >= models.StatusConverted {
 		file, err := s.Repo.GetConvertFileURLByConversationID(ctx, conversationID)
 		if err != nil {
-			return nil, fmt.Errorf("exec: Get Conversation Details\nfailed to get file URL by conversation ID: %w", err)
+			logger := logger.GetLoggerFromContext(ctx)
+			logger.Error("exec: Get Conversation Details\nfailed to get convert by conversation ID", 
+			interfaces.LogField{
+				Key:   "execution",
+				Value: "GetReportByConversationID",
+			},
+			interfaces.LogField{
+				Key: "Parameter",
+				Value: "Convert",
+			},
+			interfaces.LogField{
+				Key:   "error",
+				Value: err.Error(),
+			})
 		}
 		if file.FileUrl != nil {
 			result.ConvertedFileURL = *file.FileUrl
@@ -93,7 +106,20 @@ func (s *ConversationsService) GetConversationDetails(ctx context.Context, conve
 	if conv.Status >= models.StatusDiarized {
 		rows, err := s.Repo.GetSegmentsWithTranscriptionByConversationID(ctx, conversationID)
 		if err != nil {
-			return nil, fmt.Errorf("exec: Get Conversation Details\nfailed to get segments with transcription by conversation ID: %w", err)
+			logger := logger.GetLoggerFromContext(ctx)
+			logger.Error("exec: Get Conversation Details\nfailed to get diarization by conversation ID", 
+			interfaces.LogField{
+				Key:   "execution",
+				Value: "GetReportByConversationID",
+			},
+			interfaces.LogField{
+				Key: "Parameter",
+				Value: "Diarization",
+			},
+			interfaces.LogField{
+				Key:   "error",
+				Value: err.Error(),
+			})
 		}
 
 		segments := make([]models.SegmentDetail, 0, len(rows))
@@ -124,7 +150,20 @@ func (s *ConversationsService) GetConversationDetails(ctx context.Context, conve
 	if conv.Status >= models.StatusSemiReported {
 		rows, err := s.Repo.GetSemiReportByConversationID(ctx, conversationID)
 		if err != nil {
-			return nil, fmt.Errorf("exec: Get Conversation Details\nfailed to get semi report by conversation ID: %w", err)
+			logger := logger.GetLoggerFromContext(ctx)
+			logger.Error("exec: Get Conversation Details\nfailed to get semi_report by conversation ID",
+				interfaces.LogField{
+					Key:   "execution",
+					Value: "GetReportByConversationID",
+				},
+				interfaces.LogField{
+					Key:   "Parameter",
+					Value: "SemiReport",
+				},
+				interfaces.LogField{
+					Key:   "error",
+					Value: err.Error(),
+				})
 		}
 		if len(rows) > 0 {
 			for _, row := range rows {
@@ -133,6 +172,30 @@ func (s *ConversationsService) GetConversationDetails(ctx context.Context, conve
 				}
 			}
 		}
+	}
+	if conv.Status >= models.StatusReported {
+		report, err := s.Repo.GetReportByConversationID(ctx, conversationID)
+		if err != nil {
+			logger := logger.GetLoggerFromContext(ctx)
+			logger.Error("exec: Get Conversation Details\nfailed to get report by conversation ID",
+				interfaces.LogField{
+					Key:   "execution",
+					Value: "GetReportByConversationID",
+				},
+				interfaces.LogField{
+					Key:   "Parameter",
+					Value: "Report",
+				},
+				interfaces.LogField{
+					Key:   "error",
+					Value: err.Error(),
+				})
+		} else {
+			if report.Report != nil {
+				result.Report = *report.Report
+			}
+		}
+
 	}
 
 	return result, nil

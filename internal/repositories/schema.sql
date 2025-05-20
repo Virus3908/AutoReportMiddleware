@@ -92,6 +92,16 @@ CREATE TABLE semi_report (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
+CREATE TABLE reports (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    conversation_id UUID REFERENCES Conversations(id) ON DELETE CASCADE NOT NULL,
+    report TEXT,
+    prompt_id UUID REFERENCES Prompts(id) NOT NULL,
+    task_id UUID REFERENCES tasks(id) ON DELETE CASCADE UNIQUE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -147,5 +157,10 @@ EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trigger_update_tasks
 BEFORE UPDATE ON tasks
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER trigger_update_reports
+BEFORE UPDATE ON reports
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();

@@ -70,7 +70,11 @@ func (s *TaskDispatcher) CreateConvertTask(ctx context.Context, conversationID u
 				},
 			},
 		}
-		return s.Messenger.SendMessage(ctx, conversationID.String(), convertMessage)
+		err = s.Messenger.SendMessage(ctx, conversationID.String(), convertMessage)
+		if err != nil {
+			return fmt.Errorf("exec: Create Convert Task\nfailed to send message: %w", err)
+		}
+		return nil
 	})
 }
 
@@ -108,8 +112,11 @@ func (s *TaskDispatcher) CreateDiarizeTask(ctx context.Context, conversationID u
 				},
 			},
 		}
-
-		return s.Messenger.SendMessage(ctx, conversationID.String(), diarizeMessage)
+		err = s.Messenger.SendMessage(ctx, conversationID.String(), diarizeMessage)
+		if err != nil {
+			return fmt.Errorf("exec: Create Diarize Task\nfailed to send message: %w", err)
+		}
+		return nil
 	})
 }
 
@@ -129,6 +136,9 @@ func (s *TaskDispatcher) CreateTranscribeTask(ctx context.Context, conversationI
 		return fmt.Errorf("exec: Create Convert Task\nconversation is already processed")
 	}
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
+		if err = s.Repo.SetConversationProcessedByID(ctx, tx, conversationID, true); err != nil {
+			return fmt.Errorf("exec: Create Convert Task\nfailed to set conversation processed: %w", err)
+		}
 		for _, segment := range response {
 			taskID, err := s.Repo.CreateTask(ctx, tx, models.TranscribeTask)
 			if err != nil {
@@ -158,9 +168,6 @@ func (s *TaskDispatcher) CreateTranscribeTask(ctx context.Context, conversationI
 				return fmt.Errorf("exec: Create Transcribe Task\nfailed to send message: %s", err)
 			}
 		}
-		if err = s.Repo.SetConversationProcessedByID(ctx, tx, conversationID, true); err != nil {
-			return fmt.Errorf("exec: Create Convert Task\nfailed to set conversation processed: %w", err)
-		}
 		return err
 	})
 }
@@ -186,6 +193,9 @@ func (s *TaskDispatcher) CreateSemiReportTask(
 		taskID, err := s.Repo.CreateTask(ctx, tx, models.SemiReportTask)
 		if err != nil {
 			return fmt.Errorf("exec: Create Semi Report Task\nfailed to create task: %w", err)
+		}
+		if err = s.Repo.SetConversationProcessedByID(ctx, tx, conversationID, true); err != nil {
+			return fmt.Errorf("exec: Create Semi Report Task\nfailed to set conversation processed: %w", err)
 		}
 		for partIndex, part := range textParts {
 			err := s.Repo.CreateSemiReport(
@@ -216,6 +226,133 @@ func (s *TaskDispatcher) CreateSemiReportTask(
 			if err != nil {
 				return fmt.Errorf("exec: Create Semi Report Task\nfailed to send message: %w", err)
 			}
+		}
+		return nil
+	})
+}
+
+func (s *TaskDispatcher) CreateReportTask(
+	ctx context.Context,
+	conversationID uuid.UUID,
+	prompt models.Prompt,
+) error {
+	conversation, err := s.Repo.GetConversationByID(ctx, conversationID)
+	if err != nil {
+		return fmt.Errorf("exec: Create Report Task\nfailed to get conversation by ID: %w", err)
+	}
+	if conversation != nil {
+		if conversation.Processed {
+			return fmt.Errorf("exec: Create Report Task\nconversation is already processed")
+		}
+		if conversation.Status == models.StatusSemiReported {
+			return s.CreateReportTaskWithSemiReport(ctx, conversationID, prompt)
+		}
+		if conversation.Status == models.StatusTranscribed {
+			return s.CreateReportTaskWithTranscription(ctx, conversationID, prompt)
+		}
+	}
+	return fmt.Errorf("exec: Create Report Task\nconversation is not exist")
+}
+
+func (s *TaskDispatcher) CreateReportTaskWithTranscription(
+	ctx context.Context,
+	conversationID uuid.UUID,
+	prompt models.Prompt,
+) error {
+	promptFromDB, err := s.Repo.GetPromptByName(ctx, nil, prompt.PromptName)
+	if err != nil {
+		return fmt.Errorf("exec: Create Report Task With Transcription\nfailed to get prompt by name: %w", err)
+	}
+	transcriptionWithSpeakerText, _, err := s.getTranscriptionWithSpeakerAndAudioLen(ctx, conversationID)
+	if err != nil {
+		return fmt.Errorf("exec: Create Report Task With Transcription\nfailed to get transcription with speaker and audio length: %w", err)
+	}
+	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
+		taskID, err := s.Repo.CreateTask(ctx, tx, models.ReportTask)
+		if err != nil {
+			return fmt.Errorf("exec: Create Report Task With Transcription\nfailed to create task: %w", err)
+		}
+		err = s.Repo.CreateReport(
+			ctx,
+			tx,
+			conversationID,
+			taskID,
+			promptFromDB.ID,
+		)
+		if err != nil {
+			return fmt.Errorf("exec: Create Report Task With Transcription\nfailed to create report: %w", err)
+		}
+
+		if err = s.Repo.SetConversationProcessedByID(ctx, tx, conversationID, true); err != nil {
+			return fmt.Errorf("exec: Create Report Task With Transcription\nfailed to set conversation processed: %w", err)
+		}
+		err = s.Messenger.SendMessage(ctx, conversationID.String(), &messages.WrapperTask{
+			TaskId: taskID.String(),
+			Task: &messages.WrapperTask_Report{
+				Report: &messages.MessageReportTask{
+					Message: *transcriptionWithSpeakerText,
+					Prompt:  promptFromDB.Prompt,
+				},
+			},
+		})
+		if err != nil {
+			return fmt.Errorf("exec: Create Report Task With Transcription\nfailed to send message: %w", err)
+		}
+		return nil
+	})
+}
+
+func (s *TaskDispatcher) CreateReportTaskWithSemiReport(
+	ctx context.Context,
+	conversationID uuid.UUID,
+	prompt models.Prompt,
+) error {
+	promptFromDB, err := s.Repo.GetPromptByName(ctx, nil, prompt.PromptName)
+	if err != nil {
+		return fmt.Errorf("exec: Create Report Task With Semi report\nfailed to get prompt by name: %w", err)
+	}
+	semiReports, err := s.Repo.GetSemiReportByConversationID(ctx, conversationID)
+	if err != nil {
+		return fmt.Errorf("exec: Create Report Task With Semi report\nfailed to get semi report by conversation ID: %w", err)
+	}
+	var message string
+	for _, semiRep := range semiReports {
+		if semiRep.SemiReport != nil {
+			message += *semiRep.SemiReport + "\n"
+		}
+	}
+	if message == "" {
+		return fmt.Errorf("exec: Create Report Task With Semi report\nno semi report found")
+	}
+	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
+		taskID, err := s.Repo.CreateTask(ctx, tx, models.ReportTask)
+		if err != nil {
+			return fmt.Errorf("exec: Create Report Task With Semi report\nfailed to create task: %w", err)
+		}
+		if err = s.Repo.SetConversationProcessedByID(ctx, tx, conversationID, true); err != nil {
+			return fmt.Errorf("exec: Create Report Task With Semi report\nfailed to set conversation processed: %w", err)
+		}
+		err = s.Repo.CreateReport(
+			ctx,
+			tx,
+			conversationID,
+			taskID,
+			promptFromDB.ID,
+		)
+		if err != nil {
+			return fmt.Errorf("exec: Create Report Task With Semi report\nfailed to create report: %w", err)
+		}
+		err = s.Messenger.SendMessage(ctx, conversationID.String(), &messages.WrapperTask{
+			TaskId: taskID.String(),
+			Task: &messages.WrapperTask_Report{
+				Report: &messages.MessageReportTask{
+					Message: message,
+					Prompt:  promptFromDB.Prompt,
+				},
+			},
+		})
+		if err != nil {
+			return fmt.Errorf("exec: Create Report Task With Semi report\nfailed to send message: %w", err)
 		}
 		return nil
 	})
@@ -304,8 +441,7 @@ func (s *TaskDispatcher) HandleTask(
 	case *messages.WrapperResponse_SemiReport:
 		return s.handleSemiReportTask(ctx, taskID, t.SemiReport)
 	case *messages.WrapperResponse_Report:
-		return nil
-		// return s.handleReportTask(ctx, taskID, t.Report)
+		return s.handleReportTask(ctx, taskID, t.Report)
 	case *messages.WrapperResponse_Error:
 		return s.handleErrorTask(ctx, taskID, t.Error)
 	default:
@@ -440,7 +576,44 @@ func (s *TaskDispatcher) handleSemiReportTask(
 			return fmt.Errorf("exec: Handle Semi Report Task\nfailed to get count of unreported parts: %w", err)
 		}
 		if countOfUnReported == 0 {
-			return s.Repo.UpdateConversationStatusByID(ctx, tx, conversationID, models.StatusSemiReported)
+			err = s.Repo.UpdateConversationStatusByID(ctx, tx, conversationID, models.StatusSemiReported)
+			if err != nil {
+				return fmt.Errorf("exec: Handle Semi Report Task\nfailed to update conversation status: %w", err)
+			}
+			err = s.Repo.SetConversationProcessedByID(ctx, tx, conversationID, false)
+			if err != nil {
+				return fmt.Errorf("exec: Handle Semi Report Task\nfailed to set conversation processed: %w", err)
+			}
+		}
+		return nil
+	})
+}
+
+func (s *TaskDispatcher) handleReportTask(
+	ctx context.Context,
+	taskID uuid.UUID,
+	report *messages.ReportTaskResponse,
+) error {
+	conversationID, err := s.Repo.GetConversationIDByReportTaskID(ctx, taskID)
+	if err != nil {
+		return fmt.Errorf("exec: Handle Report Task\nfailed to get conversation ID by report task ID: %w", err)
+	}
+	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
+		err := s.Repo.UpdateTaskStatus(ctx, tx, taskID, models.StatusTaskOK)
+		if err != nil {
+			return fmt.Errorf("exec: Handle Report Task\nfailed to update task status: %w", err)
+		}
+		err = s.Repo.UpdateReportByTaskID(ctx, tx, taskID, report.GetText())
+		if err != nil {
+			return fmt.Errorf("exec: Handle Report Task\nfailed to update report by task ID: %w", err)
+		}
+		err = s.Repo.UpdateConversationStatusByID(ctx, tx, conversationID, models.StatusReported)
+		if err != nil {
+			return fmt.Errorf("exec: Handle Report Task\nfailed to update conversation status: %w", err)
+		}
+		err = s.Repo.SetConversationProcessedByID(ctx, tx, conversationID, false)
+		if err != nil {
+			return fmt.Errorf("exec: Handle Report Task\nfailed to set conversation processed: %w", err)
 		}
 		return nil
 	})
