@@ -190,15 +190,15 @@ func (s *TaskDispatcher) CreateSemiReportTask(
 		return fmt.Errorf("exec: Create Semi Report Task\nfailed to split text by audio length: %w", err)
 	}
 	return s.TxManager.WithTx(ctx, func(tx pgx.Tx) error {
-		taskID, err := s.Repo.CreateTask(ctx, tx, models.SemiReportTask)
-		if err != nil {
-			return fmt.Errorf("exec: Create Semi Report Task\nfailed to create task: %w", err)
-		}
 		if err = s.Repo.SetConversationProcessedByID(ctx, tx, conversationID, true); err != nil {
 			return fmt.Errorf("exec: Create Semi Report Task\nfailed to set conversation processed: %w", err)
 		}
 		for partIndex, part := range textParts {
-			err := s.Repo.CreateSemiReport(
+			taskID, err := s.Repo.CreateTask(ctx, tx, models.SemiReportTask)
+			if err != nil {
+				return fmt.Errorf("exec: Create Semi Report Task\nfailed to create task: %w", err)
+			}
+			err = s.Repo.CreateSemiReport(
 				ctx,
 				tx,
 				conversationID,
