@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"main/internal/common/interfaces"
 	"main/internal/config"
 	"main/internal/handlers"
@@ -16,7 +17,15 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
+
+func init() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Printf("No .env file found or failed to load it, %s", err.Error())
+	}
+}
 
 func main() {
 	cfg, err := config.GetConfig()

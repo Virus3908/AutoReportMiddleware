@@ -3,3 +3,4 @@
 s3
 minio.sh
 config/config.yaml
+.env

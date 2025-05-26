@@ -1,33 +1,33 @@
 pg:
-  host: 127.0.0.1
-  port: 5432
-  user: virus
-  password: postgres
-  database: db
+  host: {{ .PG_HOST}}
+  port: {{ .PG_PORT}}
+  user: {{ .PG_USER}}
+  password: {{ .PG_PASSWORD}}
+  database: {{ .PG_DATABASE}}
 
 server:
-  host: 0.0.0.0
-  port: 8080
+  host: {{ .SERVER_HOST}}
+  port: {{ .SERVER_PORT}}
 
 logger:
-  log_level: "debug"
-  encoding: "console"
+  log_level: {{ .LOG_LEVEL}}
+  encoding: {{ .LOG_ENCODING}}
 
 s3:
-  endpoint: http://localhost:9000
-  access_key: virus
-  secret_key: password
-  bucket: bucket
-  region: ru-central1
-  minio: true
+  endpoint: {{ .S3_ENDPOINT}}
+  access_key: {{ .S3_ACCESS_KEY}}
+  secret_key: {{ .S3_SECRET_KEY}}
+  bucket: {{ .S3_BUCKET}}
+  region: {{ .S3_REGION}}
+  minio: {{ .S3_MINIO}}
 
 producer:
   brokers:
-    - "localhost:9092"
-  topic: "task"
+    - {{ .PRODUCER_BROKER}}
+  topic: {{ .PRODUCER_TOPIC}}
 
 consumer:
   brokers:
-    - "localhost:9092"
-  topic: "callback"
-  group_id: "go_consumer"
+    - {{ .CONSUMER_BROKER}}
+  topic: {{ .CONSUMER_TOPIC}}
+  group_id: {{ .CONSUMER_GROUP_ID}}
