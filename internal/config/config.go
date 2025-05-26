@@ -13,7 +13,7 @@ type ServerConfig struct {
 	Port int    `yaml:"port"`
 }
 
-type ConfigStuct struct {
+type ConfigStruct struct {
 	DB     postgres.DBConfig `yaml:"pg"`
 	Server ServerConfig      `yaml:"server"`
 	S3     storage.S3Config  `yaml:"s3"`
