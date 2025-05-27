@@ -15,7 +15,8 @@ import (
 	"main/internal/services"
 	"main/internal/storage"
 	"net/http"
-
+	"main/internal/middleware"
+	
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 )
@@ -66,6 +67,7 @@ func main() {
 	middlewares := []mux.MiddlewareFunc{
 		log.LoggingMidleware,
 		logger.ContextWithLogger(log),
+		middleware.WithCORS,
 	}
 
 	router := handlers.New(service, middlewares)

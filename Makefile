@@ -1,6 +1,7 @@
 APP_NAME := middleware
 FILES_TO_DELETE := '*.sql.go' '*.pb.go'
 ENV_FILE := .env
+DATABASE_URL=postgres://virus:postgres@localhost:5432/db?sslmode=disable
 
 .PHONY: all
 all: build
@@ -64,4 +65,15 @@ docker-build:
 docker-run:
 	docker run --rm -it \
 		--env-file .env \
-		middleware-app
+		-p 8080:8080 \
+		--name middleware \
+  		--network my-net \
+		middleware-app 
+
+.PHONY: migrate-up
+migrate-up:
+	migrate -database "$(DATABASE_URL)" -path migrations up
+
+.PHONY: migrate-down
+migrate-down:
+	migrate -database "$(DATABASE_URL)" -path migrations down
