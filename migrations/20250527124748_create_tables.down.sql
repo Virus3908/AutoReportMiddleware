@@ -1,0 +1,11 @@
+DROP TABLE IF EXISTS transcriptions;
+DROP TABLE IF EXISTS semi_report;
+DROP TABLE IF EXISTS reports;
+DROP TABLE IF EXISTS segments;
+DROP TABLE IF EXISTS diarize;
+DROP TABLE IF EXISTS convert;
+DROP TABLE IF EXISTS tasks;
+DROP TABLE IF EXISTS conversation_speakers;
+DROP TABLE IF EXISTS participants;
+DROP TABLE IF EXISTS conversations;
+DROP TABLE IF EXISTS prompts;
